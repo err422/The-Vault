@@ -1,0 +1,26 @@
+Body {
+  Background-color: rgb(70, 120, 450);
+}
+
+.Error-Message, h1, h2, h3, h4 {
+  margin-left: 20%;
+}
+
+.Error-Message-Top, h1, h2 {
+  color: white;
+}
+
+.Error-Message-Top, h1 {
+  font-size: 100px;
+}
+
+.Error-Message-Top, h2 {
+  letter-spacing: 0.3px;
+  font-size: 45px;
+  line-height: 20px;
+}
+
+.Error-Message-Bottom, h3, h4 {
+  font-size: ;
+  Color: white;
+}

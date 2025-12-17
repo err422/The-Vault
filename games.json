@@ -1,0 +1,191 @@
+[
+    {
+        "id": 1,
+        "title": "Cryzen.io",
+        "description": "A fast-paced online multiplayer first-person shooter with team deathmatch modes and character customization.",
+        "category": "fps",
+        "icon": "🔫",
+        "rating": "★★★★☆",
+        "url": "https://cryzen.io/"
+    },
+    {
+        "id": 2,
+        "title": "Kour.io",
+        "description": "A multiplayer IO FPS game with intense battles across various maps and game modes.",
+        "category": "fps",
+        "icon": "🎯",
+        "rating": "★★★★☆",
+        "url": "https://kour.org/"
+    },
+    {
+        "id": 3,
+        "title": "Nut Simulator",
+        "description": "A quirky simulation game where players manage and grow various types of nuts through resource management and upgrades.",
+        "category": "simulation",
+        "icon": "🥜",
+        "rating": "★★★☆☆",
+        "url": "https://nutsimulator.github.io/index.html"
+    },
+    {
+        "id": 4,
+        "title": "Shell Shockers",
+        "description": "An online multiplayer FPS where players control egg-shaped characters in humorous fast-paced combat.",
+        "category": "fps",
+        "icon": "🥚",
+        "rating": "★★★★☆",
+        "url": "https://geometry.monster"
+    },
+    {
+        "id": 5,
+        "title": "Idle Breakout",
+        "description": "An idle clicker game combining classic brick breaking with automated ball upgrades to destroy billions of bricks.",
+        "category": "idle",
+        "icon": "🧱",
+        "rating": "★★★★☆",
+        "url": "https://idle-breakout.neocities.org/"
+    },
+    {
+        "id": 6,
+        "title": "Diablo 1",
+        "description": "The classic dungeon-crawler RPG where players battle demons, collect loot, and level up in gothic underground depths.",
+        "category": "rpg",
+        "icon": "⚔️",
+        "rating": "★★★★★",
+        "url": "https://d07riv.github.io/diabloweb/"
+    },
+    {
+        "id": 7,
+        "title": "Clicker Heroes",
+        "description": "An idle clicker game where players slay monsters, upgrade heroes, and progress through zones while building massive damage numbers.",
+        "category": "idle",
+        "icon": "🏆",
+        "rating": "★★★★☆",
+        "url": "https://clickerheroes.com/play"
+    },
+    {
+        "id": 8,
+        "title": "Trimps",
+        "description": "A unique incremental game combining resource management with combat as players manage small creatures called Trimps.",
+        "category": "simulation",
+        "icon": "🐹",
+        "rating": "★★★★☆",
+        "url": "https://trimps.github.io/"
+    },
+    {
+        "id": 9,
+        "title": "Tube Clicker",
+        "description": "An incremental clicking game focused on building a YouTube-like video platform empire through content creation and monetization.",
+        "category": "idle",
+        "icon": "📺",
+        "rating": "★★★☆☆",
+        "url": "https://html5.gamedistribution.com/d9ef28d7e6a9493da73860d1e0b70414/"
+    },
+    {
+        "id": 10,
+        "title": "GrindCraft",
+        "description": "A Minecraft-inspired incremental game where players automate resource gathering and crafting systems.",
+        "category": "simulation",
+        "icon": "⛏️",
+        "rating": "★★★★☆",
+        "url": "https://grindcraft.com/game.html"
+    },
+    {
+        "id": 11,
+        "title": "Hex GL",
+        "description": "A futuristic 3D racing game inspired by F-Zero and Wipeout with high-speed anti-gravity ships racing through sleek tracks.",
+        "category": "racing",
+        "icon": "🏎️",
+        "rating": "★★★★☆",
+        "url": "https://hexgl.bkcore.com/play/"
+    },
+    {
+        "id": 12,
+        "title": "Idle Shooter",
+        "description": "An idle shooting game where players automatically fire at enemies while upgrading weapons and abilities to progress through levels.",
+        "category": "idle",
+        "icon": "🎯",
+        "rating": "★★★☆☆",
+        "url": "https://html5.gamedistribution.com/acdee4deb06d46759e4577a83262dfce"
+    },
+    {
+        "id": 13,
+        "title": "Masked Special Forces",
+        "description": "A tactical FPS game featuring special forces operatives in various combat scenarios with realistic weapons and stealth mechanics.",
+        "category": "fps",
+        "icon": "🎭",
+        "rating": "★★★☆☆",
+        "url": "https://www.onlinegames.io/games/2022/unity2/masked-special-forces/index.html"
+    },
+    {
+        "id": 14,
+        "title": "Capybara Clicker",
+        "description": "An idle clicker game centered around cute capybaras where players click to generate resources and unlock adorable capybara upgrades.",
+        "category": "idle",
+        "icon": "🦫",
+        "rating": "★★★☆☆",
+        "url": "https://synergism.cc/"
+    },
+    {
+        "id": 15,
+        "title": "Block Blast",
+        "description": "A puzzle game where players arrange and clear blocks by creating lines, combining match-three mechanics with strategic block placement.",
+        "category": "puzzle",
+        "icon": "🧩",
+        "rating": "★★★★☆",
+        "url": "https://cloud.onlinegames.io/games/2024/unity3/block-blast/index-og.html"
+    },
+    {
+        "id": 16,
+        "title": "Poly Track",
+        "description": "A fun low poly version of Trackmania",
+        "category": "racing",
+        "icon": "🏎",
+        "rating": "★★★★☆",
+        "url": "https://www.kodub.com/apps/polytrack"
+    },
+    {
+        "id": 17,
+        "title": "Archer Hero",
+        "description": "An archery-based action game where players control skilled archers, aiming and shooting arrows at targets and enemies with precision.",
+        "category": "action",
+        "icon": "🏹",
+        "rating": "★★★☆☆",
+        "url": "https://www.onlinegames.io/games/2023/unity/archer-hero/index.html"
+    },
+    {
+        "id": 18,
+        "title": "OpenGuessr",
+        "description": "A geography guessing game where players use visual clues from street view images to guess locations around the world.",
+        "category": "trivia",
+        "icon": "🌍",
+        "rating": "★★★★☆",
+        "url": "https://openguessr.com/"
+    },
+    {
+        "id": 19,
+        "title": "Go",
+        "description": "Play the Japanese game of GO",
+        "category": "puzzle",
+        "icon": "🎲",
+        "rating": "★★★★☆",
+        "url": "https://www.cosumi.net/en/"
+    },
+    {
+        "id": 20,
+        "title": "Case Clicker 2",
+        "description": "Open Counter Strike cases",
+        "category": "idle",
+        "icon": "📦",
+        "rating": "★★★★☆",
+        "url": "https://csgo.mtsl.dk/"
+    },
+    {
+        "id": 21,
+        "title": "Mr. Mine",
+        "description": "A fun MMO style idle game",
+        "category": "idle",
+        "icon": "⛏️",
+        "rating": "★★★★☆",
+        "url": "https://mrmine.com/game/"
+    }
+]
