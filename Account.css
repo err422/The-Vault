@@ -1,0 +1,97 @@
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#000;color:#fff;min-height:100vh;position:relative;overflow-x:hidden}
+.nav-bar{position:fixed;z-index:100;top:2rem;left:0;right:0;margin:0 auto;width:fit-content;background:rgba(255,255,255,0.1);border:0.1rem solid rgba(255,255,255,0.2);border-radius:2rem;padding:0.75rem 1.5rem;display:flex;gap:1.25rem;backdrop-filter:blur(10px);font-size:1rem}
+.nav-item{position:relative;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;padding:0.5rem;border-radius:1rem;overflow:hidden;white-space:nowrap}
+.nav-item:hover{background:rgba(255,255,255,0.1)}
+.nav-icon{width:1.5rem;height:1.5rem;opacity:0.7;transition:opacity 0.2s;flex-shrink:0}
+.nav-item:hover .nav-icon{opacity:1}
+.nav-label{margin-left:8px;font-size:1rem;font-weight:500;opacity:0;transform:translateX(-10px);transition:all 0.35s ease-in;max-width:0;overflow:hidden}
+.nav-item:hover .nav-label{opacity:1;transform:translateX(0);max-width:100px}
+.page-title{font-family:'Poppins',sans-serif;font-size:3.5rem;text-align:center;background:linear-gradient(to right,#fc72ff,#8f68ff,#487bff,#8f68ff,#fc72ff);background-size:200%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:animate-gradient 2.5s linear infinite;padding-top:100px;margin-bottom:40px}
+@keyframes animate-gradient{to{background-position:200%}}
+.container{max-width:1400px;margin:0 auto;padding:0 40px 60px}
+.account-content{background:rgba(30,30,30,0.8);backdrop-filter:blur(10px);border:1px solid rgba(60,60,60,0.5);border-radius:20px;padding:40px;min-height:500px}
+.loading-container{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 20px}
+.spinner{width:80px;height:80px;border:4px solid rgba(255,255,255,0.1);border-top-color:#667eea;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.profile-header{text-align:center;margin-bottom:40px;padding-bottom:30px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.profile-avatar{width:120px;height:120px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:60px;margin:0 auto 20px;border:5px solid #1f2937;box-shadow:0 10px 40px rgba(102,126,234,0.4);position:relative}
+.level-badge{position:absolute;bottom:-10px;right:-10px;background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);border:4px solid #1f2937;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;box-shadow:0 0 20px rgba(251,191,36,0.6);animation:glow 2s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 10px rgba(251,191,36,0.5)}50%{box-shadow:0 0 25px rgba(251,191,36,0.8)}}
+.profile-username{font-size:2.5rem;margin-bottom:8px;font-weight:700;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.profile-email{font-size:1rem;color:#888;margin-bottom:12px}
+.profile-title{display:inline-block;background:linear-gradient(135deg,rgba(102,126,234,0.2),rgba(118,75,162,0.2));border:1px solid rgba(102,126,234,0.4);border-radius:25px;padding:8px 20px;font-size:0.9rem;font-weight:600;color:#667eea}
+.xp-bar-container{max-width:600px;margin:20px auto 0}
+.xp-bar{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;height:12px;overflow:hidden;position:relative}
+.xp-fill{height:100%;background:linear-gradient(90deg,#667eea 0%,#764ba2 100%);border-radius:12px;transition:width 1s ease-out;position:relative;overflow:hidden}
+.xp-shimmer{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);background-size:200% 100%;animation:shimmer 2s infinite}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.xp-text{display:flex;justify-content:space-between;margin-top:8px;font-size:0.85rem;color:#666}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-bottom:40px}
+.stat-card{background:linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;text-align:center;transition:all 0.3s ease}
+.stat-card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+.stat-card.primary{background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(37,99,235,0.15));border-color:rgba(59,130,246,0.3)}
+.stat-card.success{background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(22,163,74,0.15));border-color:rgba(34,197,94,0.3)}
+.stat-card.warning{background:linear-gradient(135deg,rgba(251,191,36,0.15),rgba(245,158,11,0.15));border-color:rgba(251,191,36,0.3)}
+.stat-card.purple{background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(139,92,246,0.15));border-color:rgba(168,85,247,0.3)}
+.stat-icon{font-size:2rem;margin-bottom:12px}
+.stat-value{font-size:2rem;font-weight:700;margin-bottom:8px}
+.stat-card.primary .stat-value{color:#3b82f6}
+.stat-card.success .stat-value{color:#22c55e}
+.stat-card.warning .stat-value{color:#fbbf24}
+.stat-card.purple .stat-value{color:#a855f7}
+.stat-label{font-size:0.85rem;color:#888;text-transform:uppercase;letter-spacing:0.5px}
+.section{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;margin-bottom:30px}
+.section-title{font-size:1rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.activity-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:16px;margin-bottom:12px;transition:all 0.2s}
+.activity-item:hover{background:rgba(255,255,255,0.05);transform:translateX(5px)}
+.activity-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.activity-date{font-size:0.95rem;font-weight:600;color:#ddd}
+.activity-time{font-size:0.95rem;font-weight:700;color:#3b82f6}
+.activity-games{font-size:0.85rem;color:#666}
+.achievements-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.achievement-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:20px;text-align:center;transition:all 0.3s ease;cursor:pointer;position:relative}
+.achievement-card.unlocked{background:linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.2));border-color:rgba(251,191,36,0.4)}
+.achievement-card.locked{opacity:0.4;filter:grayscale(100%)}
+.achievement-card:hover{transform:scale(1.05)}
+.achievement-icon{font-size:2.5rem;margin-bottom:10px}
+.achievement-name{font-size:0.95rem;font-weight:700;margin-bottom:6px}
+.achievement-card.unlocked .achievement-name{color:#fbbf24}
+.achievement-card.locked .achievement-name{color:#666}
+.achievement-description{font-size:0.8rem;color:#888}
+.achievement-card.locked .achievement-description{color:#555}
+.achievement-badge{position:absolute;top:12px;right:12px;font-size:1.2rem}
+.action-buttons{display:flex;gap:16px;margin-top:40px}
+.btn{flex:1;padding:18px 32px;border-radius:14px;cursor:pointer;font-size:1rem;font-weight:600;transition:all 0.2s ease;border:1px solid;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(37,99,235,0.2));border-color:#3b82f6;color:#3b82f6}
+.btn-primary:hover{box-shadow:0 8px 25px rgba(59,130,246,0.4)}
+.btn-danger{background:linear-gradient(135deg,rgba(239,68,68,0.2),rgba(220,38,38,0.2));border-color:#ef4444;color:#ef4444}
+.btn-danger:hover{box-shadow:0 8px 25px rgba(239,68,68,0.4)}
+.auth-container{max-width:500px;margin:0 auto;padding:40px 0}
+.auth-header{text-align:center;margin-bottom:40px}
+.auth-title{font-size:2rem;font-weight:700;margin-bottom:12px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-subtitle{color:#888;font-size:1rem}
+.auth-tabs{display:flex;gap:12px;margin-bottom:30px}
+.auth-tab{flex:1;padding:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#888;border-radius:12px;cursor:pointer;font-weight:600;transition:all 0.2s}
+.auth-tab.active{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;color:white}
+.form-group{margin-bottom:20px}
+.form-label{display:block;margin-bottom:8px;font-size:0.9rem;color:#888}
+.form-input{width:100%;padding:16px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:white;font-size:1rem;transition:all 0.2s}
+.form-input:focus{outline:none;border-color:#667eea;box-shadow:0 0 20px rgba(102,126,234,0.2)}
+.form-error{color:#ef4444;font-size:0.9rem;margin-bottom:20px;min-height:20px}
+.form-button{width:100%;padding:18px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;color:white;border-radius:14px;cursor:pointer;font-size:1rem;font-weight:600;transition:all 0.2s}
+.form-button:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(102,126,234,0.4)}
+.form-button:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+@media (max-width:768px){
+.page-title{font-size:2.5rem;padding-top:80px}
+.container{padding:0 20px 40px}
+.account-content{padding:24px}
+.profile-avatar{width:100px;height:100px;font-size:50px}
+.level-badge{width:40px;height:40px;font-size:16px}
+.profile-username{font-size:2rem}
+.stats-grid{grid-template-columns:1fr}
+.achievements-grid{grid-template-columns:repeat(2,1fr)}
+.action-buttons{flex-direction:column}
+.nav-bar{left:1rem;right:1rem;width:auto}
+}

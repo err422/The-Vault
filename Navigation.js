@@ -4,7 +4,9 @@
         
         navItems.forEach(item => {
             item.addEventListener('click', function() {
-                const label = this.querySelector('.nav-label').textContent;
+                const label = this.querySelector('.nav-label').textContent.trim();
+                
+                console.log('Navigation clicked:', label);
                 
                 switch(label) {
                     case 'Home':
@@ -19,12 +21,17 @@
                     case 'Credits':
                         window.location.href = 'credits.html';
                         break;
+                    case 'Account':
+                    case 'Sign In':
+                        window.location.href = 'Account.html';
+                        break;
                     case 'Fullscreen':
-                        // Toggle fullscreen
-                        if (!document.fullscreenElement) {
-                            document.documentElement.requestFullscreen();
-                        } else {
-                            document.exitFullscreen();
+                        toggleFullScreen();
+                        break;
+                    default:
+                        // Check if it's a username (starts with @)
+                        if (label.startsWith('@')) {
+                            window.location.href = 'Account.html';
                         }
                         break;
                 }
@@ -37,22 +44,22 @@
             // Enter fullscreen
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen();
-            } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+            } else if (document.documentElement.mozRequestFullScreen) {
                 document.documentElement.mozRequestFullScreen();
-            } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari, Opera
+            } else if (document.documentElement.webkitRequestFullscreen) {
                 document.documentElement.webkitRequestFullscreen();
-            } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+            } else if (document.documentElement.msRequestFullscreen) {
                 document.documentElement.msRequestFullscreen();
             }
         } else {
             // Exit fullscreen
             if (document.exitFullscreen) {
                 document.exitFullscreen();
-            } else if (document.mozCancelFullScreen) { // Firefox
+            } else if (document.mozCancelFullScreen) {
                 document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) { // Chrome, Safari, Opera
+            } else if (document.webkitExitFullscreen) {
                 document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) { // IE/Edge
+            } else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
             }
         }
