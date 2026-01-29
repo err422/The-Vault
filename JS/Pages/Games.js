@@ -1,3 +1,137 @@
+const savedTheme = localStorage.getItem('vaultTheme') || 'default';
+document.body.classList.add(`theme-${savedTheme}`);
+
+
+// Global playtime variables
+let playtimeTracker = {
+    currentGame: null,
+    startTime: null,
+    intervalId: null,
+    totalSeconds: 0
+};
+
+// Start tracking playtime when game/website opens
+function startPlaytimeTracking(title) {
+    // Don't track if not logged in
+    if (!auth.currentUser) {
+        console.log('Not tracking playtime - user not logged in');
+        return;
+    }
+
+    // Stop any existing tracking
+    stopPlaytimeTracking();
+
+    playtimeTracker.currentGame = title;
+    playtimeTracker.startTime = Date.now();
+    playtimeTracker.totalSeconds = 0;
+
+    console.log('Started tracking playtime for:', title);
+
+    // Update playtime every 30 seconds
+    playtimeTracker.intervalId = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - playtimeTracker.startTime) / 1000);
+        playtimeTracker.totalSeconds = elapsed;
+        
+        // Save to Firebase every 30 seconds (in case of crash/close)
+        savePlaytimeToFirebase();
+    }, 30000); // 30 seconds
+}
+
+// Stop tracking playtime
+function stopPlaytimeTracking() {
+    if (!playtimeTracker.currentGame) return;
+
+    // Clear interval
+    if (playtimeTracker.intervalId) {
+        clearInterval(playtimeTracker.intervalId);
+        playtimeTracker.intervalId = null;
+    }
+
+    // Calculate final playtime
+    if (playtimeTracker.startTime) {
+        const elapsed = Math.floor((Date.now() - playtimeTracker.startTime) / 1000);
+        playtimeTracker.totalSeconds = elapsed;
+        
+        // Save final playtime to Firebase
+        savePlaytimeToFirebase();
+    }
+
+    console.log('Stopped tracking playtime for:', playtimeTracker.currentGame, 
+                '- Total:', formatPlaytime(playtimeTracker.totalSeconds));
+
+    // Reset tracker
+    playtimeTracker.currentGame = null;
+    playtimeTracker.startTime = null;
+    playtimeTracker.totalSeconds = 0;
+}
+
+// Save playtime to Firebase
+function savePlaytimeToFirebase() {
+    const user = auth.currentUser;
+    if (!user || !playtimeTracker.currentGame || playtimeTracker.totalSeconds < 5) {
+        return;
+    }
+
+    const gameTitle = playtimeTracker.currentGame;
+    const secondsToAdd = playtimeTracker.totalSeconds;
+    
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Save to daily playtime
+    const dailyRef = database.ref(`users/${user.uid}/playtime/daily/${today}/${encodeGameTitle(gameTitle)}`);
+    
+    dailyRef.transaction((currentSeconds) => {
+        return (currentSeconds || 0) + secondsToAdd;
+    })
+    .then((result) => {
+        if (result.committed) {
+            console.log('Daily playtime saved:', gameTitle, '+' + secondsToAdd + 's');
+        }
+    })
+    .catch((error) => {
+        console.error('Error saving daily playtime:', error);
+    });
+    
+    // Also update lifetime total
+    const totalRef = database.ref(`users/${user.uid}/playtime/total/${encodeGameTitle(gameTitle)}`);
+    
+    totalRef.transaction((currentSeconds) => {
+        return (currentSeconds || 0) + secondsToAdd;
+    })
+    .then(() => {
+        console.log('Total playtime updated');
+    })
+    .catch((error) => {
+        console.error('Error updating total:', error);
+    });
+
+    // Reset counter
+    playtimeTracker.startTime = Date.now();
+    playtimeTracker.totalSeconds = 0;
+}
+
+// Helper: Encode game title for Firebase key (remove invalid characters)
+function encodeGameTitle(title) {
+    return title.replace(/[.#$[\]]/g, '_');
+}
+
+// Helper: Format seconds into readable time
+function formatPlaytime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    } else if (minutes > 0) {
+        return `${minutes}m ${secs}s`;
+    } else {
+        return `${secs}s`;
+    }
+}
+
+
 // Global variables
 let allGames = [];
 
@@ -40,6 +174,7 @@ function renderGames(games) {
     
     // Re-setup click handlers after rendering
     setupGameCardClickHandlers();
+    
 }
 
 // Game card click handler that opens iframe
@@ -52,7 +187,7 @@ function setupGameCardClickHandlers() {
             const gameData = allGames.find(g => g.title === gameTitle);
             const gameUrl = gameData?.url || './error.html';
             
-            openGameIframe(gameUrl, gameTitle);
+            openIframe(gameUrl, gameTitle);
         });
         
         card.style.cursor = 'pointer';
@@ -101,726 +236,79 @@ function setupFiltering() {
     }
 }
 
-// Multi-Tab Browser System
-let browserTabs = [];
-let activeTabId = null;
-let tabCounter = 0;
-let isSelectingNewTab = false;
-
-function openGameIframe(url, title) {
-    console.log('Opening:', url, title);
-    if (window.starManager) {
-       window.starManager.remove();
-       console.log('Unloading Stars');
-   }
-    
-    let overlay = document.getElementById('game-iframe-overlay');
-    
-    if (!overlay) {
-        createBrowserWindow();
-        overlay = document.getElementById('game-iframe-overlay');
-    }
-    
-    isSelectingNewTab = false;
-    createNewTab(url, title);
-}
-
-function createBrowserWindow() {
-    const overlay = document.createElement('div');
-    overlay.id = 'game-iframe-overlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(10, 10, 10, 0.95);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        backdrop-filter: blur(8px);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    `;
-    
-    const browserWindow = document.createElement('div');
-    browserWindow.id = 'browser-window';
-    browserWindow.style.cssText = `
-        width: 90%;
-        height: 90%;
-        max-width: 1200px;
-        max-height: 800px;
-        background: rgba(42, 42, 42, 0.95);
-        border-radius: 12px;
-        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        transform: scale(0.8);
-        transition: transform 0.3s ease;
-        position: relative;
-    `;
-    
-    // Tab Bar
-    const tabBar = document.createElement('div');
-    tabBar.id = 'tab-bar';
-    tabBar.style.cssText = `
-        background: rgba(55, 55, 55, 0.9);
-        display: flex;
-        align-items: flex-end;
-        height: 36px;
-        padding: 0 8px;
-        overflow-x: auto;
-        overflow-y: hidden;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        z-index: 10;
-        position: relative;
-    `;
-    
-    const newTabBtn = document.createElement('button');
-    newTabBtn.id = 'new-tab-btn';
-    newTabBtn.innerHTML = '+';
-    newTabBtn.title = 'New Tab';
-    newTabBtn.style.cssText = `
-        background: none;
-        border: none;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 20px;
-        cursor: pointer;
-        padding: 4px 12px;
-        margin-left: 8px;
-        transition: all 0.2s ease;
-        border-radius: 8px 8px 0 0;
-        flex-shrink: 0;
-    `;
-    
-    newTabBtn.addEventListener('mouseenter', function() {
-        this.style.background = 'rgba(255,255,255,0.1)';
-        this.style.color = '#fff';
-    });
-    
-    newTabBtn.addEventListener('mouseleave', function() {
-        this.style.background = 'none';
-        this.style.color = 'rgba(255,255,255,0.7)';
-    });
-    
-    newTabBtn.addEventListener('click', handleNewTabClick);
-    
-    tabBar.appendChild(newTabBtn);
-    
-    // Toolbar
-    const toolbar = document.createElement('div');
-    toolbar.id = 'toolbar';
-    toolbar.style.cssText = `
-        background: rgba(42, 42, 42, 0.95);
-        padding: 8px 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        height: 44px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        z-index: 10;
-        position: relative;
-    `;
-    
-    toolbar.appendChild(createNavButtons());
-    toolbar.appendChild(createAddressBar());
-    
-    // Add widgets to toolbar after a short delay
-    setTimeout(() => {
-        addBellScheduleIconToToolbar();
-        addFavoritesIconToToolbar();
-    }, 100);
-    
-    // Iframe Container
-    const iframeContainer = document.createElement('div');
-    iframeContainer.id = 'iframe-container';
-    iframeContainer.style.cssText = `
-        flex: 1;
-        background: rgba(25, 25, 25, 0.95);
-        position: relative;
-        overflow: hidden;
-        z-index: 1;
-    `;
-    
-    browserWindow.appendChild(tabBar);
-    browserWindow.appendChild(toolbar);
-    browserWindow.appendChild(iframeContainer);
-    
-    // Window controls
-    const windowControls = document.createElement('div');
-    windowControls.style.cssText = `
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        display: flex;
-        gap: 8px;
-        z-index: 1000;
-    `;
-    
-    const minimizeBtn = createControlButton('−', 'Minimize');
-    const fsIframeBtn = createControlButton('⛶', 'Fullscreen (content only)');
-    const maximizeBtn = createControlButton('□', 'Maximize (with toolbar)');
-    const closeBrowserBtn = createControlButton('×', 'Close');
-    
-    fsIframeBtn.addEventListener('click', function() {
-        const iframe = document.getElementById(`iframe-${activeTabId}`);
-        if (iframe) {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                iframe.requestFullscreen();
-            }
-        }
-    });
-    
-    maximizeBtn.addEventListener('click', function() {
-        const browserWindow = document.getElementById('browser-window');
-        if (browserWindow) {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                browserWindow.requestFullscreen();
-            }
-        }
-    });
-    
-    closeBrowserBtn.addEventListener('click', closeBrowser);
-    closeBrowserBtn.addEventListener('mouseenter', function() {
-        this.style.background = 'rgba(239, 68, 68, 0.8)';
-        this.style.color = '#fff';
-    });
-    
-    windowControls.appendChild(minimizeBtn);
-    windowControls.appendChild(fsIframeBtn);
-    windowControls.appendChild(maximizeBtn);
-    windowControls.appendChild(closeBrowserBtn);
-    
-    browserWindow.appendChild(windowControls);
-    overlay.appendChild(browserWindow);
-    
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-            closeBrowser();
-        }
-    });
-    
-    document.body.appendChild(overlay);
-    document.body.style.overflow = 'hidden';
-    
-    setTimeout(() => {
-        overlay.style.opacity = '1';
-        browserWindow.style.transform = 'scale(1)';
-    }, 10);
-}
-
-function createControlButton(text, title) {
-    const btn = document.createElement('button');
-    btn.innerHTML = text;
-    btn.title = title;
-    btn.style.cssText = `
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: ${text === '×' ? '22px' : text === '⛶' ? '14px' : '18px'};
-        color: rgba(255, 255, 255, 0.8);
-        transition: all 0.2s ease;
-    `;
-    
-    btn.addEventListener('mouseenter', function() {
-        this.style.background = 'rgba(255,255,255,0.2)';
-        this.style.color = '#fff';
-    });
-    
-    btn.addEventListener('mouseleave', function() {
-        this.style.background = 'rgba(255,255,255,0.1)';
-        this.style.color = 'rgba(255,255,255,0.8)';
-    });
-    
-    return btn;
-}
-
-function handleNewTabClick() {
-    isSelectingNewTab = true;
-    activeTabId = null;
-    
-    const allTabs = document.querySelectorAll('.browser-tab');
-    allTabs.forEach(tab => {
-        tab.style.background = 'rgba(50, 50, 50, 0.7)';
-        tab.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-    });
-    
-    const newTabBtn = document.getElementById('new-tab-btn');
-    if (newTabBtn) {
-        newTabBtn.style.background = 'rgba(25, 25, 25, 0.95)';
-        newTabBtn.style.borderTop = '1px solid rgba(255, 255, 255, 0.2)';
-        newTabBtn.style.borderLeft = '1px solid rgba(255, 255, 255, 0.2)';
-        newTabBtn.style.borderRight = '1px solid rgba(255, 255, 255, 0.2)';
-    }
-    
-    const urlText = document.getElementById('url-text');
-    if (urlText) {
-        urlText.textContent = 'Select a game or website...';
-    }
-    
-    const allIframes = document.querySelectorAll('#iframe-container iframe');
-    allIframes.forEach(iframe => {
-        iframe.style.display = 'none';
-    });
-    
-    showSelectionScreen();
-}
-
-function showSelectionScreen() {
-    let selectionScreen = document.getElementById('selection-screen');
-    
-    if (selectionScreen) {
-        selectionScreen.style.display = 'block';
-        return;
-    }
-    
-    selectionScreen = document.createElement('div');
-    selectionScreen.id = 'selection-screen';
-    selectionScreen.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(25, 25, 25, 0.98);
-        overflow-y: auto;
-        z-index: 100;
-    `;
-    
-    const header = document.createElement('div');
-    header.style.cssText = `text-align: center; padding: 30px 20px 20px;`;
-    header.innerHTML = `
-        <h2 style="font-size: 24px; color: #fff; margin-bottom: 8px; font-weight: 600;">Open New Tab</h2>
-        <p style="color: #888; font-size: 14px;">Select a game or website to open</p>
-    `;
-    
-    const grid = document.createElement('div');
-    grid.style.cssText = `
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 20px;
-        padding: 20px 30px 30px;
-    `;
-    
-    const items = [];
-    
-    if (Array.isArray(allGames)) {
-        allGames.forEach(game => {
-            items.push({
-                title: game.title,
-                icon: game.icon || '🎮',
-                category: game.category || 'Game',
-                url: game.url || './error.html'
-            });
-        });
-    }
-    
-    if (typeof allWebsites !== 'undefined' && Array.isArray(allWebsites)) {
-        allWebsites.forEach(site => {
-            items.push({
-                title: site.title,
-                icon: site.icon || '🌐',
-                category: site.category || 'Website',
-                url: site.url || './error.html'
-            });
-        });
-    }
-    
-    if (items.length === 0) {
-        grid.innerHTML = '<div style="color: #888; text-align: center; padding: 40px; grid-column: 1 / -1;">No games or websites available.</div>';
-    } else {
-        items.forEach(item => {
-            const card = document.createElement('div');
-            card.style.cssText = `
-                background: rgba(40, 40, 40, 0.8);
-                border: 1px solid rgba(60, 60, 60, 0.5);
-                border-radius: 12px;
-                padding: 20px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            `;
-            
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-4px)';
-                this.style.borderColor = 'rgba(100, 100, 100, 0.8)';
-                this.style.background = 'rgba(50, 50, 50, 0.9)';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-                this.style.borderColor = 'rgba(60, 60, 60, 0.5)';
-                this.style.background = 'rgba(40, 40, 40, 0.8)';
-            });
-            
-            card.addEventListener('click', function() {
-                hideSelectionScreen();
-                createNewTab(item.url, item.title);
-            });
-            
-            card.innerHTML = `
-                <div style="width: 50px; height: 50px; background: rgba(60,60,60,0.8);
-                            border-radius: 10px; display: flex; align-items: center;
-                            justify-content: center; font-size: 24px; margin-bottom: 12px;">
-                    ${item.icon}
-                </div>
-                <h3 style="font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 6px;">
-                    ${item.title}
-                </h3>
-                <span style="font-size: 12px; color: #888; background: rgba(60,60,60,0.5);
-                             padding: 3px 10px; border-radius: 12px;">
-                    ${item.category.toUpperCase()}
-                </span>
-            `;
-            
-            grid.appendChild(card);
-        });
-    }
-    
-    selectionScreen.appendChild(header);
-    selectionScreen.appendChild(grid);
-    
-    const container = document.getElementById('iframe-container');
-    if (container) {
-        container.appendChild(selectionScreen);
-    }
-}
-
-function hideSelectionScreen() {
-    const selectionScreen = document.getElementById('selection-screen');
-    if (selectionScreen) {
-        selectionScreen.style.display = 'none';
-    }
-    
-    const newTabBtn = document.getElementById('new-tab-btn');
-    if (newTabBtn) {
-        newTabBtn.style.background = 'none';
-        newTabBtn.style.border = 'none';
-    }
-}
-
-function createNewTab(url, title) {
-    isSelectingNewTab = false;
-    hideSelectionScreen();
-    
-    tabCounter++;
-    const tabId = `tab-${tabCounter}`;
-    
-    browserTabs.push({ id: tabId, url, title });
-    
-    const tab = document.createElement('div');
-    tab.className = 'browser-tab';
-    tab.dataset.tabId = tabId;
-    tab.style.cssText = `
-        background: rgba(25, 25, 25, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-bottom: none;
-        border-radius: 10px 10px 0 0;
-        padding: 6px 12px;
-        min-width: 120px;
-        max-width: 200px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: -1px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        flex-shrink: 0;
-    `;
-    
-    let icon = '🌐';
-    if (Array.isArray(allGames)) {
-        const game = allGames.find(g => g.title === title);
-        if (game && game.icon) icon = game.icon;
-    }
-    if (typeof allWebsites !== 'undefined' && Array.isArray(allWebsites)) {
-        const website = allWebsites.find(w => w.title === title);
-        if (website && website.icon) icon = website.icon;
-    }
-    
-    const iconSpan = document.createElement('span');
-    iconSpan.style.cssText = 'font-size: 14px; flex-shrink: 0;';
-    iconSpan.textContent = icon;
-    
-    const titleSpan = document.createElement('span');
-    titleSpan.style.cssText = `
-        flex: 1;
-        font-size: 12px;
-        color: rgba(255,255,255,0.9);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    `;
-    titleSpan.textContent = title;
-    
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '×';
-    closeBtn.style.cssText = `
-        background: none;
-        border: none;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        color: rgba(255,255,255,0.6);
-        transition: all 0.2s;
-        flex-shrink: 0;
-        margin-left: auto;
-    `;
-    
-    closeBtn.addEventListener('mouseenter', function() {
-        this.style.background = 'rgba(255,255,255,0.1)';
-        this.style.color = '#ff6b6b';
-    });
-    
-    closeBtn.addEventListener('mouseleave', function() {
-        this.style.background = 'none';
-        this.style.color = 'rgba(255,255,255,0.6)';
-    });
-    
-    closeBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        closeTab(tabId);
-    });
-    
-    tab.appendChild(iconSpan);
-    tab.appendChild(titleSpan);
-    tab.appendChild(closeBtn);
-    
-    tab.addEventListener('click', function() {
-        switchToTab(tabId);
-    });
-    
-    const tabBar = document.getElementById('tab-bar');
-    const newTabBtn = document.getElementById('new-tab-btn');
-    
-    if (tabBar && newTabBtn) {
-        tabBar.insertBefore(tab, newTabBtn);
-    }
-    
-    const iframe = document.createElement('iframe');
-    iframe.id = `iframe-${tabId}`;
-    iframe.src = url;
-    iframe.title = title;
-    iframe.style.cssText = `
-        width: 100%;
-        height: 100%;
-        border: none;
-        background: #000;
-        border-radius: 0 0 12px 12px;
-        display: none;
-        position: absolute;
-        top: 0;
-        left: 0;
-    `;
-    
-    const container = document.getElementById('iframe-container');
-    if (container) {
-        container.appendChild(iframe);
-    }
-    
-    switchToTab(tabId);
-}
-
-function switchToTab(tabId) {
-    activeTabId = tabId;
-    isSelectingNewTab = false;
-    hideSelectionScreen();
-    
-    const newTabBtn = document.getElementById('new-tab-btn');
-    if (newTabBtn) {
-        newTabBtn.style.background = 'none';
-        newTabBtn.style.border = 'none';
-    }
-    
-    const allTabs = document.querySelectorAll('.browser-tab');
-    allTabs.forEach(tab => {
-        if (tab.dataset.tabId === tabId) {
-            tab.style.background = 'rgba(25, 25, 25, 0.95)';
-            tab.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-        } else {
-            tab.style.background = 'rgba(50, 50, 50, 0.7)';
-            tab.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-        }
-    });
-    
-    const allIframes = document.querySelectorAll('#iframe-container iframe');
-    allIframes.forEach(iframe => {
-        if (iframe.id === `iframe-${tabId}`) {
-            iframe.style.display = 'block';
-        } else {
-            iframe.style.display = 'none';
-        }
-    });
-    
-    const tabData = browserTabs.find(t => t.id === tabId);
-    const urlText = document.getElementById('url-text');
-    if (tabData && urlText) {
-        urlText.textContent = tabData.url;
-    }
-}
-
-function closeTab(tabId) {
-    browserTabs = browserTabs.filter(t => t.id !== tabId);
-    
-    const tab = document.querySelector(`[data-tab-id="${tabId}"]`);
-    if (tab) tab.remove();
-    
-    const iframe = document.getElementById(`iframe-${tabId}`);
-    if (iframe) iframe.remove();
-    
-    if (activeTabId === tabId) {
-        if (browserTabs.length > 0) {
-            switchToTab(browserTabs[browserTabs.length - 1].id);
-        } else {
-            closeBrowser();
-        }
-    }
-}
-
-function closeBrowser() {
-    const overlay = document.getElementById('game-iframe-overlay');
-    const browserWindow = document.getElementById('browser-window');
-    
-    if (browserWindow) browserWindow.style.transform = 'scale(0.8)';
-    if (overlay) overlay.style.opacity = '0';
-    
-    setTimeout(() => {
-        if (overlay) overlay.remove();
-        document.body.style.overflow = 'auto';
-        browserTabs = [];
-        activeTabId = null;
-        tabCounter = 0;
-        isSelectingNewTab = false;
-    }, 300);
-    
-    if (window.starManager) {
-       window.starManager.init();
-       console.log('Rendering Stars');
-   }
-   
-}
-
-function createNavButtons() {
-    const nav = document.createElement('div');
-    nav.style.cssText = 'display: flex; gap: 4px;';
-    
-    const icons = ['←', '→', '↻'];
-    icons.forEach((icon, i) => {
-        const btn = document.createElement('button');
-        btn.innerHTML = icon;
-        btn.style.cssText = `
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: none;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            color: rgba(255,255,255,0.8);
-            transition: all 0.2s;
-        `;
-        
-        btn.addEventListener('mouseenter', function() {
-            this.style.background = 'rgba(255,255,255,0.1)';
-            this.style.color = '#fff';
-        });
-        
-        btn.addEventListener('mouseleave', function() {
-            this.style.background = 'none';
-            this.style.color = 'rgba(255,255,255,0.8)';
-        });
-        
-        if (i === 2) {
-            btn.addEventListener('click', function() {
-                const iframe = document.getElementById(`iframe-${activeTabId}`);
-                if (iframe) {
-                    this.style.transform = 'rotate(360deg)';
-                    iframe.src = iframe.src;
-                    setTimeout(() => {
-                        this.style.transform = '';
-                    }, 600);
-                }
-            });
-        }
-        
-        nav.appendChild(btn);
-    });
-    
-    return nav;
-}
-
-function createAddressBar() {
-    const bar = document.createElement('div');
-    bar.style.cssText = `
-        flex: 1;
-        background: rgba(55,55,55,0.8);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 24px;
-        padding: 8px 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    `;
-    
-    const lockIcon = document.createElement('span');
-    lockIcon.style.cssText = 'font-size: 12px; opacity: 0.7;';
-    lockIcon.textContent = '🔒';
-    
-    const urlText = document.createElement('span');
-    urlText.id = 'url-text';
-    urlText.style.cssText = `
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 14px;
-        color: rgba(255,255,255,0.9);
-    `;
-    urlText.textContent = '';
-    
-    bar.appendChild(lockIcon);
-    bar.appendChild(urlText);
-    
-    return bar;
-}
-
 function loadFavorites() {
     try {
+        // First load from localStorage (instant, no waiting)
         const saved = localStorage.getItem('vaultFavorites');
         favorites = saved ? JSON.parse(saved) : [];
+        
+        // Update UI immediately with localStorage data
+        updateFavoritesBadge();
+        
+        // Then sync with cloud in the background (non-blocking)
+        setTimeout(() => {
+            syncFavoritesFromCloud();
+        }, 1000); // Wait 1 second before checking cloud
+        
     } catch (error) {
         console.error('Error loading favorites:', error);
         favorites = [];
     }
 }
 
+// New function: Load from cloud without blocking
+function syncFavoritesFromCloud() {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    database.ref('users/' + user.uid + '/favorites').once('value')
+        .then((snapshot) => {
+            const cloudFavorites = snapshot.val();
+            if (cloudFavorites && cloudFavorites.length > 0) {
+                favorites = cloudFavorites;
+                localStorage.setItem('vaultFavorites', JSON.stringify(favorites));
+                
+                // Update UI after cloud sync
+                updateFavoritesBadge();
+                if (typeof updateCardStars === 'function') {
+                    updateCardStars();
+                } else if (typeof updateGameCardStars === 'function') {
+                    updateGameCardStars();
+                }
+                
+                console.log('Favorites synced from cloud:', favorites.length);
+            }
+        })
+        .catch((error) => {
+            console.error('Error syncing from cloud:', error);
+        });
+}
+
+
+let syncTimeout = null;
+
 function saveFavorites() {
     try {
+        // Save to localStorage immediately (fast)
         localStorage.setItem('vaultFavorites', JSON.stringify(favorites));
+        
+        // Debounce Firebase sync (wait 1 second after last change)
+        const user = auth.currentUser;
+        if (user) {
+            if (syncTimeout) clearTimeout(syncTimeout);
+            
+            syncTimeout = setTimeout(() => {
+                database.ref('users/' + user.uid + '/favorites').set(favorites)
+                    .then(() => console.log('Favorites synced to cloud'))
+                    .catch((error) => console.error('Sync error:', error));
+            }, 1000); // Only sync after user stops clicking for 1 second
+        }
     } catch (error) {
         console.error('Error saving favorites:', error);
     }
 }
+
+
 
 function addToFavorites(item) {
     const exists = favorites.some(fav => fav.title === item.title);
@@ -1162,7 +650,7 @@ function renderFavorites() {
             
             if (favorite && favorite.url) {
                 document.getElementById('favorites-popup')?.remove();
-                openGameIframe(favorite.url, favorite.title);
+                openIframe(favorite.url, favorite.title);
             } else {
                 console.error("No usable URL for favorite:", favorite);
             }
@@ -1325,3 +813,103 @@ document.addEventListener('DOMContentLoaded', function() {
         cardObserver.observe(gamesGrid, { childList: true, subtree: true });
     }
 });
+
+// Save playtime when user leaves or closes tab
+window.addEventListener('beforeunload', function() {
+    stopPlaytimeTracking();
+});
+
+// Track when user switches away from tab (stop counting)
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        // User switched away - pause tracking
+        if (playtimeTracker.intervalId) {
+            clearInterval(playtimeTracker.intervalId);
+            playtimeTracker.intervalId = null;
+        }
+        savePlaytimeToFirebase();
+    } else {
+        // User came back - resume tracking
+        if (playtimeTracker.currentGame && !playtimeTracker.intervalId) {
+            playtimeTracker.startTime = Date.now();
+            playtimeTracker.intervalId = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - playtimeTracker.startTime) / 1000);
+                playtimeTracker.totalSeconds = elapsed;
+                savePlaytimeToFirebase();
+            }, 30000);
+        }
+    }
+});
+
+
+// ===== TESTING - View playtime in console =====
+// Add this function to test and view playtime data
+
+function viewPlaytime(range = 'week') {
+    const user = auth.currentUser;
+    if (!user) {
+        console.log('❌ Not logged in');
+        return;
+    }
+    
+    let path = 'total'; // default
+    
+    if (range === 'today') {
+        const today = new Date().toISOString().split('T')[0];
+        path = `daily/${today}`;
+    } else if (range === 'week') {
+        path = 'daily';
+    } else if (range === 'month') {
+        path = 'weekly';
+    } else if (range === 'year') {
+        path = 'monthly';
+    } else if (range === 'all') {
+        path = 'total';
+    }
+    
+    database.ref(`users/${user.uid}/playtime/${path}`).once('value')
+        .then((snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                console.log(`📊 No playtime data for: ${range}`);
+                return;
+            }
+            
+            console.log(`\n=== PLAYTIME (${range.toUpperCase()}) ===`);
+            
+            // If viewing a time range (daily/weekly/monthly)
+            if (path !== 'total') {
+                let allGames = {};
+                
+                // Aggregate all games across all dates/weeks/months
+                for (const period in data) {
+                    for (const game in data[period]) {
+                        allGames[game] = (allGames[game] || 0) + data[period][game];
+                    }
+                }
+                
+                // Sort and display
+                const sorted = Object.entries(allGames).sort((a, b) => b[1] - a[1]);
+                sorted.forEach(([game, seconds]) => {
+                    console.log(`${game}: ${formatPlaytime(seconds)}`);
+                });
+                
+                const totalSeconds = Object.values(allGames).reduce((a, b) => a + b, 0);
+                console.log(`\n⏱️  Total: ${formatPlaytime(totalSeconds)}`);
+            } else {
+                // Viewing lifetime totals
+                const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+                sorted.forEach(([game, seconds]) => {
+                    console.log(`${game}: ${formatPlaytime(seconds)}`);
+                });
+                
+                const totalSeconds = Object.values(data).reduce((a, b) => a + b, 0);
+                console.log(`\n⏱️  Total: ${formatPlaytime(totalSeconds)}`);
+            }
+            
+            console.log('\n💡 Try: viewPlaytime("today"), viewPlaytime("week"), viewPlaytime("month"), viewPlaytime("all")');
+        })
+        .catch((error) => {
+            console.error('Error loading playtime:', error);
+        });
+}
