@@ -1,6 +1,3 @@
-
-
-// ===== FIX 1: Update FirebaseConfig.js =====
 // Prevent multiple initializations and add error handling
 
 (function() {
