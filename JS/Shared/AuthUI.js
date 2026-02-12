@@ -1,80 +1,33 @@
+// AuthUI.js - Simple version that just adds account button
 (function() {
-    function setupNavigation() {
-        const navItems = document.querySelectorAll('.nav-item');
+    function addAccountButton() {
+        const navBar = document.querySelector('.nav-bar');
+        if (!navBar || document.getElementById('auth-nav-item')) return;
         
-        navItems.forEach(item => {
-            item.addEventListener('click', function() {
-                const label = this.querySelector('.nav-label').textContent.trim();
-                
-                console.log('Navigation clicked:', label);
-                
-                switch(label) {
-                    case 'Home':
-                        window.location.href = 'index.html'; 
-                        break;
-                    case 'Games':
-                        window.location.href = 'games.html';
-                        break;
-                    case 'Websites':
-                        window.location.href = 'websites.html';
-                        break;
-                    case 'Credits':
-                        window.location.href = 'credits.html';
-                        break;
-                    case 'Account':
-                    case 'Sign In':
-                        window.location.href = 'Account.html';
-                        break;
-                    case 'Fullscreen':
-                        toggleFullScreen();
-                        break;
-                    default:
-                        // Check if it's a username (starts with @)
-                        if (label.startsWith('@')) {
-                            window.location.href = 'account.html';
-                        }
-                        break;
-                }
-            });
+        const btn = document.createElement('div');
+        btn.id = 'auth-nav-item';
+        btn.className = 'nav-item';
+        btn.style.cursor = 'pointer';
+        btn.innerHTML = `
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span class="nav-label">Account</span>
+        `;
+        
+        // Click goes to account page
+        btn.addEventListener('click', () => {
+            window.location.href = 'account.html';
         });
-    }
-
-    function toggleFullScreen() {
-        if (!document.fullscreenElement) {
-            // Enter fullscreen
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            } else if (document.documentElement.mozRequestFullScreen) {
-                document.documentElement.mozRequestFullScreen();
-            } else if (document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen();
-            } else if (document.documentElement.msRequestFullscreen) {
-                document.documentElement.msRequestFullscreen();
-            }
-        } else {
-            // Exit fullscreen
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-        }
+        
+        const fs = document.getElementById('fullscreen-btn');
+        fs ? navBar.insertBefore(btn, fs) : navBar.appendChild(btn);
     }
     
-    // Auto-initialize navigation when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupNavigation);
+        document.addEventListener('DOMContentLoaded', addAccountButton);
     } else {
-        setupNavigation();
+        addAccountButton();
     }
-
-    window.navigation = {
-        toggleFullScreen: toggleFullScreen,
-        setup: setupNavigation
-    }
-    
 })();

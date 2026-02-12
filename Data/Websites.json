@@ -1,11 +1,11 @@
 [
   {
-    "title": "GameOZero",
+    "title": "Void Network",
     "description": "Collection of flash games, HTML5 titles, and classic arcade games including puzzle, action, and strategy genres. Site displays frequent banner and popup advertisements throughout gameplay.",
     "category": "Games",
-    "rating": "★★☆☆☆",
+    "rating": "★★★★★",
     "icon": "🎮",
-    "url": "https://gameozero.com"
+    "url": "https://brainpop.work/"
   },
   {
     "title": "SpaceFlix",
@@ -16,12 +16,12 @@
     "url": "https://sf.tutoringservices.site/"
   },
   {
-    "title": "Phantom Games",
+    "title": "Velara",
     "description": "Browser games library with built-in tab disguising features that change page titles and favicons. Includes popular titles like Slope, 2048, and various .io games.",
     "category": "Games",
     "rating": "★★☆☆☆",
     "icon": "🎮",
-    "url": "https://phantom.delusionz.xyz"
+    "url": "https://velara.cc/"
   },
   {
     "title": "Frogies Arcade",
@@ -29,15 +29,15 @@
     "category": "Games",
     "rating": "★★★☆☆",
     "icon": "🎮",
-    "url": "https://full.boxathome.net"
+    "url": "https://oldmillschool.org/"
   },
   {
-    "title": "LunarSync",
-    "description": "Web proxy service bundled with 200+ HTML5 games, emulators for retro consoles, and browser-based tools for bypassing network restrictions.",
+    "title": "Endis",
+    "description": "A slow ass web browser.",
     "category": "Proxy",
     "rating": "★★★★☆",
     "icon": "🔒",
-    "url": "https://lunarsync.smartfoloo.space"
+    "url": "https://endis.rest/"
   },
   {
     "title": "FallGuy Games",
@@ -64,12 +64,12 @@
     "url": "https://subkeys.github.io/sayeo"
   },
   {
-    "title": "Plexile Arcade",
+    "title": "Afilite",
     "description": "Educational games mixed with entertainment titles, including math games, typing tests, and classic arcade games suitable for classroom use.",
     "category": "Games",
     "rating": "★★★☆☆",
     "icon": "🎮",
-    "url": "https://plexile-learning-cheddar.glitch.me/about.html"
+    "url": "https://afilite.app/"
   },
   {
     "title": "BCHS Unblocked",
@@ -112,12 +112,12 @@
     "url": "https://subwaysurfer.pages.dev/NewGames"
   },
   {
-    "title": "Luma",
+    "title": "Glacier Arcade",
     "description": "Curated selection of browser games including puzzle games, platformers, and arcade titles with consistent uptime and fast loading speeds.",
     "category": "Games",
     "rating": "★★★★☆",
     "icon": "🎮",
-    "url": "https://lumamain.com"
+    "url": "https://glacierarcade.win/"
   },
   {
     "title": "IO Games",
@@ -240,11 +240,27 @@
     "url": "https://compassnetwork.online"
   },
   {
-    "title": "Totally Science",
+    "title": "Game Hub",
     "description": "Play Tons of fun HTML5 and flash games by your self or with friends.",
     "category": "Games",
     "rating": "★★★☆☆",
     "icon": "🎮",
-    "url": null
+    "url": "https://sites.google.com/view/game-hub-unbl0cked/"
+  },
+  {
+    "title": "Quasar",
+    "description": "Play Tons of fun HTML5 and flash games by your self or with friends.",
+    "category": "Games",
+    "rating": "★★★☆☆",
+    "icon": "🎮",
+    "url": "https://qzqzqz.sghub.co.za/"
+  },
+  {
+    "title": "Jordans Math Homework",
+    "description": "Play Tons of fun HTML5 and flash games by your self or with friends.",
+    "category": "Games",
+    "rating": "★★★☆☆",
+    "icon": "🎮",
+    "url": "https://jmw-v5.pages.dev/"
   }
 ]

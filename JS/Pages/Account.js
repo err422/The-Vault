@@ -1,4 +1,6 @@
-// Account.js - Account Page Logic
+// Account.js - Enhanced Account Page Logic with Leaderboard & Charts
+const savedTheme = localStorage.getItem('vaultTheme') || 'default';
+document.body.classList.add(`theme-${savedTheme}`);
 
 (function() {
     const AccountPage = {
@@ -6,7 +8,7 @@
         currentUsername: null,
         
         init() {
-            console.log('🎨 Initializing Account Page...');
+            console.log('🎨 Initializing Enhanced Account Page...');
             this.checkAuthState();
         },
         
@@ -51,10 +53,9 @@
                 // Calculate stats
                 const stats = this.calculateStats(userData);
                 const achievements = this.calculateAchievements(userData, stats);
-                const recentActivity = this.getRecentActivity(userData);
                 
                 // Render account view
-                this.renderAccountView(stats, achievements, recentActivity);
+                await this.renderAccountView(stats, achievements, userData);
                 
             } catch (error) {
                 console.error('❌ Error loading user data:', error);
@@ -62,8 +63,12 @@
             }
         },
         
-        renderAccountView(stats, achievements, recentActivity) {
+        async renderAccountView(stats, achievements, userData) {
             const content = document.getElementById('account-content');
+            
+            // Generate the playtime chart and leaderboard HTML
+            const playtimeChartHTML = await this.renderPlaytimeChart(userData);
+            const leaderboardHTML = await this.renderLeaderboard(this.currentUser.uid);
             
             content.innerHTML = `
                 <!-- Profile Header -->
@@ -120,23 +125,21 @@
                     ` : ''}
                 </div>
                 
-                <!-- Recent Activity -->
-                ${recentActivity.length > 0 ? `
-                    <div class="section">
-                        <h3 class="section-title">
-                            <span>📊</span> Recent Activity
-                        </h3>
-                        ${recentActivity.map(day => `
-                            <div class="activity-item">
-                                <div class="activity-header">
-                                    <span class="activity-date">${day.date}</span>
-                                    <span class="activity-time">${day.time}</span>
-                                </div>
-                                <div class="activity-games">${day.gamesCount} game${day.gamesCount !== 1 ? 's' : ''} played</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
+                <!-- Playtime Chart - Last 7 Days -->
+                <div class="section">
+                    <h3 class="section-title">
+                        <span>📊</span> Last 7 Days
+                    </h3>
+                    ${playtimeChartHTML}
+                </div>
+                
+                <!-- Leaderboard -->
+                <div class="section">
+                    <h3 class="section-title">
+                        <span>🏆</span> Top Players
+                    </h3>
+                    ${leaderboardHTML}
+                </div>
                 
                 <!-- Achievements -->
                 <div class="section">
@@ -170,6 +173,319 @@
             this.attachEventListeners();
         },
         
+        async renderPlaytimeChart(userData) {
+            if (!userData.playtime || !userData.playtime.daily) {
+                return `
+                    <div style="text-align: center; padding: 60px 20px; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📊</div>
+                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #888;">No playtime data yet</div>
+                        <div style="font-size: 14px;">Start playing some games to see your activity here!</div>
+                    </div>
+                `;
+            }
+            
+            const days = [];
+            const dayLabels = [];
+            const playtimeData = [];
+            
+            // Get last 7 days
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                
+                days.push(dateStr);
+                dayLabels.push(dayName);
+                
+                let totalMinutes = 0;
+                if (userData.playtime.daily[dateStr]) {
+                    const seconds = Object.values(userData.playtime.daily[dateStr])
+                        .reduce((sum, s) => sum + Number(s), 0);
+                    totalMinutes = Math.floor(seconds / 60);
+                }
+                playtimeData.push(totalMinutes);
+            }
+            
+            const maxMinutes = Math.max(...playtimeData, 1);
+            
+            let html = `
+                <div style="
+                    background: rgba(0,0,0,0.3);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 12px;
+                    padding: 24px;
+                ">
+                    <div style="
+                        display: flex;
+                        align-items: flex-end;
+                        justify-content: space-around;
+                        height: 300px;
+                        gap: 12px;
+                        margin-bottom: 20px;
+                        padding: 40px 10px 0 10px;
+                    ">
+            `;
+            
+            playtimeData.forEach((minutes, index) => {
+                let heightPercent;
+                if (minutes === 0) {
+                    heightPercent = 0;
+                } else {
+                    // Calculate height so the tallest bar reaches ~95% of available space
+                    // This leaves room for the label above
+                    heightPercent = (minutes / maxMinutes) * 95;
+                }
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                
+                html += `
+                    <div style="
+                        flex: 1;
+                        max-width: 100px;
+                        height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: flex-end;
+                        position: relative;
+                    ">
+
+                        ${minutes > 0 ? `
+                            <div style="
+                                position: absolute;
+                                bottom: 100%;
+                                left: 50%;
+                                transform: translateX(-50%);
+                                margin-bottom: 8px;
+                                font-size: 12px;
+                                color: #667eea;
+                                white-space: nowrap;
+                                font-weight: 700;
+                                background: rgba(0,0,0,0.7);
+                                padding: 4px 8px;
+                                border-radius: 6px;
+                                border: 1px solid rgba(102, 126, 234, 0.3);
+                            ">${minutes}m</div>
+                        ` : ''}
+                        <div style="
+                            width: 100%;
+                            background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
+                            border-radius: 8px 8px 0 0;
+                            height: ${heightPercent}%;
+                            min-height: ${minutes > 0 ? '30px' : '0px'};
+                            position: relative;
+                            transition: all 0.3s ease;
+                            box-shadow: ${minutes > 0 ? '0 4px 20px rgba(102, 126, 234, 0.5), 0 0 40px rgba(102, 126, 234, 0.3)' : 'none'};
+                            opacity: ${minutes > 0 ? '1' : '0.15'};
+                        " title="${timeStr}"></div>
+                        <div style="
+                            font-size: 13px;
+                            color: ${minutes > 0 ? '#aaa' : '#666'};
+                            margin-top: 12px;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        ">${dayLabels[index]}</div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+            `;
+            
+            // Calculate total for the week
+            const totalMinutes = playtimeData.reduce((sum, m) => sum + m, 0);
+            const totalHours = Math.floor(totalMinutes / 60);
+            const totalMins = totalMinutes % 60;
+            const totalStr = totalHours > 0 ? `${totalHours}h ${totalMins}m` : `${totalMins}m`;
+            
+            html += `
+                    <div style="
+                        padding: 14px 20px;
+                        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+                        border: 1px solid rgba(102, 126, 234, 0.4);
+                        border-radius: 12px;
+                        text-align: center;
+                        font-size: 15px;
+                    ">
+                        <span style="color: #aaa; font-weight: 500;">Total this week:</span>
+                        <span style="color: #667eea; font-weight: 700; margin-left: 10px; font-size: 18px;">${totalStr}</span>
+                    </div>
+                </div>
+            `;
+            
+            return html;
+        },
+        
+        async renderLeaderboard(currentUserId) {
+            try {
+                const snapshot = await database.ref('users').once('value');
+                const users = snapshot.val();
+                
+                if (!users) {
+                    return `
+                        <div style="text-align: center; padding: 60px 20px; color: #666;">
+                            <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🏆</div>
+                            <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #888;">No players yet</div>
+                            <div style="font-size: 14px;">Be the first to play!</div>
+                        </div>
+                    `;
+                }
+                
+                // Build leaderboard
+                const leaderboard = Object.entries(users).map(([uid, userData]) => {
+                    let totalPlaytime = 0;
+                    if (userData.playtime && userData.playtime.total) {
+                        totalPlaytime = Object.values(userData.playtime.total).reduce((sum, seconds) => {
+                            const num = Number(seconds);
+                            return sum + (isNaN(num) ? 0 : num);
+                        }, 0);
+                    }
+                    return {
+                        uid,
+                        username: userData.username || 'Unknown',
+                        totalPlaytime
+                    };
+                }).sort((a, b) => b.totalPlaytime - a.totalPlaytime).slice(0, 5);
+                
+                if (leaderboard.every(user => user.totalPlaytime === 0)) {
+                    return `
+                        <div style="text-align: center; padding: 60px 20px; color: #666;">
+                            <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🎮</div>
+                            <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #888;">No playtime recorded yet</div>
+                            <div style="font-size: 14px;">Start playing some games!</div>
+                        </div>
+                    `;
+                }
+                
+                let html = '<div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">';
+                
+                leaderboard.forEach((user, index) => {
+                    const isCurrentUser = user.uid === currentUserId;
+                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+                    const hours = Math.floor(user.totalPlaytime / 3600);
+                    const minutes = Math.floor((user.totalPlaytime % 3600) / 60);
+                    const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                    
+                    const bgColor = isCurrentUser 
+                        ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2))' 
+                        : index < 3 
+                            ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15))' 
+                            : 'rgba(255,255,255,0.05)';
+                    
+                    const borderColor = isCurrentUser 
+                        ? 'rgba(102, 126, 234, 0.5)' 
+                        : index < 3 
+                            ? 'rgba(251, 191, 36, 0.3)' 
+                            : 'rgba(255,255,255,0.1)';
+                    
+                    html += `
+                        <div style="
+                            background: ${bgColor};
+                            border: 1px solid ${borderColor};
+                            border-radius: 10px;
+                            padding: 14px 16px;
+                            margin-bottom: 10px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            transition: all 0.2s ease;
+                            ${isCurrentUser ? 'box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);' : ''}
+                        ">
+                            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                                <span style="font-size: 24px; flex-shrink: 0;">${medal}</span>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="
+                                        font-weight: 700;
+                                        font-size: 16px;
+                                        color: ${isCurrentUser ? '#667eea' : '#fff'};
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                        white-space: nowrap;
+                                    ">
+                                        @${user.username}${isCurrentUser ? ' (You)' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="
+                                font-size: 15px;
+                                font-weight: 700;
+                                color: ${index < 3 ? '#fbbf24' : '#888'};
+                                flex-shrink: 0;
+                                margin-left: 12px;
+                            ">
+                                ${timeStr}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                // Check if current user is in top 5
+                const currentUserInTop5 = leaderboard.some(u => u.uid === currentUserId);
+                
+                if (!currentUserInTop5) {
+                    // Get all users and find current user's rank
+                    const allUsers = Object.entries(users).map(([uid, userData]) => {
+                        let totalPlaytime = 0;
+                        if (userData.playtime && userData.playtime.total) {
+                            totalPlaytime = Object.values(userData.playtime.total)
+                                .reduce((sum, seconds) => sum + Number(seconds), 0);
+                        }
+                        return { uid, username: userData.username, totalPlaytime };
+                    }).sort((a, b) => b.totalPlaytime - a.totalPlaytime);
+                    
+                    const currentUserRank = allUsers.findIndex(u => u.uid === currentUserId) + 1;
+                    const currentUserData = allUsers.find(u => u.uid === currentUserId);
+                    
+                    if (currentUserData && currentUserData.totalPlaytime > 0) {
+                        const hours = Math.floor(currentUserData.totalPlaytime / 3600);
+                        const minutes = Math.floor((currentUserData.totalPlaytime % 3600) / 60);
+                        const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                        
+                        html += `
+                            <div style="
+                                margin-top: 16px;
+                                padding: 14px 16px;
+                                background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+                                border: 1px solid rgba(102, 126, 234, 0.5);
+                                border-radius: 10px;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+                            ">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="font-size: 20px;">#{currentUserRank}</span>
+                                    <div style="font-weight: 700; font-size: 16px; color: #667eea;">
+                                        @${currentUserData.username} (You)
+                                    </div>
+                                </div>
+                                <div style="font-size: 15px; font-weight: 700; color: #667eea;">
+                                    ${timeStr}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                html += '</div>';
+                
+                return html;
+                
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+                return `
+                    <div style="text-align: center; padding: 40px 20px; color: #ef4444;">
+                        <div style="font-size: 40px; margin-bottom: 12px;">😕</div>
+                        <div style="font-size: 14px;">Error loading leaderboard</div>
+                    </div>
+                `;
+            }
+        },
+        
         attachEventListeners() {
             const changeBtn = document.getElementById('change-username-btn');
             const signOutBtn = document.getElementById('sign-out-btn');
@@ -198,6 +514,13 @@
                     <div class="auth-header">
                         <h2 class="auth-title">Change Username</h2>
                         <p class="auth-subtitle">Choose a new username for your account</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Current Username</label>
+                        <div style="padding: 16px; background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 12px; color: #667eea; font-weight: 600;">
+                            @${this.currentUsername}
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -283,6 +606,18 @@
                     </div>
                     
                     <!-- Sign Up Form -->
+                    <div class="form-group tos-group">
+                        <label style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#aaa;cursor:pointer;">
+                            <input type="checkbox" id="signup-tos" style="margin-top:4px;">
+                            <span>
+                                I agree to the 
+                                <a href="tos.html" target="_blank" style="color:#667eea;text-decoration:underline;">
+                                    Terms of Service
+                                </a>
+                            </span>
+                        </label>
+                    </div>
+
                     <div id="signup-form" style="display: none;">
                         <div class="form-group">
                             <label class="form-label">Username</label>
@@ -365,8 +700,14 @@
             const username = document.getElementById('signup-username').value.trim();
             const email = document.getElementById('signup-email').value.trim();
             const password = document.getElementById('signup-password').value;
+            const tosChecked = document.getElementById('signup-tos')?.checked;
             const errorDiv = document.getElementById('signup-error');
             const btn = document.getElementById('signup-btn');
+            
+            if (!tosChecked) {
+                errorDiv.textContent = 'You must agree to the Terms of Service.';
+                return;
+            }
             
             errorDiv.textContent = '';
             btn.textContent = 'Creating account...';
@@ -383,8 +724,8 @@
         
         calculateStats(userData) {
             function xpRequiredForLevel(level) {
-                const baseXP = 1800; // 30 minutes in seconds
-                const growthRate = 1.5; // 50% harder each level
+                const baseXP = 1800;
+                const growthRate = 1.5;
                 return Math.floor(baseXP * Math.pow(growthRate, level - 1));
             }
             
@@ -414,24 +755,17 @@
                 });
             }
             
-            // Calculate level
             let level = 1;
-            
             while (totalPlaytime >= totalXpForLevel(level + 1)) {
                 level++;
             }
             
-            // Calculate XP progress to next level
             const currentLevelXP = totalXpForLevel(level);
             const nextLevelXP = totalXpForLevel(level + 1);
-            
             const progressXP = Math.max(0, totalPlaytime - currentLevelXP);
             const neededXP = Math.max(1, nextLevelXP - currentLevelXP);
-            
             const xpProgress = Math.min((progressXP / neededXP) * 100, 100);
-
             
-            // Determine title
             let title = 'Newcomer';
             if (level >= 50) title = 'Discord Mod';
             else if (level >= 30) title = 'Master';
@@ -439,7 +773,6 @@
             else if (level >= 10) title = 'Veteran';
             else if (level >= 5) title = 'Regular';
             
-            // Format playtime
             const hours = Math.floor(totalPlaytime / 3600);
             const minutes = Math.floor((totalPlaytime % 3600) / 60);
             const totalPlaytimeFormatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
@@ -500,11 +833,11 @@
                     unlocked: stats.level >= 10
                 },
                 {
-                  id: 'no life',
-                  name: 'No Life',
-                  description: 'Reach level 50',
-                  icon: '💀',
-                  unlocked: stats.level >= 50
+                    id: 'no_life',
+                    name: 'No Life',
+                    description: 'Reach level 50',
+                    icon: '💀',
+                    unlocked: stats.level >= 50
                 },
                 {
                     id: 'favorites',
@@ -529,42 +862,6 @@
             };
         },
         
-        getRecentActivity(userData) {
-            if (!userData.playtime || !userData.playtime.daily) {
-                return [];
-            }
-            
-            const days = [];
-            for (let i = 0; i < 7; i++) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                days.push(date.toISOString().split('T')[0]);
-            }
-            
-            return days.map(date => {
-                if (!userData.playtime.daily[date]) return null;
-                
-                const games = userData.playtime.daily[date];
-                const totalSeconds = Object.values(games).reduce((sum, s) => sum + Number(s), 0);
-                const hours = Math.floor(totalSeconds / 3600);
-                const minutes = Math.floor((totalSeconds % 3600) / 60);
-                const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-                
-                const dateObj = new Date(date);
-                const dateStr = dateObj.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric'
-                });
-                
-                return {
-                    date: dateStr,
-                    time: timeStr,
-                    gamesCount: Object.keys(games).length
-                };
-            }).filter(Boolean);
-        },
-        
         renderError(message) {
             const content = document.getElementById('account-content');
             content.innerHTML = `
@@ -587,5 +884,8 @@
         AccountPage.init();
     }
     
-    console.log('✅ Account.js loaded');
+    console.log('✅ Enhanced Account.js loaded with Leaderboard & Charts');
+    
+    window.AccountPage = AccountPage;
+
 })();

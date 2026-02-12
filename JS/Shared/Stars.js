@@ -80,35 +80,27 @@
             shootingStarInterval = null;
         }
     }
-
-    // Initialize stars
     function initStars() {
         if (starsActive) return;
         
         starsActive = true;
         stars = [];
         
-        // Create stars - 50% static, 50% twinkling
         for (let i = 0; i < 300; i++) {
             const isStatic = Math.random() < 0.5;
             stars.push(createStar(isStatic));
         }
         
-        // Show stars with fade-in
         setTimeout(() => {
             stars.forEach(star => {
                 star.classList.add('visible');
                 star.style.opacity = star.classList.contains('static') ? '0.7' : '0.8';
             });
         }, 100);
-        
-        // Start shooting stars after delay
         setTimeout(() => {
             startShootingStars();
         }, 1000);
     }
-
-    // Remove all stars
     function removeStars() {
         if (!starsActive) return;
         

@@ -94,4 +94,3 @@ body{font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sa
 .achievements-grid{grid-template-columns:repeat(2,1fr)}
 .action-buttons{flex-direction:column}
 .nav-bar{left:1rem;right:1rem;width:auto}
-}

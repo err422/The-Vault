@@ -1,4 +1,4 @@
-////Bell Schedule extention\\\\
+////Bell Schedule extension with Notifications\\\\
 
 const bellSchedules = {
     monday: [
@@ -39,6 +39,22 @@ const bellSchedules = {
         { name: "Block 8", start: "14:05", end: "15:35" }
     ]
 };
+
+// Notification settings - customize these!
+const notificationSettings = {
+    enabled: true,
+    soundEnabled: true,
+    reminders: [
+        { minutesBefore: 5, message: "5 minutes left in class!" },
+        { minutesBefore: 1, message: "1 minute left - start packing up!" },
+        { minutesBefore: 0, message: "Class is ending now!" }
+    ],
+    passingPeriodReminder: true, // Show when passing period starts
+    nextClassReminder: true // Show when next class is about to start
+};
+
+// Track which notifications have been shown
+let shownNotifications = new Set();
 
 function getScheduleForDay(date) {
     const day = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -141,14 +157,213 @@ function getCurrentPeriod() {
     };
 }
 
+// NOTIFICATION SYSTEM
+function showNotification(title, message, type = 'info') {
+    const browserWindow = document.getElementById('browser-window');
+    if (!browserWindow) return;
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'bell-notification';
+    
+    // Different styles based on type
+    const styles = {
+        info: { bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', icon: 'ℹ️' },
+        warning: { bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', icon: '⚠️' },
+        success: { bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', icon: '✓' },
+        urgent: { bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', icon: '🔔' }
+    };
+    
+    const style = styles[type] || styles.info;
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 320px;
+        background: ${style.bg};
+        color: white;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        z-index: 999999;
+        animation: slideInRight 0.4s ease, fadeOut 0.3s ease 4.7s;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        pointer-events: all;
+    `;
+    
+    notification.innerHTML = `
+        <div style="font-size: 24px; flex-shrink: 0;">${style.icon}</div>
+        <div style="flex: 1;">
+            <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">${title}</div>
+            <div style="font-size: 14px; opacity: 0.95;">${message}</div>
+        </div>
+        <button class="close-notification" style="background: none; border: none; color: white; 
+                font-size: 20px; cursor: pointer; padding: 0; width: 24px; height: 24px;
+                display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+                opacity: 0.7; transition: opacity 0.2s;">×</button>
+    `;
+    
+    // Add animation styles if not already present
+    if (!document.getElementById('notification-animations')) {
+        const style = document.createElement('style');
+        style.id = 'notification-animations';
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes fadeOut {
+                to { opacity: 0; transform: translateX(400px); }
+            }
+            .close-notification:hover {
+                opacity: 1 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    browserWindow.appendChild(notification);
+    
+    // Play sound if enabled
+    if (notificationSettings.soundEnabled) {
+        playNotificationSound();
+    }
+    
+    // Close button functionality
+    const closeBtn = notification.querySelector('.close-notification');
+    closeBtn.addEventListener('click', () => {
+        notification.remove();
+    });
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+function playNotificationSound() {
+    // Create a simple beep sound using Web Audio API
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (e) {
+        console.log('Could not play notification sound:', e);
+    }
+}
+
+function checkAndShowNotifications() {
+    if (!notificationSettings.enabled) return;
+    
+    const info = getCurrentPeriod();
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    // Create a unique key for this minute to avoid duplicate notifications
+    const timeKey = `${now.getHours()}:${now.getMinutes()}`;
+    
+    // Reset shown notifications at the start of each new minute
+    if (!window.lastNotificationMinute || window.lastNotificationMinute !== timeKey) {
+        shownNotifications.clear();
+        window.lastNotificationMinute = timeKey;
+    }
+    
+    // Check for class ending reminders
+    if (info.type === 'in-period') {
+        notificationSettings.reminders.forEach(reminder => {
+            if (info.minutesLeft === reminder.minutesBefore) {
+                const notifKey = `${info.period.name}-${reminder.minutesBefore}`;
+                if (!shownNotifications.has(notifKey)) {
+                    const notifType = reminder.minutesBefore <= 1 ? 'warning' : 'info';
+                    showNotification(
+                        info.period.name,
+                        reminder.message,
+                        notifType
+                    );
+                    shownNotifications.add(notifKey);
+                }
+            }
+        });
+    }
+    
+    // Check for overlapping periods
+    if (info.type === 'overlapping-periods') {
+        notificationSettings.reminders.forEach(reminder => {
+            // Check both periods
+            if (info.minutesLeft1 === reminder.minutesBefore) {
+                const notifKey = `${info.period1.name}-${reminder.minutesBefore}`;
+                if (!shownNotifications.has(notifKey)) {
+                    showNotification(
+                        info.period1.name,
+                        reminder.message,
+                        'info'
+                    );
+                    shownNotifications.add(notifKey);
+                }
+            }
+            if (info.minutesLeft2 === reminder.minutesBefore) {
+                const notifKey = `${info.period2.name}-${reminder.minutesBefore}`;
+                if (!shownNotifications.has(notifKey)) {
+                    showNotification(
+                        info.period2.name,
+                        reminder.message,
+                        'info'
+                    );
+                    shownNotifications.add(notifKey);
+                }
+            }
+        });
+    }
+    
+    // Passing period notification
+    if (info.type === 'passing' && notificationSettings.passingPeriodReminder) {
+        const notifKey = `passing-${info.nextPeriod.name}`;
+        if (!shownNotifications.has(notifKey)) {
+            showNotification(
+                'Passing Period',
+                `Next: ${info.nextPeriod.name} in ${info.minutesUntilNext} minutes`,
+                'success'
+            );
+            shownNotifications.add(notifKey);
+        }
+    }
+    
+    // Next class starting soon
+    if (info.type === 'passing' && info.minutesUntilNext === 2 && notificationSettings.nextClassReminder) {
+        const notifKey = `next-class-${info.nextPeriod.name}`;
+        if (!shownNotifications.has(notifKey)) {
+            showNotification(
+                'Heads Up!',
+                `${info.nextPeriod.name} starts in 2 minutes`,
+                'urgent'
+            );
+            shownNotifications.add(notifKey);
+        }
+    }
+}
+
 function createBellScheduleWidget() {
-    // We'll add the bell icon to the browser toolbar instead of the page
-    // This function will be called when the browser window is created
     console.log('Bell schedule widget initialized - will appear in browser toolbar');
 }
 
 function addBellIconToToolbar() {
-    // Find the toolbar
     const toolbar = document.getElementById('toolbar');
     if (!toolbar) {
         console.log('Toolbar not found');
@@ -192,7 +407,6 @@ function addBellIconToToolbar() {
         toggleBellSchedulePopup();
     });
     
-    // Insert bell button right after the address bar
     const addressBar = toolbar.querySelector('div')?.nextElementSibling;
     if (addressBar) {
         toolbar.insertBefore(bellButton, addressBar.nextSibling);
@@ -203,7 +417,10 @@ function addBellIconToToolbar() {
     console.log('Bell icon added to toolbar');
     
     // Update every second
-    setInterval(updateBellSchedule, 1000);
+    setInterval(() => {
+        updateBellSchedule();
+        checkAndShowNotifications();
+    }, 1000);
 }
 
 function toggleBellSchedulePopup() {
@@ -216,17 +433,15 @@ function toggleBellSchedulePopup() {
     
     const info = getCurrentPeriod();
     
-    // Determine background color based on schedule type
     const scheduleBackgrounds = {
-        monday: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)', // Dark blue
-        orange: 'linear-gradient(135deg, #c2410c 0%, #ea580c 100%)', // Orange
-        blue: 'linear-gradient(135deg, #1e40af 0%, #2563eb 100%)', // Blue
-        weekend: 'linear-gradient(135deg, #374151 0%, #4b5563 100%)' // Gray
+        monday: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)',
+        orange: 'linear-gradient(135deg, #c2410c 0%, #ea580c 100%)',
+        blue: 'linear-gradient(135deg, #1e40af 0%, #2563eb 100%)',
+        weekend: 'linear-gradient(135deg, #374151 0%, #4b5563 100%)'
     };
     
     const bgColor = scheduleBackgrounds[info.scheduleType] || scheduleBackgrounds.weekend;
     
-    // Get the bell button position to position popup relative to it
     const bellButton = document.getElementById('bell-schedule-toolbar-btn');
     const browserWindow = document.getElementById('browser-window');
     
@@ -235,7 +450,6 @@ function toggleBellSchedulePopup() {
         return;
     }
     
-    // Create popup
     popup = document.createElement('div');
     popup.id = 'bell-schedule-popup';
     popup.style.cssText = `
@@ -272,9 +486,19 @@ function toggleBellSchedulePopup() {
                     border-radius: 6px; display: flex; align-items: center; justify-content: center;
                     transition: all 0.2s ease;">×</button>
             
-            <h2 style="color: white; margin: 0 0 24px 0; font-size: 24px; font-weight: 700; text-align: center;">
+            <h2 style="color: white; margin: 0 0 16px 0; font-size: 24px; font-weight: 700; text-align: center;">
                 ${getScheduleTitle(info.scheduleType)}
             </h2>
+            
+            <div style="text-align: center; margin-bottom: 16px;">
+                <label style="display: flex; align-items: center; justify-content: center; gap: 8px; 
+                              color: white; font-size: 14px; cursor: pointer;">
+                    <input type="checkbox" id="notification-toggle" 
+                           ${notificationSettings.enabled ? 'checked' : ''}
+                           style="width: 18px; height: 18px; cursor: pointer;">
+                    <span>Enable Notifications</span>
+                </label>
+            </div>
             
             <div id="bell-schedule-content" style="color: white;"></div>
         </div>
@@ -284,10 +508,18 @@ function toggleBellSchedulePopup() {
         </div>
     `;
     
-    // Append to browser window instead of body
     browserWindow.appendChild(popup);
     
     console.log('Bell schedule popup created and appended');
+    
+    // Notification toggle
+    const notifToggle = document.getElementById('notification-toggle');
+    notifToggle.addEventListener('change', (e) => {
+        notificationSettings.enabled = e.target.checked;
+        if (e.target.checked) {
+            showNotification('Notifications Enabled', 'You\'ll receive class reminders', 'success');
+        }
+    });
     
     const closeBtn = document.getElementById('close-bell-popup');
     closeBtn.addEventListener('mouseenter', function() {
@@ -300,7 +532,6 @@ function toggleBellSchedulePopup() {
         popup.remove();
     });
     
-    // Close when clicking outside
     document.addEventListener('click', function closeOutside(e) {
         if (!popup.contains(e.target) && e.target.id !== 'bell-schedule-btn') {
             popup.remove();
@@ -317,7 +548,6 @@ function updateBellSchedule() {
     
     const info = getCurrentPeriod();
     
-    // Save scroll position before updating
     const scheduleList = document.getElementById('bell-schedule-list');
     const scrollPos = scheduleList ? scheduleList.scrollTop : 0;
     
@@ -333,7 +563,6 @@ function updateBellSchedule() {
             </div>
         `;
     } else if (info.type === 'overlapping-periods') {
-        // Show both periods simultaneously like your school's app
         html += `
             <div style="text-align: center; margin-bottom: 24px;">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
@@ -368,7 +597,6 @@ function updateBellSchedule() {
             </div>
         `;
         
-        // Show next period
         const { schedule } = getScheduleForDay(new Date());
         const currentIndex = schedule.findIndex(p => p.name === info.period2.name);
         if (currentIndex >= 0 && currentIndex < schedule.length - 1) {
@@ -411,7 +639,6 @@ function updateBellSchedule() {
             </div>
         `;
         
-        // Show next period
         const { schedule } = getScheduleForDay(new Date());
         const currentIndex = schedule.findIndex(p => p.name === info.period.name);
         if (currentIndex >= 0 && currentIndex < schedule.length - 1) {
@@ -455,7 +682,6 @@ function updateBellSchedule() {
         `;
     }
     
-    // Show full schedule in a scrollable area
     const { schedule } = getScheduleForDay(new Date());
     if (schedule && schedule.length > 0 && info.type !== 'weekend') {
         html += `
@@ -466,7 +692,6 @@ function updateBellSchedule() {
         const currentPeriodName = info.type === 'in-period' ? info.period.name : null;
         
         schedule.forEach(period => {
-            // Skip hidden periods (they're shown with their overlapping partner)
             if (period.hidden) return;
             
             const isCurrentPeriod = period.name === currentPeriodName;
@@ -490,7 +715,6 @@ function updateBellSchedule() {
     
     content.innerHTML = html;
     
-    // Restore scroll position after updating
     const newScheduleList = document.getElementById('bell-schedule-list');
     if (newScheduleList && scrollPos > 0) {
         newScheduleList.scrollTop = scrollPos;
@@ -514,7 +738,6 @@ function getScheduleTitle(scheduleType) {
     return titles[scheduleType] || 'Bell Schedule';
 }
 
-// Initialize bell schedule on page load
 document.addEventListener('DOMContentLoaded', function() {
     createBellScheduleWidget();
 });

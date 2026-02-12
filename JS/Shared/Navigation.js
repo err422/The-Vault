@@ -1,47 +1,46 @@
 (function() {
+    // Prevent double initialization
+    if (window.navigationInitialized) {
+        return;
+    }
+    window.navigationInitialized = true;
+    
     function setupNavigation() {
         const navItems = document.querySelectorAll('.nav-item');
         
         navItems.forEach(item => {
-            item.addEventListener('click', function() {
-                const label = this.querySelector('.nav-label').textContent.trim();
+            item.addEventListener('click', function(e) {
+                const label = this.querySelector('.nav-label');
+                if (!label) return;
                 
-                console.log('Navigation clicked:', label);
+                const labelText = label.textContent.trim().replace(/\s+/g, ' ');
                 
-                switch(label) {
-                    case 'Home':
-                        window.location.href = 'index.html'; 
-                        break;
-                    case 'Games':
-                        window.location.href = 'games.html';
-                        break;
-                    case 'Websites':
-                        window.location.href = 'websites.html';
-                        break;
-                    case 'Credits':
-                        window.location.href = 'credits.html';
-                        break;
-                    case 'Account':
-                    case 'Sign In':
-                        window.location.href = 'Account.html';
-                        break;
-                    case 'Fullscreen':
-                        toggleFullScreen();
-                        break;
-                    default:
-                        // Check if it's a username (starts with @)
-                        if (label.startsWith('@')) {
-                            window.location.href = 'account.html';
-                        }
-                        break;
+                console.log('Navigation clicked:', labelText);
+                
+                // Prevent any default behavior
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Check what page to navigate to
+                if (labelText === 'Home') {
+                    window.location.href = 'index.html';
+                } else if (labelText === 'Games') {
+                    window.location.href = 'games.html';
+                } else if (labelText === 'Websites') {
+                    window.location.href = 'websites.html';
+                } else if (labelText === 'Settings') {
+                    window.location.href = 'settings.html';
+                } else if (labelText === 'Account' || labelText === 'Sign In' || labelText.startsWith('@')) {
+                    window.location.href = 'account.html';
+                } else if (labelText === 'Fullscreen') {
+                    toggleFullScreen();
                 }
             });
         });
     }
-
+    
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
-            // Enter fullscreen
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen();
             } else if (document.documentElement.mozRequestFullScreen) {
@@ -52,7 +51,6 @@
                 document.documentElement.msRequestFullscreen();
             }
         } else {
-            // Exit fullscreen
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             } else if (document.mozCancelFullScreen) {
@@ -65,13 +63,12 @@
         }
     }
     
-    // Auto-initialize navigation when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setupNavigation);
     } else {
         setupNavigation();
     }
-
+    
     window.navigation = {
         toggleFullScreen: toggleFullScreen,
         setup: setupNavigation
