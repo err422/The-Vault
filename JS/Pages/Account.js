@@ -1,4 +1,4 @@
-// Account.js - Enhanced Account Page Logic with Leaderboard & Charts
+// Account.js - CORRECTED VERSION - Enhanced Account Page Logic with Leaderboard & Charts
 const savedTheme = localStorage.getItem('vaultTheme') || 'default';
 document.body.classList.add(`theme-${savedTheme}`);
 
@@ -232,8 +232,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                 if (minutes === 0) {
                     heightPercent = 0;
                 } else {
-                    // Calculate height so the tallest bar reaches ~95% of available space
-                    // This leaves room for the label above
                     heightPercent = (minutes / maxMinutes) * 95;
                 }
                 const hours = Math.floor(minutes / 60);
@@ -251,7 +249,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                         justify-content: flex-end;
                         position: relative;
                     ">
-
                         ${minutes > 0 ? `
                             <div style="
                                 position: absolute;
@@ -606,18 +603,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                     </div>
                     
                     <!-- Sign Up Form -->
-                    <div class="form-group tos-group">
-                        <label style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#aaa;cursor:pointer;">
-                            <input type="checkbox" id="signup-tos" style="margin-top:4px;">
-                            <span>
-                                I agree to the 
-                                <a href="tos.html" target="_blank" style="color:#667eea;text-decoration:underline;">
-                                    Terms of Service
-                                </a>
-                            </span>
-                        </label>
-                    </div>
-
                     <div id="signup-form" style="display: none;">
                         <div class="form-group">
                             <label class="form-label">Username</label>
@@ -632,6 +617,19 @@ document.body.classList.add(`theme-${savedTheme}`);
                         <div class="form-group">
                             <label class="form-label">Password</label>
                             <input type="password" class="form-input" id="signup-password" placeholder="Create a password" />
+                        </div>
+                        
+                        <!-- FIXED: Moved ToS checkbox INSIDE signup form -->
+                        <div class="form-group tos-group">
+                            <label style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#aaa;cursor:pointer;">
+                                <input type="checkbox" id="signup-tos" style="margin-top:4px;">
+                                <span>
+                                    I agree to the 
+                                    <a href="tos.html" target="_blank" style="color:#667eea;text-decoration:underline;">
+                                        Terms of Service
+                                    </a>
+                                </span>
+                            </label>
                         </div>
                         
                         <div class="form-error" id="signup-error"></div>
@@ -884,7 +882,7 @@ document.body.classList.add(`theme-${savedTheme}`);
         AccountPage.init();
     }
     
-    console.log('✅ Enhanced Account.js loaded with Leaderboard & Charts');
+    console.log('✅ Enhanced Account.js loaded with Leaderboard & Charts (FIXED VERSION)');
     
     window.AccountPage = AccountPage;
 
