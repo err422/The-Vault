@@ -720,73 +720,88 @@ document.body.classList.add(`theme-${savedTheme}`);
             }
         },
         
-        function xpRequiredForLevel(level, prestige) {
-            const baseXP = 1200;
-            const growthRate = 1.087;
+        calculateStats(userData) {
+            function xpRequiredForLevel(level, prestige) {
+                const baseXP = 1200;
+                const growthRate = 1.087;
 
-            const prestigeMultiplier = 1 + (prestige * 0.15); // 15% harder per prestige
+                const prestigeMultiplier = 1 + (prestige * 0.15);
 
-            return Math.floor(
-                baseXP *
-                Math.pow(growthRate, level - 1) *
-                prestigeMultiplier
-            );
-        }
-            
-            function totalXpForLevel(level) {
+                return Math.floor(
+                    baseXP *
+                    Math.pow(growthRate, level - 1) *
+                    prestigeMultiplier
+                );
+            }
+
+            function totalXpForLevel(level, prestige) {
                 let total = 0;
                 for (let i = 1; i < level; i++) {
-                    total += xpRequiredForLevel(i);
+                    total += xpRequiredForLevel(i, prestige);
                 }
                 return total;
             }
-            
+
+            function getPrestigeRequirement(prestige) {
+                return 50 + (prestige * 5);
+            }
+
             let totalPlaytime = 0;
             let gamesPlayed = 0;
             let favoriteGame = { name: 'None', time: 0 };
-            
+
             if (userData.playtime && userData.playtime.total) {
                 const games = userData.playtime.total;
                 gamesPlayed = Object.keys(games).length;
-                
+
                 Object.entries(games).forEach(([game, seconds]) => {
                     const time = Number(seconds) || 0;
                     totalPlaytime += time;
-                    
+
                     if (time > favoriteGame.time) {
                         favoriteGame = { name: game, time: time };
                     }
                 });
             }
-            
+
+            let prestige = userData.prestige || 0;
             let level = 1;
-            while (totalPlaytime >= totalXpForLevel(level + 1)) {
+
+            while (totalPlaytime >= totalXpForLevel(level + 1, prestige)) {
                 level++;
             }
-            
-            const currentLevelXP = totalXpForLevel(level);
-            const nextLevelXP = totalXpForLevel(level + 1);
+
+            // Prestige check
+            const prestigeRequirement = getPrestigeRequirement(prestige);
+            if (level >= prestigeRequirement) {
+                prestige++;
+                level = 1;
+            }
+
+            const currentLevelXP = totalXpForLevel(level, prestige);
+            const nextLevelXP = totalXpForLevel(level + 1, prestige);
             const progressXP = Math.max(0, totalPlaytime - currentLevelXP);
             const neededXP = Math.max(1, nextLevelXP - currentLevelXP);
             const xpProgress = Math.min((progressXP / neededXP) * 100, 100);
-            
+
             let title = 'Newcomer';
             if (level >= 50) title = 'Discord Mod';
             else if (level >= 30) title = 'Master';
             else if (level >= 20) title = 'Expert';
             else if (level >= 10) title = 'Veteran';
             else if (level >= 5) title = 'Regular';
-            
+
             const hours = Math.floor(totalPlaytime / 3600);
             const minutes = Math.floor((totalPlaytime % 3600) / 60);
             const totalPlaytimeFormatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-            
+
             return {
                 totalPlaytime,
                 totalPlaytimeFormatted,
                 gamesPlayed,
                 favoriteGame,
                 level,
+                prestige,
                 title,
                 xpProgress
             };
