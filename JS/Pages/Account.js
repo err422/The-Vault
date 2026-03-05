@@ -720,12 +720,18 @@ document.body.classList.add(`theme-${savedTheme}`);
             }
         },
         
-        calculateStats(userData) {
-            function xpRequiredForLevel(level) {
-                const baseXP = 1800;
-                const growthRate = 2.5;
-                return Math.floor(baseXP * Math.pow(growthRate, level - 1));
-            }
+        function xpRequiredForLevel(level, prestige) {
+            const baseXP = 1200;
+            const growthRate = 1.087;
+
+            const prestigeMultiplier = 1 + (prestige * 0.15); // 15% harder per prestige
+
+            return Math.floor(
+                baseXP *
+                Math.pow(growthRate, level - 1) *
+                prestigeMultiplier
+            );
+        }
             
             function totalXpForLevel(level) {
                 let total = 0;
