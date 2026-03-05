@@ -723,7 +723,7 @@ document.body.classList.add(`theme-${savedTheme}`);
         calculateStats(userData) {
             function xpRequiredForLevel(level) {
                 const baseXP = 1800;
-                const growthRate = 1.5;
+                const growthRate = 1.1;
                 return Math.floor(baseXP * Math.pow(growthRate, level - 1));
             }
             
