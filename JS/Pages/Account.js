@@ -1,27 +1,22 @@
-// Account.js - CORRECTED VERSION - Enhanced Account Page Logic with Leaderboard & Charts
+// This file is shortened to deal w file size and loading issues
 const savedTheme = localStorage.getItem('vaultTheme') || 'default';
 document.body.classList.add(`theme-${savedTheme}`);
-
 (function() {
     const AccountPage = {
         currentUser: null,
         currentUsername: null,
-        
         init() {
             console.log('🎨 Initializing Enhanced Account Page...');
             this.checkAuthState();
         },
-        
         checkAuthState() {
             if (typeof auth === 'undefined') {
                 console.error('❌ Firebase auth not loaded');
                 this.renderError('Firebase not initialized');
                 return;
             }
-            
             auth.onAuthStateChanged((user) => {
-                this.currentUser = user;
-                
+                this.currentUser = user;   
                 if (user) {
                     this.loadUserData();
                 } else {
@@ -29,10 +24,8 @@ document.body.classList.add(`theme-${savedTheme}`);
                 }
             });
         },
-        
         async loadUserData() {
-            const content = document.getElementById('account-content');
-            
+            const content = document.getElementById('account-content');  
             // Show loading
             content.innerHTML = `
                 <div class="loading-container">
@@ -40,48 +33,36 @@ document.body.classList.add(`theme-${savedTheme}`);
                     <p style="margin-top: 20px; color: #888;">Loading your profile...</p>
                 </div>
             `;
-            
             try {
                 // Get username first
                 const usernameSnap = await database.ref(`users/${this.currentUser.uid}/username`).once('value');
-                this.currentUsername = usernameSnap.val();
-                
+                this.currentUsername = usernameSnap.val()  
                 // Get full user data
                 const snapshot = await database.ref(`users/${this.currentUser.uid}`).once('value');
                 const userData = snapshot.val();
-                
                 // Calculate stats
                 const stats = this.calculateStats(userData);
                 const achievements = this.calculateAchievements(userData, stats);
-                
                 // Render account view
                 await this.renderAccountView(stats, achievements, userData);
-                
             } catch (error) {
                 console.error('❌ Error loading user data:', error);
                 this.renderError('Failed to load profile data');
             }
         },
-        
         async renderAccountView(stats, achievements, userData) {
-            const content = document.getElementById('account-content');
-            
+            const content = document.getElementById('account-content');  
             // Generate the playtime chart and leaderboard HTML
             const playtimeChartHTML = await this.renderPlaytimeChart(userData);
             const leaderboardHTML = await this.renderLeaderboard(this.currentUser.uid);
-            
             content.innerHTML = `
                 <!-- Profile Header -->
                 <div class="profile-header">
-                    <div class="profile-avatar">
-                        👤
-                        ${stats.level > 1 ? `<div class="level-badge">${stats.level}</div>` : ''}
+                    <div class="profile-avatar">👤${stats.level > 1 ? `<div class="level-badge">${stats.level}</div>` : ''}
                     </div>
-                    
                     <h2 class="profile-username">@${this.currentUsername}</h2>
                     <p class="profile-email">${this.currentUser.email}</p>
                     <div class="profile-title">Level ${stats.level} • ${stats.title}</div>
-                    
                     <!-- XP Progress Bar -->
                     <div class="xp-bar-container">
                         <div class="xp-bar">
@@ -95,7 +76,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                         </div>
                     </div>
                 </div>
-                
                 <!-- Stats Grid -->
                 <div class="stats-grid">
                     <div class="stat-card primary">
@@ -103,19 +83,16 @@ document.body.classList.add(`theme-${savedTheme}`);
                         <div class="stat-value">${stats.totalPlaytimeFormatted}</div>
                         <div class="stat-label">Total Playtime</div>
                     </div>
-                    
                     <div class="stat-card success">
                         <div class="stat-icon">🎮</div>
                         <div class="stat-value">${stats.gamesPlayed}</div>
                         <div class="stat-label">Games Played</div>
                     </div>
-                    
                     <div class="stat-card warning">
                         <div class="stat-icon">🏆</div>
                         <div class="stat-value">${achievements.unlockedCount}/${achievements.total}</div>
                         <div class="stat-label">Achievements</div>
                     </div>
-                    
                     ${stats.favoriteGame.name !== 'None' ? `
                         <div class="stat-card purple">
                             <div class="stat-icon">👑</div>
@@ -124,7 +101,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                         </div>
                     ` : ''}
                 </div>
-                
                 <!-- Playtime Chart - Last 7 Days -->
                 <div class="section">
                     <h3 class="section-title">
@@ -132,7 +108,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                     </h3>
                     ${playtimeChartHTML}
                 </div>
-                
                 <!-- Leaderboard -->
                 <div class="section">
                     <h3 class="section-title">
@@ -140,7 +115,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                     </h3>
                     ${leaderboardHTML}
                 </div>
-                
                 <!-- Achievements -->
                 <div class="section">
                     <h3 class="section-title">
@@ -157,7 +131,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                         `).join('')}
                     </div>
                 </div>
-                
                 <!-- Action Buttons -->
                 <div class="action-buttons">
                     <button class="btn btn-primary" id="change-username-btn">
@@ -168,11 +141,9 @@ document.body.classList.add(`theme-${savedTheme}`);
                     </button>
                 </div>
             `;
-            
             // Attach event listeners
             this.attachEventListeners();
         },
-        
         async renderPlaytimeChart(userData) {
             if (!userData.playtime || !userData.playtime.daily) {
                 return `
@@ -182,22 +153,18 @@ document.body.classList.add(`theme-${savedTheme}`);
                         <div style="font-size: 14px;">Start playing some games to see your activity here!</div>
                     </div>
                 `;
-            }
-            
+            }  
             const days = [];
             const dayLabels = [];
             const playtimeData = [];
-            
             // Get last 7 days
             for (let i = 6; i >= 0; i--) {
                 const date = new Date();
                 date.setDate(date.getDate() - i);
                 const dateStr = date.toISOString().split('T')[0];
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                
                 days.push(dateStr);
                 dayLabels.push(dayName);
-                
                 let totalMinutes = 0;
                 if (userData.playtime.daily[dateStr]) {
                     const seconds = Object.values(userData.playtime.daily[dateStr])
@@ -206,9 +173,7 @@ document.body.classList.add(`theme-${savedTheme}`);
                 }
                 playtimeData.push(totalMinutes);
             }
-            
             const maxMinutes = Math.max(...playtimeData, 1);
-            
             let html = `
                 <div style="
                     background: rgba(0,0,0,0.3);
@@ -226,7 +191,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                         padding: 40px 10px 0 10px;
                     ">
             `;
-            
             playtimeData.forEach((minutes, index) => {
                 let heightPercent;
                 if (minutes === 0) {
@@ -236,8 +200,7 @@ document.body.classList.add(`theme-${savedTheme}`);
                 }
                 const hours = Math.floor(minutes / 60);
                 const mins = minutes % 60;
-                const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-                
+                const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;  
                 html += `
                     <div style="
                         flex: 1;
@@ -288,17 +251,14 @@ document.body.classList.add(`theme-${savedTheme}`);
                     </div>
                 `;
             });
-            
             html += `
                     </div>
             `;
-            
             // Calculate total for the week
             const totalMinutes = playtimeData.reduce((sum, m) => sum + m, 0);
             const totalHours = Math.floor(totalMinutes / 60);
             const totalMins = totalMinutes % 60;
             const totalStr = totalHours > 0 ? `${totalHours}h ${totalMins}m` : `${totalMins}m`;
-            
             html += `
                     <div style="
                         padding: 14px 20px;
@@ -313,15 +273,12 @@ document.body.classList.add(`theme-${savedTheme}`);
                     </div>
                 </div>
             `;
-            
             return html;
         },
-        
         async renderLeaderboard(currentUserId) {
             try {
                 const snapshot = await database.ref('users').once('value');
-                const users = snapshot.val();
-                
+                const users = snapshot.val();      
                 if (!users) {
                     return `
                         <div style="text-align: center; padding: 60px 20px; color: #666;">
@@ -331,7 +288,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                         </div>
                     `;
                 }
-                
                 // Build leaderboard
                 const leaderboard = Object.entries(users).map(([uid, userData]) => {
                     let totalPlaytime = 0;
@@ -347,7 +303,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                         totalPlaytime
                     };
                 }).sort((a, b) => b.totalPlaytime - a.totalPlaytime).slice(0, 5);
-                
                 if (leaderboard.every(user => user.totalPlaytime === 0)) {
                     return `
                         <div style="text-align: center; padding: 60px 20px; color: #666;">
@@ -357,9 +312,7 @@ document.body.classList.add(`theme-${savedTheme}`);
                         </div>
                     `;
                 }
-                
                 let html = '<div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">';
-                
                 leaderboard.forEach((user, index) => {
                     const isCurrentUser = user.uid === currentUserId;
                     const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
@@ -372,13 +325,11 @@ document.body.classList.add(`theme-${savedTheme}`);
                         : index < 3 
                             ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15))' 
                             : 'rgba(255,255,255,0.05)';
-                    
                     const borderColor = isCurrentUser 
                         ? 'rgba(102, 126, 234, 0.5)' 
                         : index < 3 
                             ? 'rgba(251, 191, 36, 0.3)' 
                             : 'rgba(255,255,255,0.1)';
-                    
                     html += `
                         <div style="
                             background: ${bgColor};
@@ -419,12 +370,10 @@ document.body.classList.add(`theme-${savedTheme}`);
                         </div>
                     `;
                 });
-                
-                // Check if current user is in top 5
+                // Check if current user is in top 5 (Total Playtime)
                 const currentUserInTop5 = leaderboard.some(u => u.uid === currentUserId);
-                
                 if (!currentUserInTop5) {
-                    // Get all users and find current user's rank
+                    // Get all users and find signed in users rank
                     const allUsers = Object.entries(users).map(([uid, userData]) => {
                         let totalPlaytime = 0;
                         if (userData.playtime && userData.playtime.total) {
@@ -433,15 +382,12 @@ document.body.classList.add(`theme-${savedTheme}`);
                         }
                         return { uid, username: userData.username, totalPlaytime };
                     }).sort((a, b) => b.totalPlaytime - a.totalPlaytime);
-                    
                     const currentUserRank = allUsers.findIndex(u => u.uid === currentUserId) + 1;
                     const currentUserData = allUsers.find(u => u.uid === currentUserId);
-                    
                     if (currentUserData && currentUserData.totalPlaytime > 0) {
                         const hours = Math.floor(currentUserData.totalPlaytime / 3600);
                         const minutes = Math.floor((currentUserData.totalPlaytime % 3600) / 60);
                         const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-                        
                         html += `
                             <div style="
                                 margin-top: 16px;
@@ -467,11 +413,8 @@ document.body.classList.add(`theme-${savedTheme}`);
                         `;
                     }
                 }
-                
                 html += '</div>';
-                
                 return html;
-                
             } catch (error) {
                 console.error('Error loading leaderboard:', error);
                 return `
@@ -482,15 +425,12 @@ document.body.classList.add(`theme-${savedTheme}`);
                 `;
             }
         },
-        
         attachEventListeners() {
             const changeBtn = document.getElementById('change-username-btn');
-            const signOutBtn = document.getElementById('sign-out-btn');
-            
+            const signOutBtn = document.getElementById('sign-out-btn');  
             if (changeBtn) {
                 changeBtn.addEventListener('click', () => this.showChangeUsernameForm());
             }
-            
             if (signOutBtn) {
                 signOutBtn.addEventListener('click', async () => {
                     try {
@@ -502,31 +442,25 @@ document.body.classList.add(`theme-${savedTheme}`);
                 });
             }
         },
-        
         showChangeUsernameForm() {
-            const content = document.getElementById('account-content');
-            
+            const content = document.getElementById('account-content');  
             content.innerHTML = `
                 <div class="auth-container">
                     <div class="auth-header">
                         <h2 class="auth-title">Change Username</h2>
                         <p class="auth-subtitle">Choose a new username for your account</p>
                     </div>
-                    
                     <div class="form-group">
                         <label class="form-label">Current Username</label>
                         <div style="padding: 16px; background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 12px; color: #667eea; font-weight: 600;">
                             @${this.currentUsername}
                         </div>
                     </div>
-                    
                     <div class="form-group">
                         <label class="form-label">New Username</label>
                         <input type="text" class="form-input" id="new-username" placeholder="Enter new username" />
                     </div>
-                    
                     <div class="form-error" id="change-error"></div>
-                    
                     <div class="action-buttons">
                         <button class="btn btn-primary" id="cancel-change-btn">
                             <span>❌</span> Cancel
@@ -537,20 +471,16 @@ document.body.classList.add(`theme-${savedTheme}`);
                     </div>
                 </div>
             `;
-            
             document.getElementById('cancel-change-btn').addEventListener('click', () => {
                 this.loadUserData();
             });
-            
             document.getElementById('confirm-change-btn').addEventListener('click', async () => {
                 const newUsername = document.getElementById('new-username').value.trim();
                 const errorDiv = document.getElementById('change-error');
-                const btn = document.getElementById('confirm-change-btn');
-                
+                const btn = document.getElementById('confirm-change-btn'); 
                 errorDiv.textContent = '';
                 btn.textContent = 'Changing...';
                 btn.disabled = true;
-                
                 try {
                     await window.AuthCore.changeUsername(newUsername);
                     this.currentUsername = newUsername;
@@ -561,65 +491,52 @@ document.body.classList.add(`theme-${savedTheme}`);
                     btn.disabled = false;
                 }
             });
-            
             document.getElementById('new-username').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     document.getElementById('confirm-change-btn').click();
                 }
             });
         },
-        
         renderAuthForms() {
-            const content = document.getElementById('account-content');
-            
+            const content = document.getElementById('account-content');  
             content.innerHTML = `
                 <div class="auth-container">
                     <div class="auth-header">
                         <h2 class="auth-title">Welcome to The Vault</h2>
                         <p class="auth-subtitle">Sign in to track your progress and achievements</p>
                     </div>
-                    
                     <!-- Tabs -->
                     <div class="auth-tabs">
                         <button class="auth-tab active" id="tab-signin">Sign In</button>
                         <button class="auth-tab" id="tab-signup">Sign Up</button>
                     </div>
-                    
                     <!-- Sign In Form -->
                     <div id="signin-form">
                         <div class="form-group">
                             <label class="form-label">Username or Email</label>
                             <input type="text" class="form-input" id="signin-username" placeholder="Enter username or email" />
                         </div>
-                        
                         <div class="form-group">
                             <label class="form-label">Password</label>
                             <input type="password" class="form-input" id="signin-password" placeholder="Enter password" />
                         </div>
-                        
                         <div class="form-error" id="signin-error"></div>
-                        
                         <button class="form-button" id="signin-btn">Sign In</button>
                     </div>
-                    
                     <!-- Sign Up Form -->
                     <div id="signup-form" style="display: none;">
                         <div class="form-group">
                             <label class="form-label">Username</label>
                             <input type="text" class="form-input" id="signup-username" placeholder="Choose a username" />
                         </div>
-                        
                         <div class="form-group">
                             <label class="form-label">Email</label>
                             <input type="email" class="form-input" id="signup-email" placeholder="Enter your email" />
                         </div>
-                        
                         <div class="form-group">
                             <label class="form-label">Password</label>
                             <input type="password" class="form-input" id="signup-password" placeholder="Create a password" />
                         </div>
-                        
-                        <!-- FIXED: Moved ToS checkbox INSIDE signup form -->
                         <div class="form-group tos-group">
                             <label style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#aaa;cursor:pointer;">
                                 <input type="checkbox" id="signup-tos" style="margin-top:4px;">
@@ -630,61 +547,50 @@ document.body.classList.add(`theme-${savedTheme}`);
                                     </a>
                                 </span>
                             </label>
-                        </div>
-                        
+                        </div>                        
                         <div class="form-error" id="signup-error"></div>
-                        
                         <button class="form-button" id="signup-btn">Create Account</button>
                     </div>
                 </div>
             `;
-            
             this.attachAuthFormListeners();
         },
-        
         attachAuthFormListeners() {
             const tabSignIn = document.getElementById('tab-signin');
             const tabSignUp = document.getElementById('tab-signup');
             const signInForm = document.getElementById('signin-form');
-            const signUpForm = document.getElementById('signup-form');
-            
+            const signUpForm = document.getElementById('signup-form');  
             tabSignIn.addEventListener('click', () => {
                 tabSignIn.classList.add('active');
                 tabSignUp.classList.remove('active');
                 signInForm.style.display = 'block';
                 signUpForm.style.display = 'none';
             });
-            
             tabSignUp.addEventListener('click', () => {
                 tabSignUp.classList.add('active');
                 tabSignIn.classList.remove('active');
                 signUpForm.style.display = 'block';
                 signInForm.style.display = 'none';
             });
-            
-            // Sign In
+            // Handles user Sign In
             document.getElementById('signin-btn').addEventListener('click', () => this.handleSignIn());
             document.getElementById('signin-password').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') this.handleSignIn();
             });
-            
-            // Sign Up
+            // Handles user Sign Up
             document.getElementById('signup-btn').addEventListener('click', () => this.handleSignUp());
             document.getElementById('signup-password').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') this.handleSignUp();
             });
         },
-        
         async handleSignIn() {
             const username = document.getElementById('signin-username').value.trim();
             const password = document.getElementById('signin-password').value;
             const errorDiv = document.getElementById('signin-error');
-            const btn = document.getElementById('signin-btn');
-            
+            const btn = document.getElementById('signin-btn');  
             errorDiv.textContent = '';
             btn.textContent = 'Signing in...';
             btn.disabled = true;
-            
             try {
                 await window.AuthCore.signIn(username, password);
             } catch (error) {
@@ -693,24 +599,20 @@ document.body.classList.add(`theme-${savedTheme}`);
                 btn.disabled = false;
             }
         },
-        
         async handleSignUp() {
             const username = document.getElementById('signup-username').value.trim();
             const email = document.getElementById('signup-email').value.trim();
             const password = document.getElementById('signup-password').value;
             const tosChecked = document.getElementById('signup-tos')?.checked;
             const errorDiv = document.getElementById('signup-error');
-            const btn = document.getElementById('signup-btn');
-            
+            const btn = document.getElementById('signup-btn');  
             if (!tosChecked) {
                 errorDiv.textContent = 'You must agree to the Terms of Service.';
                 return;
             }
-            
             errorDiv.textContent = '';
             btn.textContent = 'Creating account...';
             btn.disabled = true;
-            
             try {
                 await window.AuthCore.signUp(username, email, password);
             } catch (error) {
@@ -719,21 +621,17 @@ document.body.classList.add(`theme-${savedTheme}`);
                 btn.disabled = false;
             }
         },
-        
         calculateStats(userData) {
             function xpRequiredForLevel(level, prestige) {
                 const baseXP = 1200;
                 const growthRate = 1.087;
-
                 const prestigeMultiplier = 1 + (prestige * 0.15);
-
                 return Math.floor(
                     baseXP *
                     Math.pow(growthRate, level - 1) *
                     prestigeMultiplier
                 );
             }
-
             function totalXpForLevel(level, prestige) {
                 let total = 0;
                 for (let i = 1; i < level; i++) {
@@ -741,60 +639,48 @@ document.body.classList.add(`theme-${savedTheme}`);
                 }
                 return total;
             }
-
             function getPrestigeRequirement(prestige) {
                 return 50 + (prestige * 5);
             }
-
             let totalPlaytime = 0;
             let gamesPlayed = 0;
             let favoriteGame = { name: 'None', time: 0 };
-
             if (userData.playtime && userData.playtime.total) {
                 const games = userData.playtime.total;
                 gamesPlayed = Object.keys(games).length;
-
                 Object.entries(games).forEach(([game, seconds]) => {
                     const time = Number(seconds) || 0;
                     totalPlaytime += time;
-
                     if (time > favoriteGame.time) {
                         favoriteGame = { name: game, time: time };
                     }
                 });
             }
-
             let prestige = userData.prestige || 0;
             let level = 1;
-
             while (totalPlaytime >= totalXpForLevel(level + 1, prestige)) {
                 level++;
             }
-
-            // Prestige check
+            // Checks if user has any prestige
             const prestigeRequirement = getPrestigeRequirement(prestige);
             if (level >= prestigeRequirement) {
                 prestige++;
                 level = 1;
             }
-
             const currentLevelXP = totalXpForLevel(level, prestige);
             const nextLevelXP = totalXpForLevel(level + 1, prestige);
             const progressXP = Math.max(0, totalPlaytime - currentLevelXP);
             const neededXP = Math.max(1, nextLevelXP - currentLevelXP);
             const xpProgress = Math.min((progressXP / neededXP) * 100, 100);
-
             let title = 'Newcomer';
             if (level >= 50) title = 'Discord Mod';
             else if (level >= 30) title = 'Master';
             else if (level >= 20) title = 'Expert';
             else if (level >= 10) title = 'Veteran';
             else if (level >= 5) title = 'Regular';
-
             const hours = Math.floor(totalPlaytime / 3600);
             const minutes = Math.floor((totalPlaytime % 3600) / 60);
             const totalPlaytimeFormatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-
             return {
                 totalPlaytime,
                 totalPlaytimeFormatted,
@@ -806,7 +692,6 @@ document.body.classList.add(`theme-${savedTheme}`);
                 xpProgress
             };
         },
-        
         calculateAchievements(userData, stats) {
             const achievements = [
                 {
@@ -872,15 +757,13 @@ document.body.classList.add(`theme-${savedTheme}`);
                     icon: '🗺️',
                     unlocked: stats.gamesPlayed >= 10
                 }
-            ];
-            
+            ];  
             return {
                 list: achievements,
                 unlockedCount: achievements.filter(a => a.unlocked).length,
                 total: achievements.length
             };
         },
-        
         renderError(message) {
             const content = document.getElementById('account-content');
             content.innerHTML = `
@@ -895,16 +778,12 @@ document.body.classList.add(`theme-${savedTheme}`);
             `;
         }
     };
-    
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => AccountPage.init());
     } else {
         AccountPage.init();
     }
-    
     console.log('✅ Enhanced Account.js loaded with Leaderboard & Charts (FIXED VERSION)');
-    
     window.AccountPage = AccountPage;
-
 })();
