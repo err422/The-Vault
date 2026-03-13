@@ -19,21 +19,21 @@
    },
    {
       "id":3,
-      "title":"Nut Simulator",
-      "description":"A quirky simulation game where players manage and grow various types of nuts through resource management and upgrades.",
+      "title":"Minecraft 1.12.2",
+      "description":"Its just minecraft 1.12.2 with a pause menu that works 50% of the time",
       "category":"simulation",
-      "icon":"🥜",
+      "icon":"⛏ ",
       "rating":"★★★☆☆",
-      "url":"https://nutsimulator.github.io/index.html"
+      "url":"https://err422.github.io/The-Vault-games/minecraft.html"
    },
    {
       "id":4,
-      "title":"Shell Shockers",
-      "description":"An online multiplayer FPS where players control egg-shaped characters in humorous fast-paced combat.",
+      "title":"UltraKill",
+      "description":"A web port of the game UltraKill",
       "category":"fps",
-      "icon":"🥚",
+      "icon":"🔫",
       "rating":"★★★★☆",
-      "url":"https://geometry.monster"
+      "url":"https://err422.github.io/The-Vault-games/ultrakill.html"
    },
    {
       "id":5,
@@ -73,44 +73,44 @@
    },
    {
       "id":9,
-      "title":"Tube Clicker",
-      "description":"An incremental clicking game focused on building a YouTube-like video platform empire through content creation and monetization.",
+      "title":"Clover Pit",
+      "description":"GAMBLING",
       "category":"idle",
       "icon":"📺",
       "rating":"★★★☆☆",
-      "url":"https://html5.gamedistribution.com/d9ef28d7e6a9493da73860d1e0b70414/"
+      "url":"https://err422.github.io/The-Vault-games/clover-pit.html"
    },
    {
       "id":10,
-      "title":"GrindCraft",
-      "description":"A Minecraft-inspired incremental game where players automate resource gathering and crafting systems.",
+      "title":"Baletro",
+      "description":"A rogue-like poker game",
       "category":"simulation",
-      "icon":"⛏️",
+      "icon":"🃏️",
       "rating":"★★★★☆",
-      "url":"https://grindcraft.com/game.html"
+      "url":"https://err422.github.io/The-Vault-games/baletro.html"
    },
    {
       "id":11,
-      "title":"Hex GL",
-      "description":"A futuristic 3D racing game inspired by F-Zero and Wipeout with high-speed anti-gravity ships racing through sleek tracks.",
-      "category":"racing",
-      "icon":"🏎️",
+      "title":"Brotato",
+      "description":"A fun bullet hell game",
+      "category":"simulation",
+      "icon":"🥔️",
       "rating":"★★★★☆",
-      "url":"https://hexgl.bkcore.com/play/"
+      "url":"https://err422.github.io/The-Vault-games/brotato.html"
    },
    {
       "id":12,
-      "title":"Idle Shooter",
-      "description":"An idle shooting game where players automatically fire at enemies while upgrading weapons and abilities to progress through levels.",
-      "category":"idle",
-      "icon":"🎯",
+      "title":"Doom",
+      "description":"Its doom. It works very well",
+      "category":"fps",
+      "icon":"🔫",
       "rating":"★★★☆☆",
-      "url":"https://html5.gamedistribution.com/acdee4deb06d46759e4577a83262dfce"
+      "url":"https://err422.github.io/The-Vault-games/doom.html"
    },
    {
       "id":13,
-      "title":"Masked Special Forces",
-      "description":"A tactical FPS game featuring special forces operatives in various combat scenarios with realistic weapons and stealth mechanics.",
+      "title":"Half Life",
+      "description":"Its half life. it takes a minute to load",
       "category":"fps",
       "icon":"🎭",
       "rating":"★★★☆☆",
@@ -145,15 +145,6 @@
    },
    {
       "id":17,
-      "title":"Archer Hero",
-      "description":"An archery-based action game where players control skilled archers, aiming and shooting arrows at targets and enemies with precision.",
-      "category":"action",
-      "icon":"🏹",
-      "rating":"★★★☆☆",
-      "url":"https://www.onlinegames.io/games/2023/unity/archer-hero/index.html"
-   },
-   {
-      "id":18,
       "title":"OpenGuessr",
       "description":"A geography guessing game where players use visual clues from street view images to guess locations around the world.",
       "category":"trivia",
@@ -162,7 +153,7 @@
       "url":"https://openguessr.com/"
    },
    {
-      "id":19,
+      "id":18,
       "title":"Go",
       "description":"Play the Japanese game of GO",
       "category":"puzzle",
@@ -171,7 +162,7 @@
       "url":"https://www.cosumi.net/en/"
    },
    {
-      "id":20,
+      "id":19,
       "title":"Case Clicker 2",
       "description":"Open Counter Strike cases",
       "category":"idle",
@@ -180,16 +171,7 @@
       "url":"https://csgo.mtsl.dk/"
    },
    {
-      "id":21,
-      "title":"Mr. Mine",
-      "description":"A fun MMO style idle game",
-      "category":"idle",
-      "icon":"⛏️",
-      "rating":"★★★★☆",
-      "url":"https://mrmine.com/game/"
-   },
-   {
-      "id":22,
+      "id":20,
       "title":"Drift.io",
       "description":"A fun MMO style idle game",
       "category":"idle",
