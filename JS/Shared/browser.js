@@ -16,6 +16,12 @@ function openIframe(url, title) {
     createNewTab(url, title);
 }
 
+function toggleFullscreen() {
+    const bw = document.getElementById('browser-window');
+    if (!bw) return;
+    document.fullscreenElement ? document.exitFullscreen() : bw.requestFullscreen();
+}
+
 function createBrowserWindow() {
     const overlay = document.createElement('div');
     overlay.id = 'game-iframe-overlay';
@@ -55,16 +61,13 @@ function createBrowserWindow() {
     windowControls.style.cssText = `position:absolute;top:8px;right:8px;display:flex;gap:8px;z-index:1000;`;
     const minimizeBtn = createControlButton('−', 'Minimize');
     const fsIframeBtn = createControlButton('⛶', 'Fullscreen (content only)');
-    const maximizeBtn = createControlButton('□', 'Maximize (with toolbar)');
+    const maximizeBtn = createControlButton('□', 'Fullscreen — Alt+`');
     const closeBrowserBtn = createControlButton('×', 'Close');
     fsIframeBtn.addEventListener('click', function() {
         const iframe = document.getElementById(`iframe-${activeTabId}`);
         if (iframe) { document.fullscreenElement ? document.exitFullscreen() : iframe.requestFullscreen(); }
     });
-    maximizeBtn.addEventListener('click', function() {
-        const bw = document.getElementById('browser-window');
-        if (bw) { document.fullscreenElement ? document.exitFullscreen() : bw.requestFullscreen(); }
-    });
+    maximizeBtn.addEventListener('click', toggleFullscreen);
     closeBrowserBtn.addEventListener('click', closeBrowser);
     closeBrowserBtn.addEventListener('mouseenter', function() { this.style.background='rgba(239,68,68,0.8)'; this.style.color='#fff'; });
     windowControls.appendChild(minimizeBtn);
@@ -77,6 +80,18 @@ function createBrowserWindow() {
     document.body.appendChild(overlay);
     document.body.style.overflow = 'hidden';
     setTimeout(() => { overlay.style.opacity='1'; browserWindow.style.transform='scale(1)'; }, 10);
+
+    // Alt+` shortcut — works when the parent page has focus
+    document._browserKeyHandler = function(e) {
+        if (e.altKey && e.key === '`') { e.preventDefault(); toggleFullscreen(); }
+    };
+    document.addEventListener('keydown', document._browserKeyHandler);
+
+    // Alt+` forwarded via postMessage from cross-origin iframes (e.g. Eaglercraft on GitHub Pages)
+    window._browserMessageHandler = function(e) {
+        if (e.data && e.data.type === 'toggleFullscreen') toggleFullscreen();
+    };
+    window.addEventListener('message', window._browserMessageHandler);
 }
 
 function createControlButton(text, title) {
@@ -215,6 +230,14 @@ function closeTab(tabId) {
 }
 
 function closeBrowser() {
+    if (document._browserKeyHandler) {
+        document.removeEventListener('keydown', document._browserKeyHandler);
+        delete document._browserKeyHandler;
+    }
+    if (window._browserMessageHandler) {
+        window.removeEventListener('message', window._browserMessageHandler);
+        delete window._browserMessageHandler;
+    }
     const overlay = document.getElementById('game-iframe-overlay');
     const bw = document.getElementById('browser-window');
     if (bw) bw.style.transform = 'scale(0.8)';
