@@ -1,6 +1,6 @@
+// This file is optamized to deal w file size and loading issues
 const savedTheme = localStorage.getItem('vaultTheme') || 'default';
 document.body.classList.add(`theme-${savedTheme}`);
-
 
 // Global playtime variables
 let playtimeTracker = {
@@ -17,49 +17,34 @@ function startPlaytimeTracking(title) {
         console.log('Not tracking playtime - user not logged in');
         return;
     }
-
     // Stop any existing tracking
     stopPlaytimeTracking();
-
     playtimeTracker.currentGame = title;
     playtimeTracker.startTime = Date.now();
     playtimeTracker.totalSeconds = 0;
-
     console.log('Started tracking playtime for:', title);
-
     // Update playtime every 30 seconds
     playtimeTracker.intervalId = setInterval(() => {
         const elapsed = Math.floor((Date.now() - playtimeTracker.startTime) / 1000);
         playtimeTracker.totalSeconds = elapsed;
-        
-        // Save to Firebase every 30 seconds (in case of crash/close)
         savePlaytimeToFirebase();
-    }, 30000); // 30 seconds
+    }, 30000);
 }
 
 // Stop tracking playtime
 function stopPlaytimeTracking() {
     if (!playtimeTracker.currentGame) return;
-
-    // Clear interval
     if (playtimeTracker.intervalId) {
         clearInterval(playtimeTracker.intervalId);
         playtimeTracker.intervalId = null;
     }
-
-    // Calculate final playtime
     if (playtimeTracker.startTime) {
         const elapsed = Math.floor((Date.now() - playtimeTracker.startTime) / 1000);
         playtimeTracker.totalSeconds = elapsed;
-        
-        // Save final playtime to Firebase
         savePlaytimeToFirebase();
     }
-
-    console.log('Stopped tracking playtime for:', playtimeTracker.currentGame, 
+    console.log('Stopped tracking playtime for:', playtimeTracker.currentGame,
                 '- Total:', formatPlaytime(playtimeTracker.totalSeconds));
-
-    // Reset tracker
     playtimeTracker.currentGame = null;
     playtimeTracker.startTime = null;
     playtimeTracker.totalSeconds = 0;
@@ -71,16 +56,10 @@ function savePlaytimeToFirebase() {
     if (!user || !playtimeTracker.currentGame || playtimeTracker.totalSeconds < 5) {
         return;
     }
-
     const gameTitle = playtimeTracker.currentGame;
     const secondsToAdd = playtimeTracker.totalSeconds;
-    
-    // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
-    
-    // Save to daily playtime
     const dailyRef = database.ref(`users/${user.uid}/playtime/daily/${today}/${encodeGameTitle(gameTitle)}`);
-    
     dailyRef.transaction((currentSeconds) => {
         return (currentSeconds || 0) + secondsToAdd;
     })
@@ -92,10 +71,7 @@ function savePlaytimeToFirebase() {
     .catch((error) => {
         console.error('Error saving daily playtime:', error);
     });
-    
-    // Also update lifetime total
     const totalRef = database.ref(`users/${user.uid}/playtime/total/${encodeGameTitle(gameTitle)}`);
-    
     totalRef.transaction((currentSeconds) => {
         return (currentSeconds || 0) + secondsToAdd;
     })
@@ -105,8 +81,6 @@ function savePlaytimeToFirebase() {
     .catch((error) => {
         console.error('Error updating total:', error);
     });
-
-    // Reset counter
     playtimeTracker.startTime = Date.now();
     playtimeTracker.totalSeconds = 0;
 }
@@ -121,7 +95,6 @@ function formatPlaytime(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
     if (hours > 0) {
         return `${hours}h ${minutes}m`;
     } else if (minutes > 0) {
@@ -144,7 +117,7 @@ async function loadWebsites() {
         setupFiltering();
     } catch (error) {
         console.error('Error loading websites:', error);
-        document.getElementById('websitesGrid').innerHTML = 
+        document.getElementById('websitesGrid').innerHTML =
             '<p>Error loading websites. Please try again later.</p>';
     }
 }
@@ -178,25 +151,21 @@ function filterWebsites(category, searchTerm = '') {
             site.description.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesCategory && matchesSearch;
     });
-
     renderWebsites(filteredWebsites);
 }
 
 function setupFiltering() {
     const filterBtns = document.querySelectorAll('.filter-btn');
     const searchInput = document.getElementById('searchInput');
-
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             filterBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
             const category = btn.dataset.category || btn.textContent.toLowerCase();
             const searchTerm = searchInput ? searchInput.value : '';
             filterWebsites(category, searchTerm);
         });
     });
-
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             const activeBtn = document.querySelector('.filter-btn.active');
@@ -208,16 +177,13 @@ function setupFiltering() {
 
 function setupWebsiteCardClickHandlers() {
     const websiteCards = document.querySelectorAll('.website-card');
-
     websiteCards.forEach(card => {
         card.addEventListener('click', function() {
             const title = this.querySelector('.website-title').textContent;
             const websiteData = allWebsites.find(w => w.title === title);
             const url = websiteData?.url || './error.html';
-
             openIframe(url, title);
         });
-
         card.style.cursor = 'pointer';
     });
 }
@@ -239,44 +205,33 @@ let favorites = [];
 
 function loadFavorites() {
     try {
-        // First load from localStorage (instant, no waiting)
         const saved = localStorage.getItem('vaultFavorites');
         favorites = saved ? JSON.parse(saved) : [];
-        
-        // Update UI immediately with localStorage data
         updateFavoritesBadge();
-        
-        // Then sync with cloud in the background (non-blocking)
         setTimeout(() => {
             syncFavoritesFromCloud();
-        }, 1000); // Wait 1 second before checking cloud
-        
+        }, 1000);
     } catch (error) {
         console.error('Error loading favorites:', error);
         favorites = [];
     }
 }
 
-// New function: Load from cloud without blocking
 function syncFavoritesFromCloud() {
     const user = auth.currentUser;
     if (!user) return;
-    
     database.ref('users/' + user.uid + '/favorites').once('value')
         .then((snapshot) => {
             const cloudFavorites = snapshot.val();
             if (cloudFavorites && cloudFavorites.length > 0) {
                 favorites = cloudFavorites;
                 localStorage.setItem('vaultFavorites', JSON.stringify(favorites));
-                
-                // Update UI after cloud sync
                 updateFavoritesBadge();
                 if (typeof updateCardStars === 'function') {
                     updateCardStars();
                 } else if (typeof updateGameCardStars === 'function') {
                     updateGameCardStars();
                 }
-                
                 console.log('Favorites synced from cloud:', favorites.length);
             }
         })
@@ -285,31 +240,24 @@ function syncFavoritesFromCloud() {
         });
 }
 
-
 let syncTimeout = null;
 
 function saveFavorites() {
     try {
-        // Save to localStorage immediately (fast)
         localStorage.setItem('vaultFavorites', JSON.stringify(favorites));
-        
-        // Debounce Firebase sync (wait 1 second after last change)
         const user = auth.currentUser;
         if (user) {
             if (syncTimeout) clearTimeout(syncTimeout);
-            
             syncTimeout = setTimeout(() => {
                 database.ref('users/' + user.uid + '/favorites').set(favorites)
                     .then(() => console.log('Favorites synced to cloud'))
                     .catch((error) => console.error('Sync error:', error));
-            }, 1000); // Only sync after user stops clicking for 1 second
+            }, 1000);
         }
     } catch (error) {
         console.error('Error saving favorites:', error);
     }
 }
-
-
 
 function addToFavorites(item) {
     const exists = favorites.some(fav => fav.title === item.title);
@@ -339,10 +287,8 @@ function updateFavoritesBadge() {
 function addFavoritesIconToToolbar() {
     const toolbar = document.getElementById('toolbar');
     if (!toolbar) return;
-    
     const existing = document.getElementById('favorites-toolbar-btn');
     if (existing) existing.remove();
-    
     const favButton = document.createElement('button');
     favButton.id = 'favorites-toolbar-btn';
     favButton.innerHTML = '⭐';
@@ -355,7 +301,6 @@ function addFavoritesIconToToolbar() {
         transition: all 0.2s ease; margin-left: 8px;
         box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3); position: relative;
     `;
-    
     const badge = document.createElement('span');
     badge.id = 'favorites-count-badge';
     badge.style.cssText = `
@@ -367,7 +312,6 @@ function addFavoritesIconToToolbar() {
     badge.textContent = favorites.length;
     if (favorites.length === 0) badge.style.display = 'none';
     favButton.appendChild(badge);
-    
     favButton.addEventListener('mouseenter', function() {
         this.style.transform = 'scale(1.1)';
         this.style.boxShadow = '0 4px 12px rgba(251, 191, 36, 0.5)';
@@ -380,17 +324,14 @@ function addFavoritesIconToToolbar() {
         e.stopPropagation();
         toggleFavoritesPopup();
     });
-    
     toolbar.appendChild(favButton);
 }
 
 function toggleFavoritesPopup() {
     let popup = document.getElementById('favorites-popup');
     if (popup) { popup.remove(); return; }
-    
     const browserWindow = document.getElementById('browser-window');
     if (!browserWindow) return;
-    
     popup = document.createElement('div');
     popup.id = 'favorites-popup';
     popup.style.cssText = `
@@ -400,7 +341,6 @@ function toggleFavoritesPopup() {
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); animation: slideIn 0.3s ease;
         pointer-events: all; display: flex; flex-direction: column;
     `;
-    
     popup.innerHTML = `
         <div style="padding: 20px 24px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); position: relative;">
             <button id="close-favorites-popup" style="position: absolute; top: 16px; right: 16px;
@@ -416,14 +356,11 @@ function toggleFavoritesPopup() {
             Click the ★ on any card to add to favorites
         </div>
     `;
-    
     browserWindow.appendChild(popup);
-    
     const closeBtn = document.getElementById('close-favorites-popup');
     closeBtn.addEventListener('mouseenter', () => closeBtn.style.background = 'rgba(0,0,0,0.4)');
     closeBtn.addEventListener('mouseleave', () => closeBtn.style.background = 'rgba(0,0,0,0.2)');
     closeBtn.addEventListener('click', () => popup.remove());
-    
     setTimeout(() => {
         document.addEventListener('click', function closeOutside(e) {
             const favBtn = document.getElementById('favorites-toolbar-btn');
@@ -433,14 +370,12 @@ function toggleFavoritesPopup() {
             }
         });
     }, 100);
-    
     renderFavorites();
 }
 
 function renderFavorites() {
     const content = document.getElementById('favorites-content');
     if (!content) return;
-    
     if (favorites.length === 0) {
         content.innerHTML = `
             <div style="text-align: center; padding: 60px 20px; color: #888;">
@@ -451,7 +386,6 @@ function renderFavorites() {
         `;
         return;
     }
-    
     let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
     favorites.forEach(item => {
         html += `
@@ -462,14 +396,14 @@ function renderFavorites() {
                 <div style="font-size: 32px; width: 48px; height: 48px; 
                             background: rgba(255,255,255,0.1); border-radius: 10px;
                             display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    ${item.icon || '🎮'}
+                    ${item.icon || '🌐'}
                 </div>
                 <div style="flex: 1; min-width: 0;">
                     <div style="font-size: 16px; font-weight: 600; color: white; 
                                 margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         ${item.title}
                     </div>
-                    <div style="font-size: 12px; color: #888; text-transform: uppercase;">${item.category || 'Game'}</div>
+                    <div style="font-size: 12px; color: #888; text-transform: uppercase;">${item.category || 'Website'}</div>
                 </div>
                 <button class="remove-favorite" data-title="${item.title}" 
                         style="background: rgba(239, 68, 68, 0.2); border: none; color: #ef4444;
@@ -481,7 +415,6 @@ function renderFavorites() {
     });
     html += '</div>';
     content.innerHTML = html;
-    
     const favoriteItems = content.querySelectorAll('.favorite-item');
     favoriteItems.forEach(item => {
         item.addEventListener('mouseenter', function() {
@@ -509,7 +442,6 @@ function renderFavorites() {
             }
         });
     });
-    
     const removeButtons = content.querySelectorAll('.remove-favorite');
     removeButtons.forEach(btn => {
         btn.addEventListener('mouseenter', function() {
@@ -536,7 +468,6 @@ function addStarsToCards() {
         if (card.querySelector('.favorite-star')) return;
         const title = card.querySelector('.game-title, .website-title')?.textContent;
         if (!title) return;
-        
         const isFav = isFavorited(title);
         const star = document.createElement('button');
         star.className = 'favorite-star';
@@ -549,7 +480,6 @@ function addStarsToCards() {
             align-items: center; justify-content: center; transition: all 0.2s ease;
             z-index: 10; backdrop-filter: blur(4px);
         `;
-        
         star.addEventListener('mouseenter', function() {
             this.style.background = 'rgba(0,0,0,0.8)';
             this.style.transform = 'scale(1.15) rotate(15deg)';
@@ -563,7 +493,6 @@ function addStarsToCards() {
             const icon = card.querySelector('.game-icon, .website-favicon')?.textContent;
             const category = card.querySelector('.game-category, .website-category')?.textContent;
             const description = card.querySelector('.game-description, .website-description')?.textContent;
-            
             let itemData = null, url = '';
             if (typeof allGames !== 'undefined' && Array.isArray(allGames)) {
                 itemData = allGames.find(g => g.title === title);
@@ -573,12 +502,10 @@ function addStarsToCards() {
                 itemData = allWebsites.find(w => w.title === title);
                 if (itemData) url = itemData.url || '';
             }
-            
             const item = {
-                title: title, icon: icon || '🎮', category: category || 'Game',
+                title: title, icon: icon || '🌐', category: category || 'Website',
                 description: description || '', url: url
             };
-            
             if (isFavorited(title)) {
                 removeFromFavorites(title);
                 this.innerHTML = '☆';
@@ -592,7 +519,6 @@ function addStarsToCards() {
             }
             updateFavoritesBadge();
         });
-        
         card.style.position = 'relative';
         card.appendChild(star);
     });
@@ -623,12 +549,19 @@ const cardObserver = new MutationObserver(function(mutations) {
 document.addEventListener('DOMContentLoaded', function() {
     loadWebsites();
     addStarsToCards();
-    
+
     const websitesGrid = document.getElementById('websitesGrid');
     if (websitesGrid) {
         cardObserver.observe(websitesGrid, { childList: true, subtree: true });
     }
-    
+
+    // Initialize custom entries for the websites page
+    if (typeof CustomEntriesSystem !== 'undefined') {
+        CustomEntriesSystem.init('websites');
+    } else {
+        console.warn('⚠️ CustomEntriesSystem not found — make sure CustomEntries.js is loaded before Websites.js');
+    }
+
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => {
         item.addEventListener('click', function() {
@@ -652,14 +585,12 @@ window.addEventListener('beforeunload', function() {
 // Track when user switches away from tab (stop counting)
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
-        // User switched away - pause tracking
         if (playtimeTracker.intervalId) {
             clearInterval(playtimeTracker.intervalId);
             playtimeTracker.intervalId = null;
         }
         savePlaytimeToFirebase();
     } else {
-        // User came back - resume tracking
         if (playtimeTracker.currentGame && !playtimeTracker.intervalId) {
             playtimeTracker.startTime = Date.now();
             playtimeTracker.intervalId = setInterval(() => {
@@ -671,19 +602,13 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-
-// ===== TESTING - View playtime in console =====
-// Add this function to test and view playtime data
-
 function viewPlaytime(range = 'week') {
     const user = auth.currentUser;
     if (!user) {
         console.log('❌ Not logged in');
         return;
     }
-    
-    let path = 'total'; // default
-    
+    let path = 'total';
     if (range === 'today') {
         const today = new Date().toISOString().split('T')[0];
         path = `daily/${today}`;
@@ -696,7 +621,6 @@ function viewPlaytime(range = 'week') {
     } else if (range === 'all') {
         path = 'total';
     }
-    
     database.ref(`users/${user.uid}/playtime/${path}`).once('value')
         .then((snapshot) => {
             const data = snapshot.val();
@@ -704,39 +628,28 @@ function viewPlaytime(range = 'week') {
                 console.log(`📊 No playtime data for: ${range}`);
                 return;
             }
-            
             console.log(`\n=== PLAYTIME (${range.toUpperCase()}) ===`);
-            
-            // If viewing a time range (daily/weekly/monthly)
             if (path !== 'total') {
-                let allGames = {};
-                
-                // Aggregate all games across all dates/weeks/months
+                let allGamesData = {};
                 for (const period in data) {
                     for (const game in data[period]) {
-                        allGames[game] = (allGames[game] || 0) + data[period][game];
+                        allGamesData[game] = (allGamesData[game] || 0) + data[period][game];
                     }
                 }
-                
-                // Sort and display
-                const sorted = Object.entries(allGames).sort((a, b) => b[1] - a[1]);
+                const sorted = Object.entries(allGamesData).sort((a, b) => b[1] - a[1]);
                 sorted.forEach(([game, seconds]) => {
                     console.log(`${game}: ${formatPlaytime(seconds)}`);
                 });
-                
-                const totalSeconds = Object.values(allGames).reduce((a, b) => a + b, 0);
+                const totalSeconds = Object.values(allGamesData).reduce((a, b) => a + b, 0);
                 console.log(`\n⏱️  Total: ${formatPlaytime(totalSeconds)}`);
             } else {
-                // Viewing lifetime totals
                 const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
                 sorted.forEach(([game, seconds]) => {
                     console.log(`${game}: ${formatPlaytime(seconds)}`);
                 });
-                
                 const totalSeconds = Object.values(data).reduce((a, b) => a + b, 0);
                 console.log(`\n⏱️  Total: ${formatPlaytime(totalSeconds)}`);
             }
-            
             console.log('\n💡 Try: viewPlaytime("today"), viewPlaytime("week"), viewPlaytime("month"), viewPlaytime("all")');
         })
         .catch((error) => {
