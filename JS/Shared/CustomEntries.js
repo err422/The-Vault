@@ -93,6 +93,7 @@
             try {
                 console.log(`📥 Loading custom ${currentPageType} for user ${user.uid}...`);
                 
+                // Load from top-level customEntries path
                 const snapshot = await database.ref(`customEntries/${currentPageType}`).once('value');
                 customEntries = [];
                 
@@ -117,10 +118,9 @@
         },
 
         renderCustomEntries() {
-            const gridId = currentPageType === 'games' ? 'gamesGrid' : 'websitesGrid';
-            const grid = document.getElementById(gridId);
+            const grid = document.getElementById(currentPageType === 'games' ? 'gamesGrid' : 'websitesGrid');
             if (!grid) {
-                console.warn(`⚠️ Grid #${gridId} not found`);
+                console.warn('⚠️ Grid not found');
                 return;
             }
 
@@ -148,17 +148,10 @@
         },
 
         createEntryCard(entry) {
-            const isGame = currentPageType === 'games';
             const card = document.createElement('div');
-            card.className = isGame ? 'game-card custom-entry-card' : 'website-card custom-entry-card';
+            card.className = currentPageType === 'games' ? 'game-card custom-entry-card' : 'website-card custom-entry-card';
             card.dataset.category = entry.category;
             card.style.position = 'relative';
-
-            // Build meta section — rating only shown for games
-            const metaHTML = isGame
-                ? `<span class="game-category">${entry.category.toUpperCase()}</span>
-                   <span class="game-rating">${entry.rating}</span>`
-                : `<span class="website-category">${entry.category.toUpperCase()}</span>`;
 
             card.innerHTML = `
                 <div style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #667eea, #764ba2); 
@@ -168,12 +161,13 @@
                     ${entry.flagForReview ? '<span title="Flagged for review">🚩</span>' : ''}
                 </div>
 
-                <div class="${isGame ? 'game-icon' : 'website-favicon'}">${entry.icon}</div>
-                <h3 class="${isGame ? 'game-title' : 'website-title'}">${entry.title}</h3>
-                <p class="${isGame ? 'game-description' : 'website-description'}">${entry.description}</p>
+                <div class="${currentPageType === 'games' ? 'game-icon' : 'website-favicon'}">${entry.icon}</div>
+                <h3 class="${currentPageType === 'games' ? 'game-title' : 'website-title'}">${entry.title}</h3>
+                <p class="${currentPageType === 'games' ? 'game-description' : 'website-description'}">${entry.description}</p>
                 
-                <div class="${isGame ? 'game-meta' : 'website-meta'}">
-                    ${metaHTML}
+                <div class="${currentPageType === 'games' ? 'game-meta' : 'website-meta'}">
+                    <span class="${currentPageType === 'games' ? 'game-category' : 'website-category'}">${entry.category.toUpperCase()}</span>
+                    <span class="${currentPageType === 'games' ? 'game-rating' : 'website-rating'}">${entry.rating}</span>
                 </div>
 
                 <div style="margin-top: 16px; display: flex; gap: 8px;">
@@ -190,11 +184,12 @@
                 </div>
             `;
 
-            // Click to open
+            // Click to open - UPDATED TO USE openIframe
             card.addEventListener('click', (e) => {
                 if (!e.target.classList.contains('custom-edit-btn') && 
                     !e.target.classList.contains('custom-delete-btn') &&
                     !e.target.classList.contains('favorite-star')) {
+                    // Use unified openIframe function from browser.js
                     if (typeof openIframe === 'function') {
                         openIframe(entry.url, entry.title);
                     } else {
@@ -220,7 +215,6 @@
 
         openModal(entryToEdit = null) {
             const isEditing = !!entryToEdit;
-            const isGame = currentPageType === 'games';
             
             const modal = document.createElement('div');
             modal.id = 'custom-entry-modal';
@@ -240,24 +234,11 @@
                 animation: fadeIn 0.3s ease;
             `;
 
-            const categories = isGame
+            const categories = currentPageType === 'games' 
                 ? ['FPS', 'Idle', 'Puzzle', 'RPG', 'Racing', 'Action', 'Sports', 'Simulation', 'Incremental', 'Trivia']
                 : ['Games', 'Proxy', 'Education', 'Other'];
 
             const ratings = ['★☆☆☆☆', '★★☆☆☆', '★★★☆☆', '★★★★☆', '★★★★★'];
-
-            // Rating field — only rendered for games
-            const ratingHTML = isGame ? `
-                <div>
-                    <label style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: #888;">Rating *</label>
-                    <select id="entry-rating" required
-                            style="width: 100%; padding: 12px; background: rgba(0, 0, 0, 0.3); 
-                                   border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; 
-                                   color: white; font-size: 1rem;">
-                        ${ratings.map(r => `<option value="${r}" ${entryToEdit?.rating === r ? 'selected' : ''}>${r}</option>`).join('')}
-                    </select>
-                </div>
-            ` : '';
 
             modal.innerHTML = `
                 <div style="background: linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(15, 15, 15, 0.98)); 
@@ -268,7 +249,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                         <h2 style="font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, #667eea, #764ba2); 
                                     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0;">
-                            ${isEditing ? 'Edit' : 'Add'} Custom ${isGame ? 'Game' : 'Website'}
+                            ${isEditing ? 'Edit' : 'Add'} Custom ${currentPageType === 'games' ? 'Game' : 'Website'}
                         </h2>
                         <button id="close-modal" style="background: rgba(255, 255, 255, 0.1); border: none; border-radius: 8px; 
                                 width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; 
@@ -305,8 +286,8 @@
                                 <label style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: #888;">
                                     Icon * <span id="icon-count" style="color: #666; font-size: 0.85rem;">(0/${LIMITS.icon})</span>
                                 </label>
-                                <input type="text" id="entry-icon" value="${entryToEdit?.icon || (isGame ? '🎮' : '🌐')}" 
-                                       maxlength="${LIMITS.icon}" placeholder="${isGame ? '🎮' : '🌐'}" required
+                                <input type="text" id="entry-icon" value="${entryToEdit?.icon || (currentPageType === 'games' ? '🎮' : '🌐')}" 
+                                       maxlength="${LIMITS.icon}" placeholder="🎮" required
                                        style="width: 100%; padding: 12px; background: rgba(0, 0, 0, 0.3); 
                                               border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; 
                                               color: white; font-size: 1.5rem; text-align: center;">
@@ -332,15 +313,23 @@
                                 Description * <span id="desc-count" style="color: #666; font-size: 0.85rem;">(0/${LIMITS.description})</span>
                             </label>
                             <textarea id="entry-description" maxlength="${LIMITS.description}" rows="4" required
-                                      placeholder="Describe your ${isGame ? 'game' : 'website'}..."
+                                      placeholder="Describe your ${currentPageType === 'games' ? 'game' : 'website'}..."
                                       style="width: 100%; padding: 12px; background: rgba(0, 0, 0, 0.3); 
                                              border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; 
                                              color: white; font-size: 1rem; resize: vertical; font-family: inherit;">${entryToEdit?.description || ''}</textarea>
                             <div id="desc-error" style="color: #ef4444; font-size: 0.85rem; margin-top: 4px; min-height: 20px;"></div>
                         </div>
 
-                        <!-- Rating (games only) -->
-                        ${ratingHTML}
+                        <!-- Rating -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: #888;">Rating *</label>
+                            <select id="entry-rating" required
+                                    style="width: 100%; padding: 12px; background: rgba(0, 0, 0, 0.3); 
+                                           border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; 
+                                           color: white; font-size: 1rem;">
+                                ${ratings.map(r => `<option value="${r}" ${entryToEdit?.rating === r ? 'selected' : ''}>${r}</option>`).join('')}
+                            </select>
+                        </div>
 
                         <!-- Flag for Review -->
                         <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); 
@@ -348,7 +337,7 @@
                             <input type="checkbox" id="entry-flag" ${entryToEdit?.flagForReview ? 'checked' : ''}
                                    style="width: 20px; height: 20px; cursor: pointer; accent-color: #fbbf24;">
                             <label for="entry-flag" style="cursor: pointer; flex: 1; color: #fbbf24; font-size: 0.9rem;">
-                                <strong>Flag for Review</strong> — Suggest this ${isGame ? 'game' : 'website'} to be added to The Vault for everyone
+                                <strong>Flag for Review</strong> - Suggest this ${currentPageType === 'games' ? 'game' : 'website'} to be added to The Vault for everyone
                             </label>
                         </div>
 
@@ -362,7 +351,7 @@
                             <button type="submit" style="flex: 2; padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2); 
                                     border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 1rem; 
                                     font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-                                💾 ${isEditing ? 'Update' : 'Add'} ${isGame ? 'Game' : 'Website'}
+                                💾 ${isEditing ? 'Update' : 'Add'} ${currentPageType === 'games' ? 'Game' : 'Website'}
                             </button>
                         </div>
                     </form>
@@ -375,7 +364,6 @@
             const setupCounter = (inputId, countId) => {
                 const input = document.getElementById(inputId);
                 const counter = document.getElementById(countId);
-                if (!input || !counter) return;
                 input.addEventListener('input', () => {
                     counter.textContent = `(${input.value.length}/${input.maxLength})`;
                 });
@@ -402,20 +390,14 @@
         },
 
         async saveEntry(editingId = null) {
-            const isGame = currentPageType === 'games';
-
-            // Rating is only read from the DOM when on the games page
-            const ratingEl = document.getElementById('entry-rating');
-            const rating = isGame && ratingEl ? ratingEl.value : null;
-
             const formData = {
                 title: document.getElementById('entry-title').value.trim(),
                 url: document.getElementById('entry-url').value.trim(),
                 icon: document.getElementById('entry-icon').value.trim(),
                 category: document.getElementById('entry-category').value,
                 description: document.getElementById('entry-description').value.trim(),
-                flagForReview: document.getElementById('entry-flag').checked,
-                ...(isGame && rating ? { rating } : {})
+                rating: document.getElementById('entry-rating').value,
+                flagForReview: document.getElementById('entry-flag').checked
             };
 
             // Validate
@@ -435,8 +417,9 @@
             }
 
             try {
-                console.log(`💾 Saving custom entry to customEntries/${currentPageType}...`);
+                console.log(`💾 Saving custom entry to top-level path...`);
                 
+                // Get username for better organization
                 const username = (typeof AuthCore !== 'undefined' && AuthCore.currentUsername) 
                     ? AuthCore.currentUsername 
                     : 'unknown';
@@ -450,11 +433,13 @@
                 };
 
                 if (editingId) {
+                    // Update existing entry at top level
                     await database.ref(`customEntries/${currentPageType}/${editingId}`).update(entryData);
-                    console.log(`✅ Updated entry ${editingId}`);
+                    console.log(`✅ Updated entry ${editingId} at customEntries/${currentPageType}`);
                 } else {
+                    // Create new entry at top level
                     await database.ref(`customEntries/${currentPageType}`).push(entryData);
-                    console.log(`✅ Created new entry`);
+                    console.log(`✅ Created new entry at customEntries/${currentPageType}`);
                 }
 
                 document.getElementById('custom-entry-modal').remove();
