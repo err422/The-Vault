@@ -60,18 +60,18 @@ function createBrowserWindow() {
     const windowControls = document.createElement('div');
     windowControls.style.cssText = `position:absolute;top:8px;right:8px;display:flex;gap:8px;z-index:1000;`;
     const minimizeBtn = createControlButton('−', 'Minimize');
-    // const fsIframeBtn = createControlButton('⛶', 'Fullscreen (content only)');
+    const fsIframeBtn = createControlButton('⛶', 'Fullscreen (content only)');
     const maximizeBtn = createControlButton('□', 'Fullscreen — Alt+`');
     const closeBrowserBtn = createControlButton('×', 'Close');
-    // fsIframeBtn.addEventListener('click', function() {
-    //     const iframe = document.getElementById(`iframe-${activeTabId}`);
-    //     if (iframe) { document.fullscreenElement ? document.exitFullscreen() : iframe.requestFullscreen(); }
-    // });
+    fsIframeBtn.addEventListener('click', function() {
+        const iframe = document.getElementById(`iframe-${activeTabId}`);
+        if (iframe) { document.fullscreenElement ? document.exitFullscreen() : iframe.requestFullscreen(); }
+    });
     maximizeBtn.addEventListener('click', toggleFullscreen);
     closeBrowserBtn.addEventListener('click', closeBrowser);
     closeBrowserBtn.addEventListener('mouseenter', function() { this.style.background='rgba(239,68,68,0.8)'; this.style.color='#fff'; });
     windowControls.appendChild(minimizeBtn);
-    // windowControls.appendChild(fsIframeBtn);
+    windowControls.appendChild(fsIframeBtn);
     windowControls.appendChild(maximizeBtn);
     windowControls.appendChild(closeBrowserBtn);
     browserWindow.appendChild(windowControls);
