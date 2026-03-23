@@ -60,12 +60,18 @@ function createBrowserWindow() {
     const windowControls = document.createElement('div');
     windowControls.style.cssText = `position:absolute;top:8px;right:8px;display:flex;gap:8px;z-index:1000;`;
     const minimizeBtn = createControlButton('−', 'Minimize');
+    // const fsIframeBtn = createControlButton('⛶', 'Fullscreen (content only)');
     const maximizeBtn = createControlButton('□', 'Fullscreen — Alt+`');
     const closeBrowserBtn = createControlButton('×', 'Close');
+    // fsIframeBtn.addEventListener('click', function() {
+    //     const iframe = document.getElementById(`iframe-${activeTabId}`);
+    //     if (iframe) { document.fullscreenElement ? document.exitFullscreen() : iframe.requestFullscreen(); }
+    // });
     maximizeBtn.addEventListener('click', toggleFullscreen);
     closeBrowserBtn.addEventListener('click', closeBrowser);
     closeBrowserBtn.addEventListener('mouseenter', function() { this.style.background='rgba(239,68,68,0.8)'; this.style.color='#fff'; });
     windowControls.appendChild(minimizeBtn);
+    // windowControls.appendChild(fsIframeBtn);
     windowControls.appendChild(maximizeBtn);
     windowControls.appendChild(closeBrowserBtn);
     browserWindow.appendChild(windowControls);
@@ -92,7 +98,7 @@ function createControlButton(text, title) {
     const btn = document.createElement('button');
     btn.innerHTML = text;
     btn.title = title;
-    btn.style.cssText = `width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:${text==='×'?'22px':'18px'};color:rgba(255,255,255,0.8);transition:all 0.2s ease;`;
+    btn.style.cssText = `width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:${text==='×'?'22px':text==='⛶'?'14px':'18px'};color:rgba(255,255,255,0.8);transition:all 0.2s ease;`;
     btn.addEventListener('mouseenter', function() { this.style.background='rgba(255,255,255,0.2)'; this.style.color='#fff'; });
     btn.addEventListener('mouseleave', function() { this.style.background='rgba(255,255,255,0.1)'; this.style.color='rgba(255,255,255,0.8)'; });
     return btn;
