@@ -192,6 +192,8 @@ function createNewTab(url, title) {
     iframe.id = `iframe-${tabId}`;
     iframe.src = url;
     iframe.title = title;
+    iframe.allow = 'fullscreen';
+    iframe.allowFullscreen = true;
     iframe.style.cssText = `width:100%;height:100%;border:none;background:#000;border-radius:0 0 12px 12px;display:none;position:absolute;top:0;left:0;`;
     const container = document.getElementById('iframe-container');
     if (container) container.appendChild(iframe);
