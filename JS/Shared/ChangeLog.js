@@ -7,13 +7,17 @@
 //       automatically get the popup on their next visit.
 // ============================================================
 
-const CHANGELOG_VERSION = "1.0"; // <-- bump this every time you update
+const CHANGELOG_VERSION = "2.8.5"; // <-- bump this every time you update
 
 const CHANGELOG_ENTRIES = [
   // Most recent changes first
   {
     label: "NEW",       // badge text: "NEW", "FIX", "IMPROVED", "REMOVED"
-    text: "The Vault is live! Welcome to the site."
+    text: "Added a change log"
+  },
+  {
+    label: "NEW",
+    text: "Added alt + ` as fullscreen shortcut"
   },
   // Add more entries above this line, example:
   // { label: "FIX",      text: "Fixed broken links on the Games page." },
