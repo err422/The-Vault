@@ -32,7 +32,7 @@ const CHANGELOG_ENTRIES = [
   const STORAGE_KEY = "vault_changelog_seen";
 
   // Only show if user hasn't seen this version yet
-  if (localStorage.getItem(STORAGE_KEY) === CHANGELOG_VERSION) return;
+//   if (localStorage.getItem(STORAGE_KEY) === CHANGELOG_VERSION) return;
 
   // ---- Build styles ----
   const style = document.createElement("style");
