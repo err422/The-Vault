@@ -38,7 +38,15 @@
             });
         });
     }
-    
+    document.addEventListener("keydown", function (e) {
+        if (e.altKey && e.key === "`") {
+            if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            } else {
+            document.exitFullscreen();
+            }
+        }
+    });
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
             if (document.documentElement.requestFullscreen) {
