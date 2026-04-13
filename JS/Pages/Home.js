@@ -38,59 +38,6 @@ searchInput.addEventListener('input', async function() {
     }
 });
 
-// Site URLs for Websites and games
-const BASE_URLS = {
-    'Cryzen.io': 'https://cryzen.io/',
-    'Kour.io': 'https://kour.org/',
-    'Nut Simulator': 'https://nutsimulator.github.io/index.html',
-    'Shell Shockers': 'https://eggshooter.best/',
-    'Idle Breakout': 'https://idle-breakout.neocities.org/?utm_source=chatgpt.com',
-    'Diablo': 'https://d07riv.github.io/diabloweb/',
-    'Clicker Heroes': 'https://www.yoosfuhl.com/game/clickerheroes/index.html',
-    'Trimps': 'https://trimps.github.io/',
-    'Tube Clicker': 'https://html5.gamedistribution.com/d9ef28d7e6a9493da73860d1e0b70414/',
-    'GrindCraft': 'https://grindcraft.com/game.html',
-    'Hex GL': 'https://hexgl.bkcore.com/play/',
-    'Idle Shooter': 'https://html5.gamedistribution.com/acdee4deb06d46759e4577a83262dfce',
-    'Masked Special Forces': 'https://www.onlinegames.io/games/2022/unity2/masked-special-forces/index.html',
-    'Capybara Clicker': 'https://www.onlinegames.io/games/2023/q2/capybara-clicker-pro/index.html',
-    'Block Blast': 'https://cloud.onlinegames.io/games/2024/unity3/block-blast/index-og.html',
-    'CS Online': 'https://www.onlinegames.io/games/2023/unity2/cs-online/index.html',
-    'Archer Hero': 'https://www.onlinegames.io/games/2023/unity/archer-hero/index.html',
-    'Basketball King': 'https://cloud.onlinegames.io/games/2024/construct/316/basketball-king/index-og.html',
-    'OpenGuessr': 'https://openguessr.com/',
-    "GameOZero": "https://gameozero.com",
-    "Phantom Games": "https://phantom.delusionz.xyz",
-    "Frogies Arcade": "https://full.boxathome.net",
-    "LunarSync": "https://lunarsync.smartfoloo.space",
-    "FallGuy Games": "https://fallguys.onl",
-    "Slope Games": "https://slopeio.org",
-    "Subkeys Game Shack": "https://subkeys.github.io/sayeo",
-    "Plexile Arcade": "https://plexile-learning-cheddar.glitch.me/about.html",
-    "BCHS Unblocked": "https://bchs.pages.dev",
-    "CrazyGames.ee": "https://crazygames.ee",
-    "CrazyGames Unblocked": "https://crazygames-unblocked.github.io",
-    "Planet Clicker": "https://planetclicker.io",
-    "SubwaySurfer (inactive)": "https://subwaysurfer.pages.dev/NewGames",
-    "ClassLink Phish": "http://launchpad.classlink.com.servers.radio.am",
-    "Luma": "https://lumamain.com",
-    "IO Games": "https://iogames.onl",
-    "Ghost": "https://immortal2willlose.xyz",
-    "VaultV6 (AJH)": "https://ajhmath.org/home/",
-    "MathsFrame Unblocked": "https://mathsframe.github.io",
-    "UBG365": "https://ubg365.github.io",
-    "ExtremeMath": "https://datacrafted.org",
-    "DuckMath": "https://duckmath.org/index.html",
-    "JustStudy CE": "https://juststudy-ce.github.io",
-    "Lunar (Bearcat)": "https://lunmeow.bearcat.rocks",
-    "Lupine Vault": "https://lupinevault.com",
-    "Boredom V2": "http://boredomarcade.xyz",
-    "Mexi": "https://mexi.my/notes.html",
-    "Truffled": "https://truffled.lol",
-    "Pete Zah": "https://broenoughbandwith.web.app",
-    "Compass Network": "https://compassnetwork.online"
-};
-
 function displayResults(results) {
     searchResults.innerHTML = '';
     
