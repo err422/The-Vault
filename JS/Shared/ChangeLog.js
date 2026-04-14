@@ -19,14 +19,14 @@ const CHANGELOG_ENTRIES = [
     label: "NEW",
     text: "Added alt + ` as fullscreen shortcut"
   },
+  {
+    label: "IMPROVED",
+    text: "Cleaned up debug menu"
+  }
   // Add more entries above this line, example:
   // { label: "FIX",      text: "Fixed broken links on the Games page." },
   // { label: "IMPROVED", text: "Faster load times across all pages." },
 ];
-
-// ============================================================
-//  Everything below runs automatically — no need to edit it
-// ============================================================
 
 (function () {
   const STORAGE_KEY = "vault_changelog_seen";
