@@ -278,3 +278,12 @@ h1 {
 		font-size: 2.5rem
 	}
 
+	.games-grid {
+		grid-template-columns: 1fr
+	}
+
+	.nav-bar {
+		padding: 10px 16px;
+		gap: 16px
+	}
+}
