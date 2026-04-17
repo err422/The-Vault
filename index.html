@@ -67,6 +67,24 @@
         </div>
         <div id="search-results" class="search-results"></div>
     </div>
+
+    <button id="chat-bubble-btn" class="chat-bubble-btn">💬</button>
+
+    <div id="chat-window" class="chat-window hidden">
+        <div class="chat-header">
+            <h3>Chat bot</h3>
+            <button id="close-chat-btn" class="close-btn">✖</button>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot-message">Hi! Tell me what kind of games you like!</div>
+        </div>
+        
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="e.g. A scary indie game...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
     
     <!--External JS-->
     
@@ -89,6 +107,7 @@
     <script src="JS/Shared/Stars.js"></script>
     <script src="JS/Shared/Navigation.js"></script>
     <script src="JS/Shared/ChangeLog.js"></script>
+    <script src="JS/Shared/Chatbot.js"></script>
     <!--Page-->
     <script src="JS/Pages/Home.js"></script>
     

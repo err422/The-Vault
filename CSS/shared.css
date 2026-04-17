@@ -338,3 +338,115 @@ h1 {
 		width: auto;
 	}
 }
+
+/* --- Chat Bubble Button --- */
+.chat-bubble-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px; /* Anchors it to the bottom left */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #6366f1; /* Modern purple/blue */
+    color: white;
+    font-size: 24px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    z-index: 1000; /* Keeps it on top of other elements */
+}
+
+/* --- Chat Window Container --- */
+.chat-window {
+    position: fixed;
+    bottom: 90px; /* Sits right above the bubble */
+    left: 20px;
+    width: 320px;
+    height: 400px;
+    background-color: #1e1e1e; /* Dark mode styling */
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+    font-family: sans-serif;
+}
+
+/* Utility class to hide the window */
+.hidden {
+    display: none !important;
+}
+
+/* --- Internal Chat Window Styling --- */
+.chat-header {
+    background-color: #3b3b3b;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.chat-messages {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto; /* Adds scrollbar if messages get too long */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 8px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.bot-message {
+    background-color: #3b3b3b;
+    align-self: flex-start; /* Aligns bot messages to the left */
+}
+
+.user-message {
+    background-color: #6366f1;
+    align-self: flex-end; /* Aligns your messages to the right */
+}
+
+.chat-input-area {
+    display: flex;
+    padding: 10px;
+    background-color: #2d2d2d;
+}
+
+#chat-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    outline: none;
+}
+
+#send-btn {
+    background-color: #6366f1;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin-left: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
