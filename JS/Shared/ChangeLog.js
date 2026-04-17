@@ -13,7 +13,7 @@ const CHANGELOG_ENTRIES = [
   // Most recent changes first
   {
     label: "NEW",       // badge text: "NEW", "FIX", "IMPROVED", "REMOVED"
-    text: "Added a change log"
+    text: "Added a semi working chatbot"
   },
   {
     label: "NEW",
