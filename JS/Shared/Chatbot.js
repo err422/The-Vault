@@ -53,8 +53,8 @@ async function fetchGameRecommendation() {
         related_games: []
     };
 
-    const backendURL = "https://ubiquitous-space-acorn-69rjpjwqr6wgf5775-8000.app.github.dev/api/recommend";
-    
+    const backendURL = "https://upgraded-space-chainsaw-x59j4jx79jr73v9pr-8000.github.dev/api/recommend";
+                        
     try {
         const response = await fetch(backendURL, {
             method: "POST",
