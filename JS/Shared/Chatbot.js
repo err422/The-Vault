@@ -54,7 +54,7 @@ async function fetchGameRecommendation() {
     };
 
     // UPDATE THIS WITH YOUR ACTIVE CODESPACE URL
-    const backendURL = "https://YOUR-CODESPACE-NAME-8000.app.github.dev/api/recommend";
+    const backendURL = "https://zany-xylophone-v6gx5xw9gj6gfx545-8000.app.github.dev/api/recommend";
 
     try {
         const response = await fetch(backendURL, {
