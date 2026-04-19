@@ -118,3 +118,12 @@ async function fetchGameRecommendation() {
         appendMessage("My brain is offline. Probably the WiFi or Screen Time boss.", "bot");
     }
 }
+// Trigger the fetch when clicking Send
+sendBtn.addEventListener("click", fetchGameRecommendation);
+
+// Trigger the fetch when pressing Enter in the input box
+chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        fetchGameRecommendation();
+    }
+});
