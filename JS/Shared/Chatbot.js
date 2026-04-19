@@ -115,7 +115,7 @@ async function fetchGameRecommendation() {
         console.error("Fetch Error:", error);
         const loader = document.getElementById(`loading-${loadingId}`);
         if (loader) loader.remove();
-        appendMessage("My brain is offline. Probably the WiFi or Screen Time boss.", "bot");
+        appendMessage("No. Leave me alone.", "bot");
     }
 }
 // Trigger the fetch when clicking Send
