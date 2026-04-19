@@ -68,24 +68,24 @@
         <div id="search-results" class="search-results"></div>
     </div>
 
-    <div id="chatbot-container">
-    <button id="chat-bubble-btn">💬</button>
+    <button id="chat-bubble-btn" class="chat-bubble-btn">💬</button>
 
-    <div id="chat-window" class="hidden">
-        <div id="chat-header">
-            <span>The Vault Expert</span>
-            <button id="close-chat-btn">×</button>
+    <div id="chat-window" class="chat-window hidden">
+        <div class="chat-header">
+            <h3>Chat bot</h3>
+            <button id="close-chat-btn" class="close-btn">✖</button>
         </div>
         
-        <div id="chat-messages">
-            </div>
-
-        <div id="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Ask for a game...">
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot-message">Hi! Tell me what kind of games you like!</div>
+        </div>
+        
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="e.g. A scary indie game...">
             <button id="send-btn">Send</button>
         </div>
     </div>
-</div>
+    
     <!--External JS-->
     
     <!-- Firebase SDK -->
