@@ -63,89 +63,51 @@ function appendMessage(text, senderType) {
 // 2. Fetch Logic (Modified from earlier)
 
 async function fetchGameRecommendation() {
-
     const userText = chatInput.value.trim();
-
-    if (!userText) return; // Don't send empty messages
-
-
-
-    // Add the user's message to the chat UI
+    if (!userText) return; 
 
     appendMessage(userText, "user");
+    chatInput.value = ""; 
 
-    chatInput.value = ""; // Clear the input box
-
-
-
-    // Show a loading message from the bot
-
-    const loadingId = Date.now(); // Unique ID to find and remove this later
-
+    const loadingId = Date.now();
     const loadingDiv = document.createElement("div");
-
     loadingDiv.classList.add("message", "bot-message");
-
     loadingDiv.id = `loading-${loadingId}`;
-
     loadingDiv.innerText = "Thinking...";
-
     chatMessages.appendChild(loadingDiv);
 
-
-
-    // Prepare data for backend
-
     const requestData = {
-
         user_message: userText,
-
         categories: [], 
-
         related_games: []
-
     };
 
-
-
-    const backendURL = "https://red-suns-reply.loca.lt/api/recommend";
-
+    // 1. FIXED: Added /api/recommend to the end
+    const backendURL = "https://red-suns-reply.loca.lt/api/recommend"; 
                         
-
     try {
-
         const response = await fetch(backendURL, {
-
             method: "POST",
-
-            headers: { "Content-Type": "application/json" },
-
+            headers: { 
+                "Content-Type": "application/json",
+                // 2. FIXED: This header skips the Localtunnel "Warning" page
+                "bypass-tunnel-reminder": "true" 
+            },
             body: JSON.stringify(requestData)
-
         });
 
-
-
         if (!response.ok) throw new Error("Server error");
-
         
-
         const data = await response.json();
-
         
-
-        // Remove loading message
-
         document.getElementById(`loading-${loadingId}`).remove();
-
-        
-
-        // Add the real AI response
-
         appendMessage(data.bot_reply, "bot");
 
-
-
     } catch (error) {
-
-        console.error("Error:"
+        console.error("Error:", error);
+        // Clean up the loading message if it exists
+        const loader = document.getElementById(`loading-${loadingId}`);
+        if (loader) loader.remove();
+        appendMessage("The server is acting up. Maybe it's also depressed.", "bot");
+    }
+}
