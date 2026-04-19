@@ -44,7 +44,7 @@ function appendMessage(text, senderType) {
 
     messageDiv.classList.add("message");
 
-    messageDiv.classList.add(senderType === "user" ? "user-message" : "bot-message");
+    messageDiv.classList.add(senderType === "user" ? "user-message": "bot-message");
 
     messageDiv.innerText = text;
 
@@ -66,48 +66,55 @@ async function fetchGameRecommendation() {
     const userText = chatInput.value.trim();
     if (!userText) return; 
 
+    // 1. UI: Add user message and clear input
     appendMessage(userText, "user");
     chatInput.value = ""; 
 
+    // 2. UI: Add a loading bubble
     const loadingId = Date.now();
     const loadingDiv = document.createElement("div");
     loadingDiv.classList.add("message", "bot-message");
     loadingDiv.id = `loading-${loadingId}`;
     loadingDiv.innerText = "Thinking...";
     chatMessages.appendChild(loadingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 
+    // 3. Setup the Request
     const requestData = {
         user_message: userText,
         categories: [], 
         related_games: []
     };
 
-    // 1. FIXED: Added /api/recommend to the end
-    const backendURL = "https://red-suns-reply.loca.lt/api/recommend"; 
+    // Replace the URL below with your CURRENT localtunnel link!
+    const backendURL = "https://the-vault-chat.loca.lt/api/recommend"; 
                         
     try {
         const response = await fetch(backendURL, {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
-                // 2. FIXED: This header skips the Localtunnel "Warning" page
                 "bypass-tunnel-reminder": "true" 
             },
             body: JSON.stringify(requestData)
         });
 
-        if (!response.ok) throw new Error("Server error");
+        if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+        }
         
         const data = await response.json();
         
-        document.getElementById(`loading-${loadingId}`).remove();
+        // Remove loading and add bot reply
+        const loader = document.getElementById(`loading-${loadingId}`);
+        if (loader) loader.remove();
+        
         appendMessage(data.bot_reply, "bot");
 
     } catch (error) {
-        console.error("Error:", error);
-        // Clean up the loading message if it exists
+        console.error("Fetch Error:", error);
         const loader = document.getElementById(`loading-${loadingId}`);
         if (loader) loader.remove();
-        appendMessage("The server is acting up. Maybe it's also depressed.", "bot");
+        appendMessage("My brain is offline. Probably the WiFi or Screen Time boss.", "bot");
     }
 }
