@@ -53,7 +53,7 @@ async function fetchGameRecommendation() {
         related_games: []
     };
 
-    const backendURL = "https://plenty-doors-cheer.loca.lt";
+    const backendURL = "https://red-suns-reply.loca.lt";
                         
     try {
         const response = await fetch(backendURL, {
