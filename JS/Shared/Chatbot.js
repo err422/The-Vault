@@ -113,14 +113,15 @@ async function fetchGameRecommendation() {
                         
 
     try {
+
         const response = await fetch(backendURL, {
+
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                // 2. FIXED: This header skips the Localtunnel "Warning" page
-                "bypass-tunnel-reminder": "true" 
-            },
+
+            headers: { "Content-Type": "application/json" },
+
             body: JSON.stringify(requestData)
+
         });
 
 
