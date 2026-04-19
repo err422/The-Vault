@@ -108,7 +108,7 @@ async function fetchGameRecommendation() {
 
 
 
-    const backendURL = "https://red-suns-reply.loca.lt";
+    const backendURL = "https://red-suns-reply.loca.lt/api/recommend";
 
                         
 
