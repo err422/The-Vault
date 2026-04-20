@@ -87,7 +87,7 @@ async function fetchGameRecommendation() {
     };
 
     // Replace the URL below with your CURRENT localtunnel link!
-    const backendURL = "https://https://urban-potato-r4rjxjwqr5vjhwj75-8000.app.github.dev/api/recommend"; 
+    const backendURL = "https://urban-potato-r4rjxjwqr5vjhwj75-8000.app.github.dev/api/recommend"; 
                         
     try {
         const response = await fetch(backendURL, {
