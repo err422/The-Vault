@@ -89,7 +89,7 @@ async function fetchGameRecommendation() {
     };
 
     // UPDATE THIS with your current Tunnel or Codespace URL
-    const backendURL = "https://crispy-space-invention-q79wxw6j9jx72wx4x-8000.app.github.dev/api/recommend"; 
+    const backendURL = "https://orange-goggles-pj5r4p69vjvfj97-8000.app.github.dev/api/recommend"; 
                         
     try {
         const response = await fetch(backendURL, {
