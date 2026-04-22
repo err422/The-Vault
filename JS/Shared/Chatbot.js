@@ -11,6 +11,7 @@ const sendBtn = document.getElementById("send-btn");
 const chatInput = document.getElementById("chat-input");
 
 const chatMessages = document.getElementById("chat-messages");
+let chatHistory = []; // stores chat history
 
 
 
