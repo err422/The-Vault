@@ -80,15 +80,16 @@ async function fetchGameRecommendation() {
     chatMessages.appendChild(loadingDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // 3. Setup the Request
+    // 3. Setup the Request (Only declare this ONCE)
     const requestData = {
         user_message: userText,
+        history: chatHistory, // Include the conversation so far
         categories: [], 
         related_games: []
     };
 
-    // Replace the URL below with your CURRENT localtunnel link!
-    const backendURL = "https://crispy-space-invention-q79wxw6j9jx72xp4x-8000.app.github.dev/api/recommend"; 
+    // UPDATE THIS with your current Tunnel or Codespace URL
+    const backendURL = "https://crispy-space-invention-q79wxw6j9jx72wx4x-8000.app.github.dev/api/recommend"; 
                         
     try {
         const response = await fetch(backendURL, {
@@ -106,7 +107,14 @@ async function fetchGameRecommendation() {
         
         const data = await response.json();
         
-        // Remove loading and add bot reply
+        // 4. Update History (Store both user and bot messages)
+        chatHistory.push({ role: "user", text: userText });
+        chatHistory.push({ role: "model", text: data.bot_reply });
+
+        // Keep history manageable (Optional: Keep last 10 messages)
+        if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
+        
+        // 5. Remove loading and add bot reply
         const loader = document.getElementById(`loading-${loadingId}`);
         if (loader) loader.remove();
         
@@ -116,7 +124,7 @@ async function fetchGameRecommendation() {
         console.error("Fetch Error:", error);
         const loader = document.getElementById(`loading-${loadingId}`);
         if (loader) loader.remove();
-        appendMessage("No. Leave me alone.", "bot");
+        appendMessage("No. Leave me alone. (The server is dead).", "bot");
     }
 }
 // Trigger the fetch when clicking Send
