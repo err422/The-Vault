@@ -80,7 +80,7 @@ async function fetchGameRecommendation() {
     chatMessages.appendChild(loadingDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // 3. Setup the Request (Only declare this ONCE)
+    // 3. Setup the Request 
     const requestData = {
         user_message: userText,
         history: chatHistory, // Include the conversation so far
@@ -88,7 +88,6 @@ async function fetchGameRecommendation() {
         related_games: []
     };
 
-    // UPDATE THIS with your current Tunnel or Codespace URL
     const backendURL = "https://orange-goggles-pj5r4p69vjvfj97-8000.app.github.dev/api/recommend"; 
                         
     try {
@@ -111,7 +110,7 @@ async function fetchGameRecommendation() {
         chatHistory.push({ role: "user", text: userText });
         chatHistory.push({ role: "model", text: data.bot_reply });
 
-        // Keep history manageable (Optional: Keep last 10 messages)
+        // Keep history manageable 
         if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
         
         // 5. Remove loading and add bot reply
