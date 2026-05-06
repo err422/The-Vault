@@ -178,5 +178,14 @@
       "icon":"⛏️",
       "rating":"★★★★☆",
       "url":"https://drift.io/"
+   },
+   {
+      "id":21,
+      "title":"Diep.io",
+      "description":"A fun tank evolution .IO game",
+      "category":"simulation",
+      "icon":"⛏️",
+      "rating":"★★★★☆",
+      "url":"https://diep.io/"
    }
 ]
