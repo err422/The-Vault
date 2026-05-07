@@ -20,11 +20,11 @@
    {
       "id":3,
       "title":"Minecraft 1.12.2",
-      "description":"Its just minecraft 1.12.2 with a pause menu that works 50% of the time",
+      "description":"Custom made Minecraft launcher",
       "category":"simulation",
       "icon":"⛏ ",
       "rating":"★★★☆☆",
-      "url":"https://err422.github.io/The-Vault-games/minecraft.html"
+      "url":"https://irv77.github.io/AmplerLauncher/"
    },
    {
       "id":4,
@@ -187,5 +187,86 @@
       "icon":"⛏️",
       "rating":"★★★★☆",
       "url":"https://diep.io/"
+   },
+   {
+      "id":22,
+      "title":"Cuphead",
+      "description":"A slow loading web port of the game Cuphead",
+      "category":"simulation",
+      "icon": "n/a",
+      "rating":"★★★★☆",
+      "url":"https://err422.github.io/cuphead/"
+   },
+   {
+      "id":23,
+      "title":"FNAF 1",
+      "description":"The first FNAF game",
+      "category":"simulation",
+      "icon":"n/a",
+      "rating":"★★★★★",
+      "url":"https://genizy.github.io/fnaf/1/"
+   },
+   {
+      "id":24,
+      "title":"FNAF 2",
+      "description":"The second FNAF game",
+      "category":"simulation",
+      "icon":"n/a",
+      "rating":"★★★★★",
+      "url":"https://genizy.github.io/fnaf/2/"
+   },
+   {
+      "id":25,
+      "title":"FNAF 3",
+      "description":"The third FNAF game",
+      "category":"simulation",
+      "icon":"n/a",
+      "rating":"★★★★★",
+      "url":"https://genizy.github.io/fnaf/3/"
+   },
+   {
+      "id":26,
+      "title":"FNAF 4",
+      "description":"The fourth FNAF game",
+      "category":"simulation",
+      "icon":"n/a",
+      "rating":"★★★★★",
+      "url":"https://genizy.github.io/fnaf/4/"
+   },
+   {
+      "id":27,
+      "title":"FNAF World",
+      "description":"A web port of FNAF World",
+      "category":"simulation",
+      "icon":"n/a",
+      "rating":"★★★★★",
+      "url":"https://genizy.github.io/fnaf/w/"
+   },
+   {
+      "id":28,
+      "title":"FNAF Pizzeria Simulator",
+      "description":"A web Port of FNAF Pizzeria Simulator",
+      "category":"simulation",
+      "icon":"n/a",
+      "rating":"★★★★★",
+      "url":"https://genizy.github.io/fnaf/ps/"
+   },
+   {
+      "id":29,
+      "title":"FNAF UCN",
+      "description":"A web port of FNAF UCN",
+      "category":"Simulation",
+      "icon":"n/a",
+      "rating":"★★★★☆",
+      "url":"https://genizy.github.io/fnaf/ucn/"
+   },
+   {
+      "id":30,
+      "title":"FNAF Sister Location",
+      "description":"A web port of FNAF Sister Location",
+      "category":"Simulation",
+      "icon":"n/a",
+      "rating":"★★★★☆",
+      "url":"https://genizy.github.io/fnaf/sl/"
    }
 ]
