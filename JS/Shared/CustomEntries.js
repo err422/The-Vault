@@ -14,7 +14,7 @@
     window.CustomEntriesSystem = {
         init(pageType) {
             currentPageType = pageType;
-            console.log(`🎨 Initializing Custom Entries for ${pageType}`);
+            console.log(`Initializing Custom Entries for ${pageType}`);
             
             this.createFloatingButton();
             
@@ -22,16 +22,16 @@
             if (typeof auth !== 'undefined') {
                 auth.onAuthStateChanged((user) => {
                     if (user) {
-                        console.log('✅ User authenticated, loading custom entries...');
+                        console.log('User aufentication loaded, Loading custom entries...');
                         this.loadCustomEntries();
                     } else {
-                        console.log('ℹ️ No user logged in');
+                        console.log('No user logged in');
                         customEntries = [];
                         this.renderCustomEntries();
                     }
                 });
             } else {
-                console.warn('⚠️ Auth not available yet');
+                console.warn('Auth not available yet');
             }
         },
 
@@ -78,13 +78,13 @@
             fab.addEventListener('click', () => this.openModal());
 
             document.body.appendChild(fab);
-            console.log('✅ Floating button created');
+            console.log('Floating button created');
         },
 
         async loadCustomEntries() {
             const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
             if (!user) {
-                console.log('❌ No user logged in, cannot load custom entries');
+                console.log('No user logged in, cannot load custom entries');
                 customEntries = [];
                 this.renderCustomEntries();
                 return;
@@ -417,7 +417,7 @@
             }
 
             try {
-                console.log(`💾 Saving custom entry to top-level path...`);
+                console.log(`Saving custom entry to top-level path...`);
                 
                 // Get username for better organization
                 const username = (typeof AuthCore !== 'undefined' && AuthCore.currentUsername) 
@@ -435,18 +435,18 @@
                 if (editingId) {
                     // Update existing entry at top level
                     await database.ref(`customEntries/${currentPageType}/${editingId}`).update(entryData);
-                    console.log(`✅ Updated entry ${editingId} at customEntries/${currentPageType}`);
+                    console.log(`Updated entry ${editingId} at customEntries/${currentPageType}`);
                 } else {
                     // Create new entry at top level
                     await database.ref(`customEntries/${currentPageType}`).push(entryData);
-                    console.log(`✅ Created new entry at customEntries/${currentPageType}`);
+                    console.log(`Created new entry at customEntries/${currentPageType}`);
                 }
 
                 document.getElementById('custom-entry-modal').remove();
                 await this.loadCustomEntries();
 
             } catch (error) {
-                console.error('❌ Error saving entry:', error);
+                console.error('Error saving entry:', error);
                 alert('Failed to save entry. Please try again.');
             }
         },

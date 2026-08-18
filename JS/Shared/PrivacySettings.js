@@ -1,4 +1,4 @@
-// PrivacySettings.js - Privacy & Safety System for The Vault
+// PrivacySettings.js - Privacy & Safety Systems
 
 (function() {
     console.log('🛡️ Privacy Settings System Initializing...');

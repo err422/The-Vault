@@ -1,5 +1,5 @@
 (function() {
-    console.log('🚀 Debug System Initializing...');
+    console.log('Debug System Initializing...');
     
     // ===== CONFIGURATION =====
     const DEBUG_CONFIG = {
@@ -11,7 +11,7 @@
     let debugModeActive = false;
     let passwordPromptOpen = false;
 
-    console.log('✅ Debug configuration loaded');
+    console.log('Debug configuration loaded');
     
     // ===== SECRET CODE LISTENER =====
     document.addEventListener('keydown', function(event) {

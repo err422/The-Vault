@@ -1,11 +1,4 @@
-// ============================================================
-//  THE VAULT — CHANGELOG POPUP
-//  How to update:
-//    1. Change CHANGELOG_VERSION to any new string (e.g. "1.1", "2025-03-24")
-//    2. Edit the entries array below — add new items at the TOP
-//    3. Save the file. Users who haven't seen this version will
-//       automatically get the popup on their next visit.
-// ============================================================
+
 
 const CHANGELOG_VERSION = "2.8.5"; // <-- bump this every time you update
 
@@ -13,7 +6,7 @@ const CHANGELOG_ENTRIES = [
   // Most recent changes first
   {
     label: "NEW",       // badge text: "NEW", "FIX", "IMPROVED", "REMOVED"
-    text: "Added a semi working chatbot"
+    text: "Chatbot is refusing to work"
   },
   {
     label: "NEW",
