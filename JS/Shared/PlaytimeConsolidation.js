@@ -32,9 +32,9 @@
         return diffDays;
     }
     
-    // Main consolidation function
+    //  Consolodate entries to save space and keep data clean
     async function consolidatePlaytime(userId) {
-        console.log('🔄 Starting playtime consolidation for user:', userId);
+        console.log('Starting playtime consolidation for user:', userId);
         
         try {
             // Get all playtime data
@@ -52,8 +52,8 @@
             
             let updates = {};
             
-            // === STEP 1: Consolidate old daily entries into weekly ===
-            console.log('📅 Checking daily entries...');
+            // === STEP 1: Consolidate old daily entries into weekly entries after a week ===
+            console.log('Checking daily entries...');
             for (const dateStr in daily) {
                 const age = daysAgo(dateStr);
                 
@@ -75,7 +75,7 @@
             }
             
             // === STEP 2: Consolidate old weekly entries into monthly ===
-            console.log('📊 Checking weekly entries...');
+            console.log('Checking weekly entries...');
             for (const weekStr in weekly) {
                 // Extract year and week number from "2026-W01"
                 const [year, weekPart] = weekStr.split('-W');
@@ -91,7 +91,7 @@
                     console.log(`  Moving ${weekStr} to monthly (${age} days old)`);
                     const monthStr = getMonthString(weekDate);
                     
-                    // Merge this week's data into the appropriate month
+                    // Merge this week's data into the correct month
                     for (const game in weekly[weekStr]) {
                         const seconds = weekly[weekStr][game];
                         const monthPath = `monthly/${monthStr}/${game}`;
@@ -104,8 +104,8 @@
                 }
             }
             
-            // === STEP 3: Consolidate old monthly entries into yearly ===
-            console.log('📈 Checking monthly entries...');
+            // === STEP 3: Consolidate old monthly entries into yearly entries ===
+            console.log('Checking monthly entries...');
             for (const monthStr in monthly) {
                 const monthDate = new Date(monthStr + '-01');
                 const age = daysAgo(monthDate.toISOString().split('T')[0]);
