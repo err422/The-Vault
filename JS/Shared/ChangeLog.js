@@ -1,24 +1,22 @@
 
 
-const CHANGELOG_VERSION = "2.8.5"; // <-- bump this every time you update
+const CHANGELOG_VERSION = "2.8.6";
 
 const CHANGELOG_ENTRIES = [
   // Most recent changes first
+  // badge text: "NEW", "FIX", "IMPROVED", "REMOVED"
   {
-    label: "NEW",       // badge text: "NEW", "FIX", "IMPROVED", "REMOVED"
+    label: "IMPROVED",
+    text: "Game windows fill screen when open"
+  },
+  {
+    label: "NEW",    
     text: "Chatbot is refusing to work"
   },
   {
     label: "NEW",
-    text: "Added alt + ` as fullscreen shortcut"
-  },
-  {
-    label: "IMPROVED",
-    text: "Cleaned up debug menu"
+    text: "Added alt + ` as fullscreen shortcut inside select games"
   }
-  // Add more entries above this line, example:
-  // { label: "FIX",      text: "Fixed broken links on the Games page." },
-  // { label: "IMPROVED", text: "Faster load times across all pages." },
 ];
 
 (function () {
