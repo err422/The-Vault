@@ -10,7 +10,7 @@
 
 The Vault is a personal web project that serves as a centralized hub for games and websites, as well as a showcase for my web development work. It features a clean, navigation-based layout with dedicated pages for games, websites, account management, and settings.
 
->**Intended Use:** The Vault is designed to be used during free time, downtime, or other non-instructional periods. Please be respectful of your school's policies and only use it when appropriate.
+>**Intended Use:** The Vault is designed to be used during free time, downtime, or other non-instructional periods. Please respect your school's or workplace's policies and use it only when appropriate.
 
 ---
 
