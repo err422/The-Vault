@@ -28,7 +28,7 @@
         overlay.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(10,10,10,0.95);z-index:9999;display:flex;justify-content:center;align-items:center;backdrop-filter:blur(8px);opacity:0;transition:opacity 0.3s ease;`;
         const browserWindow = document.createElement('div');
         browserWindow.id = 'browser-window';
-        browserWindow.style.cssText = `width:90%;height:90%;max-width:1200px;max-height:800px;background:rgba(42,42,42,0.95);border-radius:12px;box-shadow:0 25px 80px rgba(0,0,0,0.8);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,0.1);transform:scale(0.8);transition:transform 0.3s ease;position:relative;`;
+        browserWindow.style.cssText = `width:100%;height:100%;background:rgba(42,42,42,0.95);border-radius:12px;box-shadow:0 25px 80px rgba(0,0,0,0.8);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,0.1);transform:scale(0.8);transition:transform 0.3s ease;position:relative;`;
         const tabBar = document.createElement('div');
         tabBar.id = 'tab-bar';
         tabBar.style.cssText = `background:rgba(55,55,55,0.9);display:flex;align-items:flex-end;height:36px;padding:0 8px;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid rgba(255,255,255,0.1);z-index:10;position:relative;`;

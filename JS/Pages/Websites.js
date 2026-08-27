@@ -1,10 +1,6 @@
 //Websites.js
-const savedTheme = localStorage.getItem('vaultTheme') || 'default';
-document.body.classList.add(`theme-${savedTheme}`);
-
-
 // Global playtime variables
-let playtimeTracker = {
+var playtimeTracker = {
     currentGame: null,
     startTime: null,
     intervalId: null,
@@ -133,7 +129,7 @@ function formatPlaytime(seconds) {
 }
 
 // Global variables
-let allWebsites = [];
+var allWebsites = [];
 
 // Load websites from JSON file
 async function loadWebsites() {
@@ -236,7 +232,7 @@ function toggleFullScreen() {
 }
 
 // Favorites management
-let favorites = [];
+var favorites = [];
 
 function loadFavorites() {
     try {
@@ -287,7 +283,7 @@ function syncFavoritesFromCloud() {
 }
 
 
-let syncTimeout = null;
+var syncTimeout = null;
 
 function saveFavorites() {
     try {
@@ -615,35 +611,30 @@ function updateCardStars() {
 
 loadFavorites();
 
-const cardObserver = new MutationObserver(function(mutations) {
+var cardObserver = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
         if (mutation.addedNodes.length) addStarsToCards();
     });
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    loadWebsites();
-    addStarsToCards();
-    
-    const websitesGrid = document.getElementById('websitesGrid');
-    if (websitesGrid) {
-        cardObserver.observe(websitesGrid, { childList: true, subtree: true });
-    }
-    
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const label = this.querySelector('.nav-label').textContent;
-            switch (label) {
-                case 'Home': window.location.href = 'index.html'; break;
-                case 'Games': window.location.href = 'games.html'; break;
-                case 'Websites': window.location.href = 'websites.html'; break;
-                case 'Credits': window.location.href = 'credits.html'; break;
-                case 'Fullscreen': toggleFullScreen(); break;
-            }
-        });
-    });
-});
+// Main initialization — runs immediately rather than waiting on
+// DOMContentLoaded, since this script only executes once it's actually
+// attached to the page (both on first load and on every SPA swap into
+// websites.html via navigation.js).
+//
+// Note: the old version of this block also attached its own nav-item
+// click handler that did a hard `window.location.href` navigation on
+// every click. That duplicated (and fought with) the SPA handler in
+// navigation.js — it's the reason fullscreen was dropping on this page
+// specifically. navigation.js already owns all nav-item clicks, so that
+// handler has been removed rather than fixed.
+loadWebsites();
+addStarsToCards();
+
+var websitesGrid = document.getElementById('websitesGrid');
+if (websitesGrid) {
+    cardObserver.observe(websitesGrid, { childList: true, subtree: true });
+}
 
 // Save playtime when user leaves or closes tab
 window.addEventListener('beforeunload', function() {

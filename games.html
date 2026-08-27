@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Vault - Games</title>
     <link rel="stylesheet" href="CSS/shared.css">
-    <link rel="stylesheet" href="CSS/games.css">
+    <link rel="stylesheet" href="CSS/games.css" id="page-style">
 </head>
 <body>
-    <div class="stars" id="stars"></div>
-
     <nav class="nav-bar">
         <div class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -55,42 +53,44 @@
             </svg>
             <span class="nav-label">Fullscreen</span>
         </div>
-    </nav> 
+    </nav>
 
-    <div class="container">
-        <h1 class="title">The Vault</h1>
-        <!-- Search -->
-        <div class="search-container">
-            <input type="text" class="search-box" placeholder="Search games..." id="searchInput">
-        </div>
+    <main id="app-content" data-page="games">
+        <div class="stars" id="stars"></div>
 
-        <!-- Category filters -->
-        <div class="filter-container">
-            <button class="filter-btn active" onclick="filterGames('all')">All</button>
-            <button class="filter-btn" onclick="filterGames('fps')">FPS</button>
-            <button class="filter-btn" onclick="filterGames('idle')">Idle</button>
-            <button class="filter-btn" onclick="filterGames('puzzle')">Puzzle</button>
-            <button class="filter-btn" onclick="filterGames('rpg')">RPG</button>
-            <button class="filter-btn" onclick="filterGames('racing')">Racing</button>
-            <button class="filter-btn" onclick="filterGames('action')">Action</button>
-            <button class="filter-btn" onclick="filterGames('sports')">Sports</button>
-            <button class="filter-btn" onclick="filterGames('simulation')">Simulation</button>
-            <button class="filter-btn" onclick="filterGames('incremental')">Incremental</button>
-            <button class="filter-btn" onclick="filterGames('trivia')">Trivia</button>
-        </div>
+        <div class="container">
+            <h1 class="title">The Vault</h1>
+            <!-- Search -->
+            <div class="search-container">
+                <input type="text" class="search-box" placeholder="Search games..." id="searchInput">
+            </div>
 
-        <!-- Games grid -->
-        <div class="games-grid" id="gamesGrid"> </div> 
-        
+            <!-- Category filters -->
+            <div class="filter-container">
+                <button class="filter-btn active" onclick="filterGames('all')">All</button>
+                <button class="filter-btn" onclick="filterGames('fps')">FPS</button>
+                <button class="filter-btn" onclick="filterGames('idle')">Idle</button>
+                <button class="filter-btn" onclick="filterGames('puzzle')">Puzzle</button>
+                <button class="filter-btn" onclick="filterGames('rpg')">RPG</button>
+                <button class="filter-btn" onclick="filterGames('racing')">Racing</button>
+                <button class="filter-btn" onclick="filterGames('action')">Action</button>
+                <button class="filter-btn" onclick="filterGames('sports')">Sports</button>
+                <button class="filter-btn" onclick="filterGames('simulation')">Simulation</button>
+                <button class="filter-btn" onclick="filterGames('incremental')">Incremental</button>
+                <button class="filter-btn" onclick="filterGames('trivia')">Trivia</button>
+            </div>
+
+            <!-- Games grid -->
+            <div class="games-grid" id="gamesGrid"></div>
         </div>
-        
-     
+    </main>
+
     <!--External JS-->
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    
+
     <!-- Firebase files -->
     <script src="JS/Shared/FirebaseConfig.js"></script>
     <script src="JS/Shared/AuthCore.js"></script>
@@ -99,16 +99,18 @@
     <script defer src="JS/Shared/DebugSystem.js"></script>
     <!--Shared-->
     <script src="JS/Shared/CustomEntries.js"></script>
-    <script>document.addEventListener('DOMContentLoaded', function() {if (typeof CustomEntriesSystem !== 'undefined') {CustomEntriesSystem.init('games');}});</script>
-    <script src="JS/Shared/ThemeLoader.js"></script>
+    <script data-page-script>
+        if (typeof CustomEntriesSystem !== 'undefined') {
+            CustomEntriesSystem.init('games');
+        }
+    </script>
     <script src="JS/Shared/PrivacySettings.js"></script>
     <script src="JS/Shared/Stars.js"></script>
     <script src="JS/Shared/Navigation.js"></script>
     <script src="JS/Shared/BellSchedule.js"></script>
     <script src="JS/Shared/browser.js"></script>
     <!--Page-->
-    <script src="JS/Pages/Games.js"></script>
-    
-    <script src="JS/Shared/LoadingScreen.js"></script>
+    <script src="JS/Pages/Games.js" data-page-script></script>
+
 </body>
 </html>

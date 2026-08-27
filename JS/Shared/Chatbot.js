@@ -1,17 +1,17 @@
 // Grab our UI elements
 
-const chatBubbleBtn = document.getElementById("chat-bubble-btn");
+var chatBubbleBtn = document.getElementById("chat-bubble-btn");
 
-const chatWindow = document.getElementById("chat-window");
+var chatWindow = document.getElementById("chat-window");
 
-const closeChatBtn = document.getElementById("close-chat-btn");
+var closeChatBtn = document.getElementById("close-chat-btn");
 
-const sendBtn = document.getElementById("send-btn");
+var sendBtn = document.getElementById("send-btn");
 
-const chatInput = document.getElementById("chat-input");
+var chatInput = document.getElementById("chat-input");
 
-const chatMessages = document.getElementById("chat-messages");
-let chatHistory = []; // stores chat history
+var chatMessages = document.getElementById("chat-messages");
+var chatHistory = []; // stores chat history
 
 
 

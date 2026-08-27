@@ -6,11 +6,9 @@
     <title>The Vault - Websites</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="CSS/shared.css">
-    <link rel="stylesheet" href="CSS/Websites.css">
+    <link rel="stylesheet" href="CSS/Websites.css" id="page-style">
 </head>
 <body>
-    <div class="stars" id="stars"></div>
-
     <nav class="nav-bar">
         <div class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -49,34 +47,37 @@
         </div>
     </nav>
 
-    <div class="container">
-        <h1 class="title">The Vault</h1>
-        
-        <!-- Search -->
-        <div class="search-container">
-            <input type="text" class="search-box" placeholder="Search websites..." id="searchInput">
-        </div>
+    <main id="app-content" data-page="websites">
+        <div class="stars" id="stars"></div>
 
-        <!-- Category filters -->
-        <div class="filter-container">
-            <button class="filter-btn active" data-category="all">All</button>
-            <button class="filter-btn" data-category="Games">Games</button>
-            <button class="filter-btn" data-category="Proxy">Proxy</button>
-            <button class="filter-btn" data-category="Education">Education</button>
-            <button class="filter-btn" data-category="Other">Other</button>
-        </div>
+        <div class="container">
+            <h1 class="title">The Vault</h1>
 
-        <!-- Websites grid -->
-        <div class="websites-grid" id="websitesGrid">
-           
-        </div> 
-    </div>
+            <!-- Search -->
+            <div class="search-container">
+                <input type="text" class="search-box" placeholder="Search websites..." id="searchInput">
+            </div>
+
+            <!-- Category filters -->
+            <div class="filter-container">
+                <button class="filter-btn active" data-category="all">All</button>
+                <button class="filter-btn" data-category="Games">Games</button>
+                <button class="filter-btn" data-category="Proxy">Proxy</button>
+                <button class="filter-btn" data-category="Education">Education</button>
+                <button class="filter-btn" data-category="Other">Other</button>
+            </div>
+
+            <!-- Websites grid -->
+            <div class="websites-grid" id="websitesGrid"></div>
+        </div>
+    </main>
+
     <!--External JS-->
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    
+
     <!-- Firebase files -->
     <script src="JS/Shared/FirebaseConfig.js"></script>
     <script src="JS/Shared/AuthCore.js"></script>
@@ -85,15 +86,17 @@
     <script defer src="JS/Shared/DebugSystem.js"></script>
     <!--Shared-->
     <script src="JS/Shared/CustomEntries.js"></script>
-    <script>document.addEventListener('DOMContentLoaded', function() {if (typeof CustomEntriesSystem !== 'undefined') {CustomEntriesSystem.init('games');}});</script>
-    <script src="JS/Shared/ThemeLoader.js"></script>
-    <script src="JS/Shared/LoadingScreen.js"></script>
+    <script data-page-script>
+        if (typeof CustomEntriesSystem !== 'undefined') {
+            CustomEntriesSystem.init('websites');
+        }
+    </script>
     <script src="JS/Shared/PrivacySettings.js"></script>
     <script src="JS/Shared/Stars.js"></script>
     <script src="JS/Shared/Navigation.js"></script>
     <script src="JS/Shared/BellSchedule.js"></script>
     <script src="JS/Shared/browser.js"></script>
     <!--Page-->
-    <script src="JS/Pages/Websites.js"></script>
+    <script src="JS/Pages/Websites.js" data-page-script></script>
 </body>
 </html>

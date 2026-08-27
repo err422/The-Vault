@@ -5,399 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Vault - Settings</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #000;
-            color: #fff;
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-            transition: background 0.5s ease;
-        }
-
-        h1 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 3rem;
-            text-align: center;
-            background: linear-gradient(to right, #fc72ff, #8f68ff, #487bff, #8f68ff, #fc72ff);
-            background-size: 200%;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: animate-gradient 2.5s linear infinite;
-        }
-
-        @keyframes animate-gradient {
-            to { background-position: 200%; }
-        }
-
-        .nav-bar {
-            position: fixed;
-            z-index: 100;
-            top: 2rem;
-            left: 0;
-            right: 0;
-            margin: 0 auto;
-            width: fit-content;
-            background: rgba(255, 255, 255, 0.1);
-            border: 0.1rem solid rgba(255, 255, 255, 0.2);
-            border-radius: 2rem;
-            padding: 0.75rem 1.5rem;
-            display: flex;
-            gap: 1.25rem;
-            backdrop-filter: blur(10px);
-            font-size: 1rem;
-        }
-
-        .nav-item {
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            padding: 0.5rem;
-            border-radius: 1rem;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .nav-icon {
-            width: 1.5rem;
-            height: 1.5rem;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-            flex-shrink: 0;
-        }
-
-        .nav-item:hover .nav-icon {
-            opacity: 1;
-        }
-
-        .nav-label {
-            margin-left: 8px;
-            font-size: 1rem;
-            font-weight: 500;
-            opacity: 0;
-            transform: translateX(-10px);
-            transition: all 0.35s ease-in;
-            max-width: 0;
-            overflow: hidden;
-        }
-
-        .nav-item:hover .nav-label {
-            opacity: 1;
-            transform: translateX(0);
-            max-width: 100px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 120px 20px 40px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .title {
-            text-align: center;
-            font-size: 4rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 60px;
-            letter-spacing: -2px;
-        }
-
-        .settings-section {
-            background: rgba(30, 30, 30, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(60, 60, 60, 0.5);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 30px;
-            transition: all 0.3s ease;
-        }
-
-        .settings-section:hover {
-            border-color: rgba(100, 100, 100, 0.8);
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .section-icon {
-            font-size: 1.8rem;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #fff;
-        }
-
-        .section-description {
-            color: #888;
-            font-size: 0.95rem;
-            margin-bottom: 25px;
-        }
-
-        /* Theme Grid */
-        .theme-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .theme-card {
-            background: rgba(40, 40, 40, 0.8);
-            border: 2px solid rgba(60, 60, 60, 0.5);
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .theme-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(143, 104, 255, 0.6);
-        }
-
-        .theme-card.active {
-            border-color: #8f68ff;
-            box-shadow: 0 0 20px rgba(143, 104, 255, 0.4);
-        }
-
-        .theme-card.active::after {
-            content: '✓';
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 26px;
-            height: 26px;
-            background: #8f68ff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .theme-preview {
-            width: 100%;
-            height: 100px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-
-        .theme-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #fff;
-            text-align: center;
-        }
-
-        /* Control Groups */
-        .control-group {
-            margin-bottom: 20px;
-        }
-
-        .control-label {
-            font-size: 1rem;
-            color: #ddd;
-            margin-bottom: 10px;
-            display: block;
-            font-weight: 500;
-        }
-
-        .control-sublabel {
-            font-size: 0.85rem;
-            color: #888;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .control-input {
-            width: 100%;
-            background: rgba(60, 60, 60, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 12px 16px;
-            color: #fff;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-        }
-
-        .control-input:focus {
-            outline: none;
-            border-color: #8f68ff;
-            background: rgba(60, 60, 60, 0.7);
-        }
-
-        .key-capture {
-            background: rgba(143, 104, 255, 0.1);
-            border: 2px dashed rgba(143, 104, 255, 0.5);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .key-capture:hover {
-            background: rgba(143, 104, 255, 0.2);
-            border-color: rgba(143, 104, 255, 0.8);
-        }
-
-        .key-capture.active {
-            background: rgba(143, 104, 255, 0.3);
-            border-style: solid;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-
-        .key-display {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #8f68ff;
-            margin-bottom: 8px;
-        }
-
-        .key-hint {
-            font-size: 0.9rem;
-            color: #888;
-        }
-
-        /* Toggle Switch */
-        .toggle-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-
-        .toggle-label {
-            font-size: 1rem;
-            color: #ddd;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 50px;
-            height: 26px;
-            background: rgba(60, 60, 60, 0.8);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .toggle-switch.active {
-            background: #8f68ff;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 50%;
-            transition: all 0.3s;
-        }
-
-        .toggle-switch.active .toggle-slider {
-            left: 27px;
-        }
-
-        /* Preset Buttons */
-        .preset-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .preset-btn {
-            background: rgba(143, 104, 255, 0.1);
-            border: 1px solid rgba(143, 104, 255, 0.3);
-            color: #8f68ff;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
-
-        .preset-btn:hover {
-            background: rgba(143, 104, 255, 0.2);
-            border-color: rgba(143, 104, 255, 0.6);
-        }
-
-        /* Save Indicator */
-        .save-indicator {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: rgba(34, 197, 94, 0.9);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s;
-            pointer-events: none;
-            z-index: 1000;
-        }
-
-        .save-indicator.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        @media (max-width: 768px) {
-            .title { font-size: 2.5rem; }
-            .theme-grid { grid-template-columns: repeat(2, 1fr); }
-            .nav-bar {
-                left: 1rem;
-                right: 1rem;
-                width: auto;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="CSS/settings.css" id="page-style">
 </head>
 <body>
     <!-- Navigation -->
-<nav class="nav-bar">
+    <nav class="nav-bar">
         <div class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -434,91 +46,80 @@
             <span class="nav-label">Fullscreen</span>
         </div>
     </nav>
-    <div class="container">
-        <h1 class="title">Settings</h1>
 
-        <!-- Appearance Settings -->
-        <div class="settings-section">
-            <div class="section-header">
-                <span class="section-icon">🎨</span>
-                <h2 class="section-title">Appearance</h2>
-            </div>
-            <p class="section-description">Customize the look and feel of The Vault</p>
+    <main id="app-content" data-page="settings">
+        <div class="container">
+            <h1 class="title">Settings</h1>
 
-            <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #aaa;">Background Theme</h3>
-            <div class="theme-grid" id="theme-grid">
-                <!-- Themes will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Privacy & Safety -->
-        <div class="settings-section">
-            <div class="section-header">
-                <span class="section-icon">🛡️</span>
-                <h2 class="section-title">Privacy & Safety</h2>
-            </div>
-            <p class="section-description">Configure panic features and tab disguise</p>
-
-            <!-- Panic Key -->
-            <div class="control-group">
-                <label class="control-label">Panic Key</label>
-                <span class="control-sublabel">Press any key to set as your panic key</span>
-                <div class="key-capture" id="key-capture" onclick="startKeyCapture()">
-                    <div class="key-display" id="key-display">Not Set</div>
-                    <div class="key-hint">Click to set panic key</div>
+            <!-- Privacy & Safety -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <span class="section-icon">🛡️</span>
+                    <h2 class="section-title">Privacy & Safety</h2>
                 </div>
-            </div>
+                <p class="section-description">Configure panic features and tab disguise</p>
 
-            <!-- Panic URL -->
-            <div class="control-group">
-                <label class="control-label">Panic URL</label>
-                <span class="control-sublabel">Where to redirect when panic key is pressed</span>
-                <div class="preset-group">
-                    <button class="preset-btn" onclick="setPanicURLPreset('https://classroom.google.com')">📚 Google Classroom</button>
-                    <button class="preset-btn" onclick="setPanicURLPreset('https://google.com')">🔍 Google</button>
-                    <button class="preset-btn" onclick="setPanicURLPreset('https://docs.google.com')">📄 Google Docs</button>
-                </div>
-                <input type="url" class="control-input" id="panic-url" placeholder="https://classroom.google.com" onchange="savePanicURL()">
-            </div>
-
-            <!-- Tab Disguise -->
-            <div class="control-group">
-                <label class="control-label">Tab Disguise</label>
-                <span class="control-sublabel">Make The Vault look like another website</span>
-                
-                <div class="toggle-group">
-                    <span class="toggle-label">Enable Tab Disguise</span>
-                    <div class="toggle-switch" id="disguise-toggle" onclick="toggleDisguise()">
-                        <div class="toggle-slider"></div>
+                <!-- Panic Key -->
+                <div class="control-group">
+                    <label class="control-label">Panic Key</label>
+                    <span class="control-sublabel">Press any key to set as your panic key</span>
+                    <div class="key-capture" id="key-capture" onclick="startKeyCapture()">
+                        <div class="key-display" id="key-display">Not Set</div>
+                        <div class="key-hint">Click to set panic key</div>
                     </div>
                 </div>
 
-                <input type="text" class="control-input" id="disguise-title" placeholder="Classes" style="margin-bottom: 10px;" onchange="saveDisguiseSettings()">
-                <input type="url" class="control-input" id="disguise-favicon" placeholder="https://ssl.gstatic.com/classroom/ic_product_classroom_32.png" onchange="saveDisguiseSettings()">
+                <!-- Panic URL -->
+                <div class="control-group">
+                    <label class="control-label">Panic URL</label>
+                    <span class="control-sublabel">Where to redirect when panic key is pressed</span>
+                    <div class="preset-group">
+                        <button class="preset-btn" onclick="setPanicURLPreset('https://classroom.google.com')">📚 Google Classroom</button>
+                        <button class="preset-btn" onclick="setPanicURLPreset('https://google.com')">🔍 Google</button>
+                        <button class="preset-btn" onclick="setPanicURLPreset('https://docs.google.com')">📄 Google Docs</button>
+                    </div>
+                    <input type="url" class="control-input" id="panic-url" placeholder="https://classroom.google.com" onchange="savePanicURL()">
+                </div>
+
+                <!-- Tab Disguise -->
+                <div class="control-group">
+                    <label class="control-label">Tab Disguise</label>
+                    <span class="control-sublabel">Make The Vault look like another website</span>
+
+                    <div class="toggle-group">
+                        <span class="toggle-label">Enable Tab Disguise</span>
+                        <div class="toggle-switch" id="disguise-toggle" onclick="toggleDisguise()">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+
+                    <input type="text" class="control-input" id="disguise-title" placeholder="Classes" style="margin-bottom: 10px;" onchange="saveDisguiseSettings()">
+                    <input type="url" class="control-input" id="disguise-favicon" placeholder="https://ssl.gstatic.com/classroom/ic_product_classroom_32.png" onchange="saveDisguiseSettings()">
+                </div>
+            </div>
+
+            <!-- Performance Settings (Coming Soon) -->
+            <div class="settings-section" style="opacity: 0.5; pointer-events: none; position: relative;">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(143, 104, 255, 0.9); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.5px; z-index: 10;">
+                    COMING SOON
+                </div>
+                <div class="section-header">
+                    <span class="section-icon">⚡</span>
+                    <h2 class="section-title">Performance</h2>
+                </div>
+                <p class="section-description">Optimize performance for your device</p>
             </div>
         </div>
 
-        <!-- Performance Settings (Coming Soon) -->
-        <div class="settings-section" style="opacity: 0.5; pointer-events: none; position: relative;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(143, 104, 255, 0.9); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.5px; z-index: 10;">
-                COMING SOON
-            </div>
-            <div class="section-header">
-                <span class="section-icon">⚡</span>
-                <h2 class="section-title">Performance</h2>
-            </div>
-            <p class="section-description">Optimize performance for your device</p>
-        </div>
-    </div>
-
-    <!-- Save Indicator -->
-    <div class="save-indicator" id="save-indicator">✓ Saved</div>
+        <!-- Save Indicator -->
+        <div class="save-indicator" id="save-indicator">✓ Saved</div>
+    </main>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    
+
     <!-- Firebase files -->
     <script src="JS/Shared/FirebaseConfig.js"></script>
     <script src="JS/Shared/AuthCore.js"></script>
@@ -527,153 +128,11 @@
     <script defer src="JS/Shared/DebugSystem.js"></script>
     <!--Shared-->
     <script src="JS/Shared/VersionChecker.js"></script>
-    <script src="JS/Shared/ThemeLoader.js"></script>
-    <script src="JS/Shared/LoadingScreen.js"></script>
     <script src="JS/Shared/PrivacySettings.js"></script>
     <script src="JS/Shared/Stars.js"></script>
     <script src="JS/Shared/Navigation.js"></script>
-    <script>
-        // Theme Management
-        const themes = [
-            { id: 'default', name: 'Pure Black', preview: '#000' },
-            { id: 'purple', name: 'Deep Purple', preview: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' },
-            { id: 'ocean', name: 'Ocean Depths', preview: 'linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)' },
-            { id: 'midnight', name: 'Midnight Purple', preview: 'linear-gradient(135deg, #2c003e, #1a0033, #0d001f)' },
-            { id: 'night', name: 'Night Sky', preview: 'radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%)' },
-            { id: 'royal', name: 'Royal Purple', preview: 'linear-gradient(135deg, #2d1b69, #1a0f3d, #0a0520)' }
-        ];
-
-        let isCapturingKey = false;
-
-        // Load themes
-        function loadThemes() {
-            const grid = document.getElementById('theme-grid');
-            const currentTheme = window.ThemeLoader.getCurrentTheme();
-            
-            grid.innerHTML = themes.map(theme => `
-                <div class="theme-card ${theme.id === currentTheme ? 'active' : ''}" onclick="setTheme('${theme.id}')">
-                    <div class="theme-preview" style="background: ${theme.preview}"></div>
-                    <div class="theme-name">${theme.name}</div>
-                </div>
-            `).join('');
-        }
-
-        function setTheme(themeName) {
-            window.ThemeLoader.setTheme(themeName);
-            loadThemes();
-            showSaveIndicator();
-        }
-
-        // Privacy Settings UI
-        function loadPrivacySettings() {
-            const settings = window.PrivacySettings.getSettings();
-            
-            // Panic Key
-            document.getElementById('key-display').textContent = settings.panicKey ? settings.panicKey.toUpperCase() : 'Not Set';
-            
-            // Panic URL
-            document.getElementById('panic-url').value = settings.panicURL;
-            
-            // Disguise
-            const toggle = document.getElementById('disguise-toggle');
-            if (settings.disguiseEnabled) {
-                toggle.classList.add('active');
-            }
-            document.getElementById('disguise-title').value = settings.disguiseTitle;
-            document.getElementById('disguise-favicon').value = settings.disguiseFavicon;
-        }
-
-        function startKeyCapture() {
-            if (isCapturingKey) return;
-            
-            isCapturingKey = true;
-            const capture = document.getElementById('key-capture');
-            const display = document.getElementById('key-display');
-            
-            capture.classList.add('active');
-            display.textContent = 'Press any key...';
-            
-            const keyHandler = (e) => {
-                e.preventDefault();
-                
-                const key = e.key;
-                window.PrivacySettings.setPanicKey(key);
-                
-                display.textContent = key.toUpperCase();
-                capture.classList.remove('active');
-                isCapturingKey = false;
-                
-                document.removeEventListener('keydown', keyHandler);
-                showSaveIndicator();
-            };
-            
-            document.addEventListener('keydown', keyHandler);
-        }
-
-        function savePanicURL() {
-            const url = document.getElementById('panic-url').value;
-            window.PrivacySettings.setPanicURL(url);
-            showSaveIndicator();
-        }
-
-        function setPanicURLPreset(url) {
-            document.getElementById('panic-url').value = url;
-            window.PrivacySettings.setPanicURL(url);
-            showSaveIndicator();
-        }
-
-        function toggleDisguise() {
-            const toggle = document.getElementById('disguise-toggle');
-            const isEnabled = !toggle.classList.contains('active');
-            
-            toggle.classList.toggle('active');
-            window.PrivacySettings.toggleDisguise(isEnabled);
-            showSaveIndicator();
-        }
-
-        function saveDisguiseSettings() {
-            const title = document.getElementById('disguise-title').value;
-            const favicon = document.getElementById('disguise-favicon').value;
-            
-            window.PrivacySettings.setDisguiseSettings(title, favicon);
-            showSaveIndicator();
-        }
-
-        function showSaveIndicator() {
-            const indicator = document.getElementById('save-indicator');
-            indicator.classList.add('show');
-            
-            setTimeout(() => {
-                indicator.classList.remove('show');
-            }, 2000);
-        }
-
-        // Navigation
-        function navigate(page) {
-            window.location.href = page;
-        }
-
-        function toggleFullScreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
-        }
-
-        // Initialize
-        window.addEventListener('load', () => {
-            loadThemes();
-            
-            // Wait for PrivacySettings to load
-            const checkPrivacy = setInterval(() => {
-                if (window.PrivacySettings) {
-                    loadPrivacySettings();
-                    clearInterval(checkPrivacy);
-                }
-            }, 100);
-        });
-    </script>
+    <!--Page-->
+    <script src="JS/Pages/Settings.js" data-page-script></script>
 
 </body>
 </html>
