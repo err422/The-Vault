@@ -25,13 +25,16 @@
     function createBrowserWindow() {
         const overlay = document.createElement('div');
         overlay.id = 'game-iframe-overlay';
-        overlay.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(10,10,10,0.95);z-index:9999;display:flex;justify-content:center;align-items:center;backdrop-filter:blur(8px);opacity:0;transition:opacity 0.3s ease;`;
+        overlay.style.cssText = `position:fixed;top:0;left:0;width:100vw;height:100vh;background-color:rgba(10,10,10,0.95);z-index:9999;display:flex;justify-content:center;align-items:center;backdrop-filter:blur(8px);opacity:0;transition:opacity 0.3s ease;`;
+
         const browserWindow = document.createElement('div');
         browserWindow.id = 'browser-window';
-        browserWindow.style.cssText = `width:100%;height:100%;background:rgba(42,42,42,0.95);border-radius:12px;box-shadow:0 25px 80px rgba(0,0,0,0.8);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,0.1);transform:scale(0.8);transition:transform 0.3s ease;position:relative;`;
+        browserWindow.style.cssText = `position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(42,42,42,0.95);border-radius:0;box-shadow:none;display:flex;flex-direction:column;overflow:hidden;border:none;transform:scale(0.98);transition:transform 0.3s ease;`;
+
         const tabBar = document.createElement('div');
         tabBar.id = 'tab-bar';
         tabBar.style.cssText = `background:rgba(55,55,55,0.9);display:flex;align-items:flex-end;height:36px;padding:0 8px;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid rgba(255,255,255,0.1);z-index:10;position:relative;`;
+
         const newTabBtn = document.createElement('button');
         newTabBtn.id = 'new-tab-btn';
         newTabBtn.innerHTML = '+';
@@ -41,45 +44,59 @@
         newTabBtn.addEventListener('mouseleave', function() { this.style.background='none'; this.style.color='rgba(255,255,255,0.7)'; });
         newTabBtn.addEventListener('click', handleNewTabClick);
         tabBar.appendChild(newTabBtn);
+
         const toolbar = document.createElement('div');
         toolbar.id = 'toolbar';
         toolbar.style.cssText = `background:rgba(42,42,42,0.95);padding:8px 16px;display:flex;align-items:center;gap:8px;height:44px;border-bottom:1px solid rgba(255,255,255,0.1);z-index:10;position:relative;`;
         toolbar.appendChild(createNavButtons());
         toolbar.appendChild(createAddressBar());
+
         setTimeout(() => {
             if (typeof addBellScheduleIconToToolbar === 'function') addBellScheduleIconToToolbar();
             else if (typeof addBellIconToToolbar === 'function') addBellIconToToolbar();
             if (typeof addFavoritesIconToToolbar === 'function') addFavoritesIconToToolbar();
         }, 100);
+
         const iframeContainer = document.createElement('div');
         iframeContainer.id = 'iframe-container';
         iframeContainer.style.cssText = `flex:1;background:rgba(25,25,25,0.95);position:relative;overflow:hidden;z-index:1;`;
+
         browserWindow.appendChild(tabBar);
         browserWindow.appendChild(toolbar);
         browserWindow.appendChild(iframeContainer);
+
         const windowControls = document.createElement('div');
         windowControls.style.cssText = `position:absolute;top:8px;right:8px;display:flex;gap:8px;z-index:1000;`;
+
         const minimizeBtn = createControlButton('−', 'Minimize');
         const fsIframeBtn = createControlButton('⛶', 'Fullscreen (content only)');
         const maximizeBtn = createControlButton('□', 'Fullscreen — Alt+`');
         const closeBrowserBtn = createControlButton('×', 'Close');
+
         fsIframeBtn.addEventListener('click', function() {
             const iframe = document.getElementById(`iframe-${activeTabId}`);
             if (iframe) { document.fullscreenElement ? document.exitFullscreen() : iframe.requestFullscreen(); }
         });
+
         maximizeBtn.addEventListener('click', toggleFullscreen);
         closeBrowserBtn.addEventListener('click', closeBrowser);
         closeBrowserBtn.addEventListener('mouseenter', function() { this.style.background='rgba(239,68,68,0.8)'; this.style.color='#fff'; });
+
         windowControls.appendChild(minimizeBtn);
         windowControls.appendChild(fsIframeBtn);
         windowControls.appendChild(maximizeBtn);
         windowControls.appendChild(closeBrowserBtn);
         browserWindow.appendChild(windowControls);
+
         overlay.appendChild(browserWindow);
         overlay.addEventListener('click', function(e) { if (e.target === overlay) closeBrowser(); });
         document.body.appendChild(overlay);
         document.body.style.overflow = 'hidden';
-        setTimeout(() => { overlay.style.opacity='1'; browserWindow.style.transform='scale(1)'; }, 10);
+
+        setTimeout(() => {
+            overlay.style.opacity='1';
+            browserWindow.style.transform='scale(1)';
+        }, 10);
 
         // Alt+` shortcut — works when the parent page has focus
         document._browserKeyHandler = function(e) {
@@ -91,7 +108,7 @@
         window._browserMessageHandler = function(e) {
             if (e.data && e.data.type === 'toggleFullscreen') toggleFullscreen();
         };
-        window.addEventListener('message', window._browserMessageHandler);
+        window.addEventListener('message', document._browserMessageHandler);
     }
 
     function createControlButton(text, title) {
