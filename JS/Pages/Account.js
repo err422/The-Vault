@@ -1,6 +1,4 @@
 // This file is shortened to deal w file size and loading issues
-const savedTheme = localStorage.getItem('vaultTheme') || 'default';
-document.body.classList.add(`theme-${savedTheme}`);
 (function() {
     const AccountPage = {
         currentUser: null,

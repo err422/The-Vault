@@ -1,8 +1,6 @@
 // This file is optamized to deal w file size and loading issues
-const savedTheme = localStorage.getItem('vaultTheme') || 'default';
-document.body.classList.add(`theme-${savedTheme}`);
 // Global playtime variables
-let playtimeTracker = {
+var playtimeTracker = {
     currentGame: null,
     startTime: null,
     intervalId: null,
@@ -107,7 +105,7 @@ function formatPlaytime(seconds) {
     }
 }
 // Global variables
-let allGames = [];
+var allGames = [];
 // Load games from JSON file
 async function loadGames() {
     try {
@@ -232,7 +230,7 @@ function syncFavoritesFromCloud() {
             console.error('Error syncing from cloud:', error);
         });
 }
-let syncTimeout = null;
+var syncTimeout = null;
 function saveFavorites() {
     try {
         // Save to localStorage immediately (fast)
@@ -660,22 +658,23 @@ function updateGameCardStars() {
 // Initialize favorites
 loadFavorites();
 // Observer to add stars when cards are rendered
-const cardObserver = new MutationObserver(function(mutations) {
+var cardObserver = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
         if (mutation.addedNodes.length) {
             addStarsToCards();
         }
     });
 });
-// Main initialization
-document.addEventListener('DOMContentLoaded', function() {
-    loadGames(); 
-    addStarsToCards();
-    const gamesGrid = document.getElementById('gamesGrid');
-    if (gamesGrid) {
-        cardObserver.observe(gamesGrid, { childList: true, subtree: true });
-    }
-});
+// Main initialization — runs immediately rather than waiting on
+// DOMContentLoaded, since this script only executes once it's actually
+// attached to the page (both on first load and on every SPA swap into
+// games.html via navigation.js).
+loadGames();
+addStarsToCards();
+var gamesGrid = document.getElementById('gamesGrid');
+if (gamesGrid) {
+    cardObserver.observe(gamesGrid, { childList: true, subtree: true });
+}
 // Save playtime when user leaves or closes tab
 window.addEventListener('beforeunload', function() {
     stopPlaytimeTracking();

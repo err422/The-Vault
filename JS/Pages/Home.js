@@ -1,10 +1,6 @@
-const savedTheme = localStorage.getItem('vaultTheme') || 'default';
-document.body.classList.add(`theme-${savedTheme}`);
-
-
 // Search functionality
-const searchInput = document.getElementById('search-input');
-const searchResults = document.getElementById('search-results');
+var searchInput = document.getElementById('search-input');
+var searchResults = document.getElementById('search-results');
 
 searchInput.addEventListener('input', async function() {
     const query = this.value.toLowerCase();
@@ -39,7 +35,7 @@ searchInput.addEventListener('input', async function() {
 });
 
 // Site URLs for Websites and games
-const BASE_URLS = {
+var BASE_URLS = {
     'Cryzen.io': 'https://cryzen.io/',
     'Kour.io': 'https://kour.org/',
     'Nut Simulator': 'https://nutsimulator.github.io/index.html',
@@ -154,8 +150,8 @@ function displayResults(results) {
 }
 
 // Disabled search functionality for now
-const searchBox = document.querySelector('.search-box');
-const searchIcon = document.querySelector('.search-icon');
+var searchBox = document.querySelector('.search-box');
+var searchIcon = document.querySelector('.search-icon');
 
 // Make search box appear interactive but not functional
 searchBox.addEventListener('keypress', function (e) {

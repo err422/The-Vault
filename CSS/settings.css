@@ -1,0 +1,329 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #000;
+    color: #fff;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    transition: background 0.5s ease;
+}
+
+h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 3rem;
+    text-align: center;
+    background: linear-gradient(to right, #fc72ff, #8f68ff, #487bff, #8f68ff, #fc72ff);
+    background-size: 200%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: animate-gradient 2.5s linear infinite;
+}
+
+@keyframes animate-gradient {
+    to { background-position: 200%; }
+}
+
+.nav-bar {
+    position: fixed;
+    z-index: 100;
+    top: 2rem;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: fit-content;
+    background: rgba(255, 255, 255, 0.1);
+    border: 0.1rem solid rgba(255, 255, 255, 0.2);
+    border-radius: 2rem;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    gap: 1.25rem;
+    backdrop-filter: blur(10px);
+    font-size: 1rem;
+}
+
+.nav-item {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+}
+
+.nav-item:hover .nav-icon {
+    opacity: 1;
+}
+
+.nav-label {
+    margin-left: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.35s ease-in;
+    max-width: 0;
+    overflow: hidden;
+}
+
+.nav-item:hover .nav-label {
+    opacity: 1;
+    transform: translateX(0);
+    max-width: 100px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 120px 20px 40px;
+    position: relative;
+    z-index: 10;
+}
+
+.title {
+    text-align: center;
+    font-size: 4rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 60px;
+    letter-spacing: -2px;
+}
+
+.settings-section {
+    background: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(60, 60, 60, 0.5);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+}
+
+.settings-section:hover {
+    border-color: rgba(100, 100, 100, 0.8);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-icon {
+    font-size: 1.8rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.section-description {
+    color: #888;
+    font-size: 0.95rem;
+    margin-bottom: 25px;
+}
+
+/* Control Groups */
+.control-group {
+    margin-bottom: 20px;
+}
+
+.control-label {
+    font-size: 1rem;
+    color: #ddd;
+    margin-bottom: 10px;
+    display: block;
+    font-weight: 500;
+}
+
+.control-sublabel {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.control-input {
+    width: 100%;
+    background: rgba(60, 60, 60, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.control-input:focus {
+    outline: none;
+    border-color: #8f68ff;
+    background: rgba(60, 60, 60, 0.7);
+}
+
+.key-capture {
+    background: rgba(143, 104, 255, 0.1);
+    border: 2px dashed rgba(143, 104, 255, 0.5);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.key-capture:hover {
+    background: rgba(143, 104, 255, 0.2);
+    border-color: rgba(143, 104, 255, 0.8);
+}
+
+.key-capture.active {
+    background: rgba(143, 104, 255, 0.3);
+    border-style: solid;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+.key-display {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #8f68ff;
+    margin-bottom: 8px;
+}
+
+.key-hint {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+/* Toggle Switch */
+.toggle-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.toggle-label {
+    font-size: 1rem;
+    color: #ddd;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: rgba(60, 60, 60, 0.8);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.toggle-switch.active {
+    background: #8f68ff;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.toggle-switch.active .toggle-slider {
+    left: 27px;
+}
+
+/* Preset Buttons */
+.preset-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.preset-btn {
+    background: rgba(143, 104, 255, 0.1);
+    border: 1px solid rgba(143, 104, 255, 0.3);
+    color: #8f68ff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.preset-btn:hover {
+    background: rgba(143, 104, 255, 0.2);
+    border-color: rgba(143, 104, 255, 0.6);
+}
+
+/* Save Indicator */
+.save-indicator {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(34, 197, 94, 0.9);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.save-indicator.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .title { font-size: 2.5rem; }
+    .nav-bar {
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+    }
+}
