@@ -1,12 +1,17 @@
-// This file is shortened to deal w file size and loading issues
-(function() {
+// Account.js
+// Depends on window.VaultManagers (see JS/Utils/Accounthelper.js — loaded first)
+(function () {
+    const { RankManager, StreakManager, DailyChallengeManager, QuestManager } = window.VaultManagers;
+
     const AccountPage = {
         currentUser: null,
         currentUsername: null,
+
         init() {
-            console.log('🎨 Initializing Enhanced Account Page...');
+            console.log('🎨 Initializing Account Page...');
             this.checkAuthState();
         },
+
         checkAuthState() {
             if (typeof auth === 'undefined') {
                 console.error('❌ Firebase auth not loaded');
@@ -14,7 +19,7 @@
                 return;
             }
             auth.onAuthStateChanged((user) => {
-                this.currentUser = user;   
+                this.currentUser = user;
                 if (user) {
                     this.loadUserData();
                 } else {
@@ -22,410 +27,271 @@
                 }
             });
         },
+
         async loadUserData() {
-            const content = document.getElementById('account-content');  
-            // Show loading
+            const content = document.getElementById('account-content');
             content.innerHTML = `
                 <div class="loading-container">
                     <div class="spinner"></div>
-                    <p style="margin-top: 20px; color: #888;">Loading your profile...</p>
+                    <p style="margin-top: 16px; color: #777; font-size: 14px;">Loading your record...</p>
                 </div>
             `;
             try {
-                // Get username first
                 const usernameSnap = await database.ref(`users/${this.currentUser.uid}/username`).once('value');
-                this.currentUsername = usernameSnap.val()  
-                // Get full user data
+                this.currentUsername = usernameSnap.val();
+
                 const snapshot = await database.ref(`users/${this.currentUser.uid}`).once('value');
-                const userData = snapshot.val();
-                // Calculate stats
+                const userData = snapshot.val() || {};
+
                 const stats = this.calculateStats(userData);
-                const achievements = this.calculateAchievements(userData, stats);
-                // Render account view
-                await this.renderAccountView(stats, achievements, userData);
+                const achievementCount = this.countAchievements(userData, stats);
+
+                await this.renderAccountView(stats, achievementCount, userData);
             } catch (error) {
                 console.error('❌ Error loading user data:', error);
                 this.renderError('Failed to load profile data');
             }
         },
-        async renderAccountView(stats, achievements, userData) {
-            const content = document.getElementById('account-content');  
-            // Generate the playtime chart and leaderboard HTML
-            const playtimeChartHTML = await this.renderPlaytimeChart(userData);
-            const leaderboardHTML = await this.renderLeaderboard(this.currentUser.uid);
+
+        async renderAccountView(stats, achievementCount, userData) {
+            const content = document.getElementById('account-content');
+
+            const weeklyPlaytime = RankManager.getWeeklyPlaytime(userData);
+            const rank = RankManager.getRank(weeklyPlaytime);
+            const rankIndex = RankManager.getRankIndex(weeklyPlaytime);
+            const streak = await StreakManager.updateStreak(this.currentUser.uid, userData);
+            const weekView = StreakManager.getWeekView(userData);
+            const dailyChallenge = await DailyChallengeManager.getTodaysChallenge();
+            const dailyQuests = QuestManager.getTodaysQuests(userData, dailyChallenge);
+
             content.innerHTML = `
-                <!-- Profile Header -->
-                <div class="profile-header">
-                    <div class="profile-avatar">👤${stats.level > 1 ? `<div class="level-badge">${stats.level}</div>` : ''}
+                <div class="page-wrap">
+                    <h1 class="page-title">Your Record</h1>
+                    <p class="page-subtitle">Every minute here is counted by the server while you play, not by this page.</p>
+
+                    ${this.renderProfileCard(stats, rank)}
+
+                    <div class="two-col">
+                        ${this.renderRankCard(rank, rankIndex)}
+                        ${this.renderStreakCard(streak, weekView)}
                     </div>
-                    <h2 class="profile-username">@${this.currentUsername}</h2>
-                    <p class="profile-email">${this.currentUser.email}</p>
-                    <div class="profile-title">Level ${stats.level} • ${stats.title}</div>
-                    <!-- XP Progress Bar -->
-                    <div class="xp-bar-container">
-                        <div class="xp-bar">
-                            <div class="xp-fill" style="width: ${stats.xpProgress}%">
-                                <div class="xp-shimmer"></div>
-                            </div>
-                        </div>
-                        <div class="xp-text">
-                            <span>Level ${stats.level}</span>
-                            <span>${Math.floor(stats.xpProgress)}% to Level ${stats.level + 1}</span>
-                        </div>
+
+                    <div class="two-col">
+                        ${this.renderQuestsCard(dailyQuests)}
+                        ${this.renderChallengeCard(dailyChallenge, dailyQuests)}
                     </div>
-                </div>
-                <!-- Stats Grid -->
-                <div class="stats-grid">
-                    <div class="stat-card primary">
-                        <div class="stat-icon">⏱️</div>
-                        <div class="stat-value">${stats.totalPlaytimeFormatted}</div>
-                        <div class="stat-label">Total Playtime</div>
+
+                    <div class="card">
+                        <div class="card-label"><span class="dot"></span> Play Activity · Last 30 Days</div>
+                        ${this.renderHeatmap(userData)}
                     </div>
-                    <div class="stat-card success">
-                        <div class="stat-icon">🎮</div>
-                        <div class="stat-value">${stats.gamesPlayed}</div>
-                        <div class="stat-label">Games Played</div>
+
+                    ${this.renderGlanceCard(stats, achievementCount)}
+
+                    <div class="action-buttons">
+                        <button class="btn" id="change-username-btn">Change Username</button>
+                        <button class="btn btn-danger" id="sign-out-btn">Sign Out</button>
                     </div>
-                    <div class="stat-card warning">
-                        <div class="stat-icon">🏆</div>
-                        <div class="stat-value">${achievements.unlockedCount}/${achievements.total}</div>
-                        <div class="stat-label">Achievements</div>
-                    </div>
-                    ${stats.favoriteGame.name !== 'None' ? `
-                        <div class="stat-card purple">
-                            <div class="stat-icon">👑</div>
-                            <div class="stat-value">${stats.favoriteGame.name}</div>
-                            <div class="stat-label">Most Played Game</div>
-                        </div>
-                    ` : ''}
-                </div>
-                <!-- Playtime Chart - Last 7 Days -->
-                <div class="section">
-                    <h3 class="section-title">
-                        <span>📊</span> Last 7 Days
-                    </h3>
-                    ${playtimeChartHTML}
-                </div>
-                <!-- Leaderboard -->
-                <div class="section">
-                    <h3 class="section-title">
-                        <span>🏆</span> Top Players
-                    </h3>
-                    ${leaderboardHTML}
-                </div>
-                <!-- Achievements -->
-                <div class="section">
-                    <h3 class="section-title">
-                        <span>🏆</span> Achievements
-                    </h3>
-                    <div class="achievements-grid">
-                        ${achievements.list.map(achievement => `
-                            <div class="achievement-card ${achievement.unlocked ? 'unlocked' : 'locked'}">
-                                <div class="achievement-icon">${achievement.icon}</div>
-                                <div class="achievement-name">${achievement.name}</div>
-                                <div class="achievement-description">${achievement.description}</div>
-                                <div class="achievement-badge">${achievement.unlocked ? '✨' : '🔒'}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <button class="btn btn-primary" id="change-username-btn">
-                        <span>✏️</span> Change Username
-                    </button>
-                    <button class="btn btn-danger" id="sign-out-btn">
-                        <span>🚪</span> Sign Out
-                    </button>
                 </div>
             `;
-            // Attach event listeners
+
             this.attachEventListeners();
         },
-        async renderPlaytimeChart(userData) {
-            if (!userData.playtime || !userData.playtime.daily) {
+
+        // ===== YOUR PROFILE =====
+        renderProfileCard(stats, rank) {
+            const initial = (this.currentUsername || '?').charAt(0);
+            return `
+                <div class="card">
+                    <div class="card-label"><span class="dot"></span> Your Profile</div>
+                    <div class="profile-row">
+                        <div class="profile-avatar">${initial}<div class="profile-level-badge">${stats.level}</div></div>
+                        <div class="profile-info">
+                            <div class="profile-name">${this.currentUsername}</div>
+                            <div class="profile-meta">${rank.name} · Level ${stats.level}</div>
+                        </div>
+                        <div class="profile-total">
+                            <div class="profile-total-value">${stats.totalPlaytime}</div>
+                            <div class="profile-total-label">Total XP</div>
+                        </div>
+                    </div>
+                    <div class="xp-track"><div class="xp-fill" style="width: ${stats.xpProgress}%"></div></div>
+                    <div class="xp-labels">
+                        <span>${stats.progressXP} / ${stats.neededXP} XP</span>
+                        <span>Next: Lv ${stats.level + 1}</span>
+                    </div>
+                </div>
+            `;
+        },
+
+        // ===== SEASON RANK =====
+        renderRankCard(rank, rankIndex) {
+            const ranks = RankManager.RANKS;
+            const nodes = ranks.map((r, i) => {
+                const state = i < rankIndex ? 'passed' : i === rankIndex ? 'current' : '';
                 return `
-                    <div style="text-align: center; padding: 60px 20px; color: #666;">
-                        <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📊</div>
-                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #888;">No playtime data yet</div>
-                        <div style="font-size: 14px;">Start playing some games to see your activity here!</div>
+                    <div class="rank-node ${state}">
+                        <div class="rank-circle">${i + 1}</div>
+                        <div class="rank-label">${r.short}</div>
                     </div>
                 `;
-            }  
-            const days = [];
-            const dayLabels = [];
-            const playtimeData = [];
-            // Get last 7 days
-            for (let i = 6; i >= 0; i--) {
+            }).join('');
+            return `
+                <div class="card">
+                    <div class="card-label"><span class="dot"></span> Season Rank · ${rank.name}</div>
+                    <div class="rank-track">${nodes}</div>
+                </div>
+            `;
+        },
+
+        // ===== DAILY STREAK =====
+        renderStreakCard(streak, weekView) {
+            const days = weekView.map(d => `
+                <div class="streak-day ${d.done ? 'done' : ''} ${d.isToday ? 'today' : ''}">
+                    <div class="streak-day-circle">${d.done ? '✓' : ''}</div>
+                    <div class="streak-day-label">${d.label}</div>
+                </div>
+            `).join('');
+            return `
+                <div class="card">
+                    <div class="card-label"><span class="dot"></span> Daily Streak</div>
+                    <div class="streak-top">
+                        <div class="streak-count-row">
+                            <span class="streak-flame">🔥</span>
+                            <div>
+                                <div class="streak-number">${streak.current}</div>
+                                <div class="streak-sub">Day Streak</div>
+                            </div>
+                        </div>
+                        <div class="streak-best">
+                            <div class="streak-best-value">${streak.longest}</div>
+                            <div class="streak-best-label">Best</div>
+                        </div>
+                    </div>
+                    <div class="streak-days">${days}</div>
+                </div>
+            `;
+        },
+
+        // ===== TODAY'S QUESTS =====
+        renderQuestsCard(quests) {
+            const rows = quests.map(q => `
+                <div class="quest-row ${q.done ? 'done' : ''}">
+                    <div class="quest-checkbox">${q.done ? '✓' : ''}</div>
+                    <div class="quest-body">
+                        <div class="quest-name">${q.label}</div>
+                        <div class="quest-bar"><div class="quest-bar-fill" style="width: ${(q.progress / q.target) * 100}%"></div></div>
+                    </div>
+                    <div class="quest-count">${q.progress}/${q.target}</div>
+                </div>
+            `).join('');
+            return `
+                <div class="card">
+                    <div class="card-label"><span class="dot"></span> Today's Quests</div>
+                    ${rows}
+                </div>
+            `;
+        },
+
+        // ===== DAILY CHALLENGE =====
+        renderChallengeCard(challenge, quests) {
+            if (!challenge) {
+                return `<div class="card"><div class="card-label"><span class="dot"></span> Daily Challenge</div><p style="color:#666;font-size:14px;">No challenge available today.</p></div>`;
+            }
+            const done = quests.find(q => q.id === 'daily_challenge')?.done;
+            return `
+                <div class="card">
+                    <div class="card-label"><span class="dot"></span> Daily Challenge</div>
+                    <div class="challenge-row">
+                        <div class="challenge-icon">${challenge.icon}</div>
+                        <div class="challenge-body">
+                            <div class="challenge-label">Daily Challenge</div>
+                            <div class="challenge-title">${challenge.title}</div>
+                            <div class="challenge-bar"><div class="challenge-bar-fill" style="width: ${done ? 100 : 0}%"></div></div>
+                        </div>
+                        <a class="challenge-play" href="${challenge.url}" target="_blank" rel="noopener">${done ? 'Played' : 'Play'}</a>
+                    </div>
+                </div>
+            `;
+        },
+
+        // ===== ACTIVITY HEATMAP (30 days) =====
+        renderHeatmap(userData) {
+            const daily = userData.playtime?.daily || {};
+            const DAYS = 30;
+            const cells = [];
+            let maxMinutes = 1;
+
+            for (let i = DAYS - 1; i >= 0; i--) {
                 const date = new Date();
                 date.setDate(date.getDate() - i);
                 const dateStr = date.toISOString().split('T')[0];
-                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                days.push(dateStr);
-                dayLabels.push(dayName);
-                let totalMinutes = 0;
-                if (userData.playtime.daily[dateStr]) {
-                    const seconds = Object.values(userData.playtime.daily[dateStr])
-                        .reduce((sum, s) => sum + Number(s), 0);
-                    totalMinutes = Math.floor(seconds / 60);
+                let minutes = 0;
+                if (daily[dateStr]) {
+                    const seconds = Object.values(daily[dateStr]).reduce((s, v) => s + Number(v), 0);
+                    minutes = Math.floor(seconds / 60);
                 }
-                playtimeData.push(totalMinutes);
+                maxMinutes = Math.max(maxMinutes, minutes);
+                cells.push({ dateStr, minutes });
             }
-            const maxMinutes = Math.max(...playtimeData, 1);
-            let html = `
-                <div style="
-                    background: rgba(0,0,0,0.3);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 12px;
-                    padding: 24px;
-                ">
-                    <div style="
-                        display: flex;
-                        align-items: flex-end;
-                        justify-content: space-around;
-                        height: 300px;
-                        gap: 12px;
-                        margin-bottom: 20px;
-                        padding: 40px 10px 0 10px;
-                    ">
+
+            const getLevel = (minutes) => {
+                if (minutes === 0) return 0;
+                const ratio = minutes / maxMinutes;
+                if (ratio > 0.66) return 4;
+                if (ratio > 0.33) return 3;
+                if (ratio > 0.1) return 2;
+                return 1;
+            };
+
+            const cellsHTML = cells.map(c => {
+                const level = getLevel(c.minutes);
+                const label = new Date(c.dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const title = c.minutes > 0 ? `${label}: ${c.minutes}m played` : `${label}: no activity`;
+                return `<div class="heatmap-cell level-${level}" title="${title}"></div>`;
+            }).join('');
+
+            return `
+                <div class="heatmap-grid">${cellsHTML}</div>
+                <div class="heatmap-legend">
+                    <span>Less</span>
+                    <div class="heatmap-cell level-0"></div>
+                    <div class="heatmap-cell level-1"></div>
+                    <div class="heatmap-cell level-2"></div>
+                    <div class="heatmap-cell level-3"></div>
+                    <div class="heatmap-cell level-4"></div>
+                    <span>More</span>
+                </div>
             `;
-            playtimeData.forEach((minutes, index) => {
-                let heightPercent;
-                if (minutes === 0) {
-                    heightPercent = 0;
-                } else {
-                    heightPercent = (minutes / maxMinutes) * 95;
-                }
-                const hours = Math.floor(minutes / 60);
-                const mins = minutes % 60;
-                const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;  
-                html += `
-                    <div style="
-                        flex: 1;
-                        max-width: 100px;
-                        height: 100%;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: flex-end;
-                        position: relative;
-                    ">
-                        ${minutes > 0 ? `
-                            <div style="
-                                position: absolute;
-                                bottom: 100%;
-                                left: 50%;
-                                transform: translateX(-50%);
-                                margin-bottom: 8px;
-                                font-size: 12px;
-                                color: #667eea;
-                                white-space: nowrap;
-                                font-weight: 700;
-                                background: rgba(0,0,0,0.7);
-                                padding: 4px 8px;
-                                border-radius: 6px;
-                                border: 1px solid rgba(102, 126, 234, 0.3);
-                            ">${minutes}m</div>
-                        ` : ''}
-                        <div style="
-                            width: 100%;
-                            background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
-                            border-radius: 8px 8px 0 0;
-                            height: ${heightPercent}%;
-                            min-height: ${minutes > 0 ? '30px' : '0px'};
-                            position: relative;
-                            transition: all 0.3s ease;
-                            box-shadow: ${minutes > 0 ? '0 4px 20px rgba(102, 126, 234, 0.5), 0 0 40px rgba(102, 126, 234, 0.3)' : 'none'};
-                            opacity: ${minutes > 0 ? '1' : '0.15'};
-                        " title="${timeStr}"></div>
-                        <div style="
-                            font-size: 13px;
-                            color: ${minutes > 0 ? '#aaa' : '#666'};
-                            margin-top: 12px;
-                            font-weight: 600;
-                            text-transform: uppercase;
-                            letter-spacing: 0.5px;
-                        ">${dayLabels[index]}</div>
-                    </div>
-                `;
-            });
-            html += `
-                    </div>
-            `;
-            // Calculate total for the week
-            const totalMinutes = playtimeData.reduce((sum, m) => sum + m, 0);
-            const totalHours = Math.floor(totalMinutes / 60);
-            const totalMins = totalMinutes % 60;
-            const totalStr = totalHours > 0 ? `${totalHours}h ${totalMins}m` : `${totalMins}m`;
-            html += `
-                    <div style="
-                        padding: 14px 20px;
-                        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
-                        border: 1px solid rgba(102, 126, 234, 0.4);
-                        border-radius: 12px;
-                        text-align: center;
-                        font-size: 15px;
-                    ">
-                        <span style="color: #aaa; font-weight: 500;">Total this week:</span>
-                        <span style="color: #667eea; font-weight: 700; margin-left: 10px; font-size: 18px;">${totalStr}</span>
+        },
+
+        // ===== AT A GLANCE =====
+        renderGlanceCard(stats, achievementCount) {
+            return `
+                <div class="card">
+                    <div class="card-label"><span class="dot"></span> At a Glance</div>
+                    <div class="glance-grid">
+                        <div class="glance-box">
+                            <div class="glance-value">${stats.gamesPlayed}</div>
+                            <div class="glance-label">Games</div>
+                        </div>
+                        <div class="glance-box">
+                            <div class="glance-value">${stats.totalPlaytimeFormatted}</div>
+                            <div class="glance-label">Played</div>
+                        </div>
+                        <div class="glance-box">
+                            <div class="glance-value">${achievementCount.unlocked}/${achievementCount.total}</div>
+                            <div class="glance-label">Badges</div>
+                        </div>
                     </div>
                 </div>
             `;
-            return html;
         },
-        async renderLeaderboard(currentUserId) {
-            try {
-                const snapshot = await database.ref('users').once('value');
-                const users = snapshot.val();      
-                if (!users) {
-                    return `
-                        <div style="text-align: center; padding: 60px 20px; color: #666;">
-                            <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🏆</div>
-                            <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #888;">No players yet</div>
-                            <div style="font-size: 14px;">Be the first to play!</div>
-                        </div>
-                    `;
-                }
-                // Build leaderboard
-                const leaderboard = Object.entries(users).map(([uid, userData]) => {
-                    let totalPlaytime = 0;
-                    if (userData.playtime && userData.playtime.total) {
-                        totalPlaytime = Object.values(userData.playtime.total).reduce((sum, seconds) => {
-                            const num = Number(seconds);
-                            return sum + (isNaN(num) ? 0 : num);
-                        }, 0);
-                    }
-                    return {
-                        uid,
-                        username: userData.username || 'Unknown',
-                        totalPlaytime
-                    };
-                }).sort((a, b) => b.totalPlaytime - a.totalPlaytime).slice(0, 5);
-                if (leaderboard.every(user => user.totalPlaytime === 0)) {
-                    return `
-                        <div style="text-align: center; padding: 60px 20px; color: #666;">
-                            <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🎮</div>
-                            <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #888;">No playtime recorded yet</div>
-                            <div style="font-size: 14px;">Start playing some games!</div>
-                        </div>
-                    `;
-                }
-                let html = '<div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">';
-                leaderboard.forEach((user, index) => {
-                    const isCurrentUser = user.uid === currentUserId;
-                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-                    const hours = Math.floor(user.totalPlaytime / 3600);
-                    const minutes = Math.floor((user.totalPlaytime % 3600) / 60);
-                    const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-                    
-                    const bgColor = isCurrentUser 
-                        ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2))' 
-                        : index < 3 
-                            ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15))' 
-                            : 'rgba(255,255,255,0.05)';
-                    const borderColor = isCurrentUser 
-                        ? 'rgba(102, 126, 234, 0.5)' 
-                        : index < 3 
-                            ? 'rgba(251, 191, 36, 0.3)' 
-                            : 'rgba(255,255,255,0.1)';
-                    html += `
-                        <div style="
-                            background: ${bgColor};
-                            border: 1px solid ${borderColor};
-                            border-radius: 10px;
-                            padding: 14px 16px;
-                            margin-bottom: 10px;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            transition: all 0.2s ease;
-                            ${isCurrentUser ? 'box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);' : ''}
-                        ">
-                            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-                                <span style="font-size: 24px; flex-shrink: 0;">${medal}</span>
-                                <div style="flex: 1; min-width: 0;">
-                                    <div style="
-                                        font-weight: 700;
-                                        font-size: 16px;
-                                        color: ${isCurrentUser ? '#667eea' : '#fff'};
-                                        overflow: hidden;
-                                        text-overflow: ellipsis;
-                                        white-space: nowrap;
-                                    ">
-                                        @${user.username}${isCurrentUser ? ' (You)' : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="
-                                font-size: 15px;
-                                font-weight: 700;
-                                color: ${index < 3 ? '#fbbf24' : '#888'};
-                                flex-shrink: 0;
-                                margin-left: 12px;
-                            ">
-                                ${timeStr}
-                            </div>
-                        </div>
-                    `;
-                });
-                // Check if current user is in top 5 (Total Playtime)
-                const currentUserInTop5 = leaderboard.some(u => u.uid === currentUserId);
-                if (!currentUserInTop5) {
-                    // Get all users and find signed in users rank
-                    const allUsers = Object.entries(users).map(([uid, userData]) => {
-                        let totalPlaytime = 0;
-                        if (userData.playtime && userData.playtime.total) {
-                            totalPlaytime = Object.values(userData.playtime.total)
-                                .reduce((sum, seconds) => sum + Number(seconds), 0);
-                        }
-                        return { uid, username: userData.username, totalPlaytime };
-                    }).sort((a, b) => b.totalPlaytime - a.totalPlaytime);
-                    const currentUserRank = allUsers.findIndex(u => u.uid === currentUserId) + 1;
-                    const currentUserData = allUsers.find(u => u.uid === currentUserId);
-                    if (currentUserData && currentUserData.totalPlaytime > 0) {
-                        const hours = Math.floor(currentUserData.totalPlaytime / 3600);
-                        const minutes = Math.floor((currentUserData.totalPlaytime % 3600) / 60);
-                        const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-                        html += `
-                            <div style="
-                                margin-top: 16px;
-                                padding: 14px 16px;
-                                background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
-                                border: 1px solid rgba(102, 126, 234, 0.5);
-                                border-radius: 10px;
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-                            ">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <span style="font-size: 20px;">#{currentUserRank}</span>
-                                    <div style="font-weight: 700; font-size: 16px; color: #667eea;">
-                                        @${currentUserData.username} (You)
-                                    </div>
-                                </div>
-                                <div style="font-size: 15px; font-weight: 700; color: #667eea;">
-                                    ${timeStr}
-                                </div>
-                            </div>
-                        `;
-                    }
-                }
-                html += '</div>';
-                return html;
-            } catch (error) {
-                console.error('Error loading leaderboard:', error);
-                return `
-                    <div style="text-align: center; padding: 40px 20px; color: #ef4444;">
-                        <div style="font-size: 40px; margin-bottom: 12px;">😕</div>
-                        <div style="font-size: 14px;">Error loading leaderboard</div>
-                    </div>
-                `;
-            }
-        },
+
         attachEventListeners() {
             const changeBtn = document.getElementById('change-username-btn');
-            const signOutBtn = document.getElementById('sign-out-btn');  
+            const signOutBtn = document.getElementById('sign-out-btn');
+
             if (changeBtn) {
                 changeBtn.addEventListener('click', () => this.showChangeUsernameForm());
             }
@@ -440,42 +306,39 @@
                 });
             }
         },
+
         showChangeUsernameForm() {
-            const content = document.getElementById('account-content');  
+            const content = document.getElementById('account-content');
             content.innerHTML = `
-                <div class="auth-container">
-                    <div class="auth-header">
-                        <h2 class="auth-title">Change Username</h2>
-                        <p class="auth-subtitle">Choose a new username for your account</p>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Current Username</label>
-                        <div style="padding: 16px; background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 12px; color: #667eea; font-weight: 600;">
-                            @${this.currentUsername}
+                <div class="page-wrap">
+                    <div class="auth-container">
+                        <div class="auth-header">
+                            <h2 class="auth-title">Change Username</h2>
+                            <p class="auth-subtitle">Choose a new username for your account</p>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">New Username</label>
-                        <input type="text" class="form-input" id="new-username" placeholder="Enter new username" />
-                    </div>
-                    <div class="form-error" id="change-error"></div>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" id="cancel-change-btn">
-                            <span>❌</span> Cancel
-                        </button>
-                        <button class="btn btn-primary" id="confirm-change-btn">
-                            <span>✅</span> Change Username
-                        </button>
+                        <div class="form-group">
+                            <label class="form-label">Current Username</label>
+                            <div style="padding: 13px 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #ccc; font-weight: 600;">
+                                @${this.currentUsername}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">New Username</label>
+                            <input type="text" class="form-input" id="new-username" placeholder="Enter new username" />
+                        </div>
+                        <div class="form-error" id="change-error"></div>
+                        <div class="action-buttons">
+                            <button class="btn" id="cancel-change-btn">Cancel</button>
+                            <button class="btn" id="confirm-change-btn" style="background:#fff;color:#000;border-color:#fff;">Confirm</button>
+                        </div>
                     </div>
                 </div>
             `;
-            document.getElementById('cancel-change-btn').addEventListener('click', () => {
-                this.loadUserData();
-            });
+            document.getElementById('cancel-change-btn').addEventListener('click', () => this.loadUserData());
             document.getElementById('confirm-change-btn').addEventListener('click', async () => {
                 const newUsername = document.getElementById('new-username').value.trim();
                 const errorDiv = document.getElementById('change-error');
-                const btn = document.getElementById('confirm-change-btn'); 
+                const btn = document.getElementById('confirm-change-btn');
                 errorDiv.textContent = '';
                 btn.textContent = 'Changing...';
                 btn.disabled = true;
@@ -485,79 +348,74 @@
                     this.loadUserData();
                 } catch (error) {
                     errorDiv.textContent = error.message;
-                    btn.innerHTML = '<span>✅</span> Change Username';
+                    btn.textContent = 'Confirm';
                     btn.disabled = false;
                 }
             });
             document.getElementById('new-username').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    document.getElementById('confirm-change-btn').click();
-                }
+                if (e.key === 'Enter') document.getElementById('confirm-change-btn').click();
             });
         },
+
         renderAuthForms() {
-            const content = document.getElementById('account-content');  
+            const content = document.getElementById('account-content');
             content.innerHTML = `
-                <div class="auth-container">
-                    <div class="auth-header">
-                        <h2 class="auth-title">Welcome to The Vault</h2>
-                        <p class="auth-subtitle">Sign in to track your progress and achievements</p>
-                    </div>
-                    <!-- Tabs -->
-                    <div class="auth-tabs">
-                        <button class="auth-tab active" id="tab-signin">Sign In</button>
-                        <button class="auth-tab" id="tab-signup">Sign Up</button>
-                    </div>
-                    <!-- Sign In Form -->
-                    <div id="signin-form">
-                        <div class="form-group">
-                            <label class="form-label">Username or Email</label>
-                            <input type="text" class="form-input" id="signin-username" placeholder="Enter username or email" />
+                <div class="page-wrap">
+                    <div class="auth-container">
+                        <div class="auth-header">
+                            <h2 class="auth-title">Welcome to The Vault</h2>
+                            <p class="auth-subtitle">Sign in to track your progress and achievements</p>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Password</label>
-                            <input type="password" class="form-input" id="signin-password" placeholder="Enter password" />
+                        <div class="auth-tabs">
+                            <button class="auth-tab active" id="tab-signin">Sign In</button>
+                            <button class="auth-tab" id="tab-signup">Sign Up</button>
                         </div>
-                        <div class="form-error" id="signin-error"></div>
-                        <button class="form-button" id="signin-btn">Sign In</button>
-                    </div>
-                    <!-- Sign Up Form -->
-                    <div id="signup-form" style="display: none;">
-                        <div class="form-group">
-                            <label class="form-label">Username</label>
-                            <input type="text" class="form-input" id="signup-username" placeholder="Choose a username" />
+                        <div id="signin-form">
+                            <div class="form-group">
+                                <label class="form-label">Username or Email</label>
+                                <input type="text" class="form-input" id="signin-username" placeholder="Enter username or email" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-input" id="signin-password" placeholder="Enter password" />
+                            </div>
+                            <div class="form-error" id="signin-error"></div>
+                            <button class="form-button" id="signin-btn">Sign In</button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-input" id="signup-email" placeholder="Enter your email" />
+                        <div id="signup-form" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-input" id="signup-username" placeholder="Choose a username" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="signup-email" placeholder="Enter your email" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-input" id="signup-password" placeholder="Create a password" />
+                            </div>
+                            <div class="form-group tos-group">
+                                <label>
+                                    <input type="checkbox" id="signup-tos">
+                                    <span>I agree to the <a href="tos.html" target="_blank">Terms of Service</a></span>
+                                </label>
+                            </div>
+                            <div class="form-error" id="signup-error"></div>
+                            <button class="form-button" id="signup-btn">Create Account</button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Password</label>
-                            <input type="password" class="form-input" id="signup-password" placeholder="Create a password" />
-                        </div>
-                        <div class="form-group tos-group">
-                            <label style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#aaa;cursor:pointer;">
-                                <input type="checkbox" id="signup-tos" style="margin-top:4px;">
-                                <span>
-                                    I agree to the 
-                                    <a href="tos.html" target="_blank" style="color:#667eea;text-decoration:underline;">
-                                        Terms of Service
-                                    </a>
-                                </span>
-                            </label>
-                        </div>                        
-                        <div class="form-error" id="signup-error"></div>
-                        <button class="form-button" id="signup-btn">Create Account</button>
                     </div>
                 </div>
             `;
             this.attachAuthFormListeners();
         },
+
         attachAuthFormListeners() {
             const tabSignIn = document.getElementById('tab-signin');
             const tabSignUp = document.getElementById('tab-signup');
             const signInForm = document.getElementById('signin-form');
-            const signUpForm = document.getElementById('signup-form');  
+            const signUpForm = document.getElementById('signup-form');
+
             tabSignIn.addEventListener('click', () => {
                 tabSignIn.classList.add('active');
                 tabSignUp.classList.remove('active');
@@ -570,22 +428,22 @@
                 signUpForm.style.display = 'block';
                 signInForm.style.display = 'none';
             });
-            // Handles user Sign In
+
             document.getElementById('signin-btn').addEventListener('click', () => this.handleSignIn());
             document.getElementById('signin-password').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') this.handleSignIn();
             });
-            // Handles user Sign Up
             document.getElementById('signup-btn').addEventListener('click', () => this.handleSignUp());
             document.getElementById('signup-password').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') this.handleSignUp();
             });
         },
+
         async handleSignIn() {
             const username = document.getElementById('signin-username').value.trim();
             const password = document.getElementById('signin-password').value;
             const errorDiv = document.getElementById('signin-error');
-            const btn = document.getElementById('signin-btn');  
+            const btn = document.getElementById('signin-btn');
             errorDiv.textContent = '';
             btn.textContent = 'Signing in...';
             btn.disabled = true;
@@ -597,13 +455,14 @@
                 btn.disabled = false;
             }
         },
+
         async handleSignUp() {
             const username = document.getElementById('signup-username').value.trim();
             const email = document.getElementById('signup-email').value.trim();
             const password = document.getElementById('signup-password').value;
             const tosChecked = document.getElementById('signup-tos')?.checked;
             const errorDiv = document.getElementById('signup-error');
-            const btn = document.getElementById('signup-btn');  
+            const btn = document.getElementById('signup-btn');
             if (!tosChecked) {
                 errorDiv.textContent = 'You must agree to the Terms of Service.';
                 return;
@@ -619,169 +478,81 @@
                 btn.disabled = false;
             }
         },
+
+        // ===== STATS / LEVEL MATH (unchanged from the original system) =====
         calculateStats(userData) {
             function xpRequiredForLevel(level, prestige) {
                 const baseXP = 1200;
                 const growthRate = 1.087;
                 const prestigeMultiplier = 1 + (prestige * 0.15);
-                return Math.floor(
-                    baseXP *
-                    Math.pow(growthRate, level - 1) *
-                    prestigeMultiplier
-                );
+                return Math.floor(baseXP * Math.pow(growthRate, level - 1) * prestigeMultiplier);
             }
             function totalXpForLevel(level, prestige) {
                 let total = 0;
-                for (let i = 1; i < level; i++) {
-                    total += xpRequiredForLevel(i, prestige);
-                }
+                for (let i = 1; i < level; i++) total += xpRequiredForLevel(i, prestige);
                 return total;
             }
-            function getPrestigeRequirement(prestige) {
-                return 50 + (prestige * 5);
-            }
+
             let totalPlaytime = 0;
             let gamesPlayed = 0;
-            let favoriteGame = { name: 'None', time: 0 };
             if (userData.playtime && userData.playtime.total) {
                 const games = userData.playtime.total;
                 gamesPlayed = Object.keys(games).length;
-                Object.entries(games).forEach(([game, seconds]) => {
-                    const time = Number(seconds) || 0;
-                    totalPlaytime += time;
-                    if (time > favoriteGame.time) {
-                        favoriteGame = { name: game, time: time };
-                    }
+                Object.values(games).forEach(seconds => {
+                    totalPlaytime += Number(seconds) || 0;
                 });
             }
-            let prestige = userData.prestige || 0;
+
+            const prestige = userData.prestige || 0;
             let level = 1;
-            while (totalPlaytime >= totalXpForLevel(level + 1, prestige)) {
-                level++;
-            }
-            // Checks if user has any prestige
-            const prestigeRequirement = getPrestigeRequirement(prestige);
-            if (level >= prestigeRequirement) {
-                prestige++;
-                level = 1;
-            }
+            while (totalPlaytime >= totalXpForLevel(level + 1, prestige)) level++;
+
             const currentLevelXP = totalXpForLevel(level, prestige);
             const nextLevelXP = totalXpForLevel(level + 1, prestige);
             const progressXP = Math.max(0, totalPlaytime - currentLevelXP);
             const neededXP = Math.max(1, nextLevelXP - currentLevelXP);
             const xpProgress = Math.min((progressXP / neededXP) * 100, 100);
-            let title = 'Newcomer';
-            if (level >= 50) title = 'Discord Mod';
-            else if (level >= 30) title = 'Master';
-            else if (level >= 20) title = 'Expert';
-            else if (level >= 10) title = 'Veteran';
-            else if (level >= 5) title = 'Regular';
+
             const hours = Math.floor(totalPlaytime / 3600);
             const minutes = Math.floor((totalPlaytime % 3600) / 60);
             const totalPlaytimeFormatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-            return {
-                totalPlaytime,
-                totalPlaytimeFormatted,
-                gamesPlayed,
-                favoriteGame,
-                level,
-                prestige,
-                title,
-                xpProgress
-            };
+
+            return { totalPlaytime, totalPlaytimeFormatted, gamesPlayed, level, xpProgress, progressXP, neededXP };
         },
-        calculateAchievements(userData, stats) {
+
+        // Count-only — no achievement grid on this page, just the number for "At a Glance"
+        countAchievements(userData, stats) {
             const achievements = [
-                {
-                    id: 'first_game',
-                    name: 'First Steps',
-                    description: 'Play your first game',
-                    icon: '🎮',
-                    unlocked: stats.gamesPlayed >= 1
-                },
-                {
-                    id: 'game_collector',
-                    name: 'Collector',
-                    description: 'Play 5 different games',
-                    icon: '🎯',
-                    unlocked: stats.gamesPlayed >= 5
-                },
-                {
-                    id: 'hour_one',
-                    name: 'Getting Started',
-                    description: 'Play for 1 hour total',
-                    icon: '⏰',
-                    unlocked: stats.totalPlaytime >= 3600
-                },
-                {
-                    id: 'hour_ten',
-                    name: 'Dedicated',
-                    description: 'Play for 10 hours total',
-                    icon: '🔥',
-                    unlocked: stats.totalPlaytime >= 36000
-                },
-                {
-                    id: 'marathon',
-                    name: 'Marathon',
-                    description: 'Play for 24 hours total',
-                    icon: '⚡',
-                    unlocked: stats.totalPlaytime >= 86400
-                },
-                {
-                    id: 'veteran',
-                    name: 'Veteran',
-                    description: 'Reach level 10',
-                    icon: '🏅',
-                    unlocked: stats.level >= 10
-                },
-                {
-                    id: 'no_life',
-                    name: 'No Life',
-                    description: 'Reach level 50',
-                    icon: '💀',
-                    unlocked: stats.level >= 50
-                },
-                {
-                    id: 'favorites',
-                    name: 'Curator',
-                    description: 'Add 5 favorites',
-                    icon: '⭐',
-                    unlocked: (userData.favorites?.length || 0) >= 5
-                },
-                {
-                    id: 'explorer',
-                    name: 'Explorer',
-                    description: 'Play 10 different games',
-                    icon: '🗺️',
-                    unlocked: stats.gamesPlayed >= 10
-                }
-            ];  
-            return {
-                list: achievements,
-                unlockedCount: achievements.filter(a => a.unlocked).length,
-                total: achievements.length
-            };
+                stats.gamesPlayed >= 1,
+                stats.gamesPlayed >= 5,
+                stats.totalPlaytime >= 3600,
+                stats.totalPlaytime >= 36000,
+                stats.totalPlaytime >= 86400,
+                stats.level >= 10,
+                stats.level >= 50,
+                (userData.favorites?.length || 0) >= 5,
+                stats.gamesPlayed >= 10
+            ];
+            return { unlocked: achievements.filter(Boolean).length, total: achievements.length };
         },
+
         renderError(message) {
             const content = document.getElementById('account-content');
             content.innerHTML = `
-                <div style="text-align: center; padding: 100px 20px;">
-                    <div style="font-size: 80px; margin-bottom: 20px;">😕</div>
+                <div class="page-wrap" style="text-align: center;">
                     <h2 style="margin-bottom: 12px;">Oops!</h2>
-                    <p style="color: #888; margin-bottom: 30px;">${message}</p>
-                    <button class="btn btn-primary" onclick="location.reload()">
-                        <span>🔄</span> Reload Page
-                    </button>
+                    <p style="color: #777; margin-bottom: 24px;">${message}</p>
+                    <button class="btn" onclick="location.reload()" style="flex:none;">Reload Page</button>
                 </div>
             `;
         }
     };
-    // Initialize when DOM is ready
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => AccountPage.init());
     } else {
         AccountPage.init();
     }
-    console.log('✅ Enhanced Account.js loaded with Leaderboard & Charts (FIXED VERSION)');
+    console.log('✅ Account.js loaded (rebuilt — matches Void-style reference)');
     window.AccountPage = AccountPage;
 })();
