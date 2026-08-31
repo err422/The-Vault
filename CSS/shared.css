@@ -15,6 +15,7 @@ body {
 	min-height: 100vh;
 	position: relative;
 	overflow-x: hidden;
+	background: linear-gradient(to top, #1a0033, #0d001a, #000000);
 }
 
 /* ANIMATED GRADIENT TEXT */
