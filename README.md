@@ -42,12 +42,9 @@ The Vault is a personal web project that serves as a centralized hub for games a
 
 1. Create a [CodeHS](https://codehs.com) student account if you don't already have one.
 2. From your dashboard, create a new **Sandbox** program and select **Web Development** as the type.
-3. Download a ZIP of The Vault from one of the following sources:
-   - **GitHub:** Click `Code → Download ZIP` on the [repository page](https://github.com/err422/The-Vault)
-   - **Dropbox (past versions):** [The Vault Archive](https://www.dropbox.com/scl/fo/g7c2f6cirpkchl8apxnpm/ANf6VEgqyMBw5BtTxBUwzVk?rlkey=le90mf4pcmfu9z30px72b64i4&st=0jmq5857&dl=0)
-4. Inside your new CodeHS sandbox, click the **`+ New`** button in the top-left of the editor.
-5. Select **Upload** and upload the ZIP file you downloaded.
-6. CodeHS will extract the files automatically — open `index.html` to get started.
+3. Use an iframe to load the site using the link in the description; make sure that fullscreen is allowed. 
+4. CodeHS will extract the files automatically — open `index.html` to get started.
+5. **Having the CodeHS tab in a separate window is advised to stay in fullscreen**
 
 ---
 
@@ -79,3 +76,4 @@ The-Vault/
 ## Author
 
 **err422** — [github.com/err422](https://github.com/err422)
+**Contact me at** - [Ashur.nichols@gmail.com]
