@@ -208,7 +208,7 @@
         window._browserMessageHandler = function (e) {
             if (e.data && e.data.type === 'toggleFullscreen') toggleFullscreen();
         };
-        window.addEventListener('message', window._browserMessageHandler);
+        window.addEventListener('message', document._browserMessageHandler);
     }
 
     function createControlButton(text, title) {

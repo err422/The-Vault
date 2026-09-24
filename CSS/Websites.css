@@ -1,6 +1,6 @@
 /* Base styles imported from shared.css */
 body {
-	background: #000;
+	background: linear-gradient(to top, #1a0033, #0d001a, #000000);
 }
 
 /* Star styles imported from shared.css */

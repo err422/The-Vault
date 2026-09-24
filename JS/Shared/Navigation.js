@@ -213,6 +213,6 @@
         toggleFullScreen: toggleFullScreen,
         navigateTo: navigateTo,
         setup: setupNavigation
-    };
-
+    }
+    
 })();

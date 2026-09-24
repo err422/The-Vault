@@ -4,6 +4,7 @@ const CHANGELOG_VERSION = "2.9.1";
 
 const CHANGELOG_ENTRIES = [
   // Most recent changes first
+  // badge text: "NEW", "FIX", "IMPROVED", "REMOVED"
   {
     label: "REMOVED",       // badge text: "NEW", "FIX", "IMPROVED", "REMOVED", "NOTICE"
     text: "No more chatbot"
