@@ -1,6 +1,7 @@
 /* Base styles imported from shared.css */
 body {
 	background: linear-gradient(to top, #1a0033, #0d001a, #000000);
+	background-position: sticky;
 	display: flex;
 	flex-direction: column;
 	align-items: center;

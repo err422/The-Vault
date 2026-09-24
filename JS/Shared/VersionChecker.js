@@ -1,4 +1,4 @@
-// VersionChecker.js - Compact & Working Version
+//  Checks if current version is up to date if site is downloaded
 (function() {
     const CFG = {
         VER: 'v2.6.0',  // UPDATE THIS when releasing new version

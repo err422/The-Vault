@@ -1,20 +1,17 @@
-// Account.js
-// Depends on window.VaultManagers (see JS/Utils/Accounthelper.js — loaded first)
-(function () {
-    const { RankManager, StreakManager, DailyChallengeManager, QuestManager } = window.VaultManagers;
-
+// JS for acount page, along w accountHelper.js
+(function() {
     const AccountPage = {
         currentUser: null,
         currentUsername: null,
 
         init() {
-            console.log('🎨 Initializing Account Page...');
+            console.log('Initializing Enhanced Account Page...');
             this.checkAuthState();
         },
 
         checkAuthState() {
             if (typeof auth === 'undefined') {
-                console.error('❌ Firebase auth not loaded');
+                console.error('Firebase auth not loaded');
                 this.renderError('Firebase not initialized');
                 return;
             }
@@ -553,6 +550,5 @@
     } else {
         AccountPage.init();
     }
-    console.log('✅ Account.js loaded (rebuilt — matches Void-style reference)');
     window.AccountPage = AccountPage;
 })();
