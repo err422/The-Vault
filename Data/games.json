@@ -268,5 +268,14 @@
       "icon":"n/a",
       "rating":"★★★★☆",
       "url":"https://genizy.github.io/fnaf/sl/"
+   },
+   {
+      "id":31,
+      "title": "Fireboy and Watergirl",
+      "description": "Fun two player game",
+      "category":"puzzle",
+      "icon":"🎭",
+      "rating":"★★★★★",
+      "url":"n/a"
    }
 ]

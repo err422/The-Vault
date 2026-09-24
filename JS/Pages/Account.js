@@ -1,15 +1,15 @@
-// This file is shortened to deal w file size and loading issues
+// JS for acount page, along w accountHelper.js
 (function() {
     const AccountPage = {
         currentUser: null,
         currentUsername: null,
         init() {
-            console.log('🎨 Initializing Enhanced Account Page...');
+            console.log('Initializing Enhanced Account Page...');
             this.checkAuthState();
         },
         checkAuthState() {
             if (typeof auth === 'undefined') {
-                console.error('❌ Firebase auth not loaded');
+                console.error('Firebase auth not loaded');
                 this.renderError('Firebase not initialized');
                 return;
             }
@@ -782,6 +782,5 @@
     } else {
         AccountPage.init();
     }
-    console.log('✅ Enhanced Account.js loaded with Leaderboard & Charts (FIXED VERSION)');
     window.AccountPage = AccountPage;
 })();

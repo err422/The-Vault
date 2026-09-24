@@ -1,7 +1,8 @@
+// Debug / Admin menu
 (function() {
     console.log('Debug System Initializing...');
     
-    // ===== CONFIGURATION =====
+    // ===== PASSWORD CONFIGURATION ===== \\
     const DEBUG_CONFIG = {
         passwordHash: 'e7cf3ef4f17c3999a94f2c6f612e8a888e5b1026878e4e19398b23bd38ec221a', 
         secretCode: ['d', 'e', 'b', 'u', 'g']
@@ -13,7 +14,7 @@
 
     console.log('Debug configuration loaded');
     
-    // ===== SECRET CODE LISTENER =====
+    // ===== DEBUG CODE LISTENER ===== \\
     document.addEventListener('keydown', function(event) {
         userInput.push(event.key.toLowerCase());
         
@@ -22,26 +23,23 @@
         }
 
         if (JSON.stringify(userInput) === JSON.stringify(DEBUG_CONFIG.secretCode)) {
-            console.log('🔑 Secret code detected!');
             promptPassword();
             userInput = [];
         }
     });
 
-    console.log('✅ Secret code listener attached');
-
     // ===== PASSWORD PROMPT =====
     function promptPassword() {
-        console.log('🔐 Opening password prompt...');
+        console.log('Opening password prompt...');
         
         if (passwordPromptOpen) {
-            console.log('⚠️ Password prompt already open, ignoring');
+            console.log('Password prompt already open, ignoring');
             return;
         }
         
         passwordPromptOpen = true;
         
-        // Create modal backdrop
+        // Create password modal backdrop
         const backdrop = document.createElement('div');
         backdrop.style.cssText = `
             position: fixed;
@@ -58,7 +56,7 @@
             animation: fadeIn 0.2s ease;
         `;
 
-        // Create modal
+        // Create password modal
         const modal = document.createElement('div');
         modal.style.cssText = `
             background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(15, 15, 15, 0.95) 100%);
@@ -77,7 +75,7 @@
         modal.innerHTML = `
             <h2 style="color: white; margin: 0 0 10px 0; font-size: 24px; display: flex; align-items: center; gap: 10px;">
                 <span style="background: linear-gradient(to right, #fc72ff, #8f68ff, #487bff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                    🔐 Debug Mode Access
+                    Debug Mode Access
                 </span>
             </h2>
             <p style="color: rgba(255,255,255,0.6); margin: 0 0 20px 0; font-size: 14px;">
@@ -126,9 +124,9 @@
 
         backdrop.appendChild(modal);
         document.body.appendChild(backdrop);
-        console.log('✅ Password modal created and added to DOM');
+        console.log('Password modal created and added to DOM');
 
-        // Add animations
+        // Add animations for debug menu
         const style = document.createElement('style');
         style.textContent = `
             @keyframes fadeIn {
@@ -164,7 +162,7 @@
         // Focus input
         setTimeout(() => {
             input.focus();
-            console.log('✅ Input focused');
+            console.log('Input focused');
         }, 100);
 
         // Handle submit
@@ -172,8 +170,8 @@
             console.log('🔍 Checking password...');
             const password = input.value.trim();
             if (!password) {
-                console.log('⚠️ No password entered');
-                errorDiv.textContent = '⚠️ Please enter a password';
+                console.log('No password entered');
+                errorDiv.textContent = 'Please enter a password';
                 return;
             }
 
@@ -181,27 +179,27 @@
             submitBtn.disabled = true;
 
             hashPassword(password).then(hash => {
-                console.log('🔐 Entered hash:', hash);
-                console.log('🔐 Expected hash:', DEBUG_CONFIG.passwordHash);
+                console.log('Entered hash:', hash);
+                console.log('Expected hash:', DEBUG_CONFIG.passwordHash);
                 
                 if (hash === DEBUG_CONFIG.passwordHash) {
-                    console.log('✅ Password correct! Activating debug mode...');
+                    console.log('Password correct! Activating debug mode...');
                     passwordPromptOpen = false;
                     backdrop.remove();
                     style.remove();
-                    console.log('✅ Modal removed, calling activateDebugMode()...');
+                    console.log('Modal removed, calling activateDebugMode()...');
                     activateDebugMode();
                 } else {
-                    console.log('❌ Incorrect password');
-                    errorDiv.textContent = '❌ Incorrect password';
+                    console.log('Incorrect password');
+                    errorDiv.textContent = 'Incorrect password';
                     input.value = '';
                     input.focus();
                     submitBtn.textContent = 'Unlock';
                     submitBtn.disabled = false;
                 }
             }).catch(err => {
-                console.error('❌ Error hashing password:', err);
-                errorDiv.textContent = '❌ Error checking password';
+                console.error('Error hashing password:', err);
+                errorDiv.textContent = 'Error checking password';
                 submitBtn.textContent = 'Unlock';
                 submitBtn.disabled = false;
             });
@@ -209,7 +207,7 @@
 
         // Handle cancel
         const handleCancel = () => {
-            console.log('❌ Password prompt cancelled');
+            console.log('Password prompt cancelled');
             passwordPromptOpen = false;
             backdrop.remove();
             style.remove();
@@ -230,80 +228,80 @@
         });
         backdrop.addEventListener('click', (e) => {
             if (e.target === backdrop) {
-                console.log('🖱️ Clicked outside modal');
+                console.log('Clicked outside modal');
                 handleCancel();
             }
         });
 
-        console.log('✅ Event listeners attached to password modal');
+        console.log('Event listeners attached to password modal');
     }
 
     // ===== PASSWORD HASHING =====
     async function hashPassword(password) {
-        console.log('🔐 Hashing password...');
+        console.log('Hashing password...');
         try {
             const msgBuffer = new TextEncoder().encode(password);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            console.log('✅ Password hashed successfully');
+            console.log('Password hashed successfully');
             return hashHex;
         } catch (error) {
-            console.error('❌ Error hashing password:', error);
+            console.error('Error hashing password:', error);
             throw error;
         }
     }
 
     // ===== ACTIVATE DEBUG MODE =====
     function activateDebugMode() {
-        console.log('🎯 activateDebugMode() called!');
-        console.log('📊 Current debugModeActive:', debugModeActive);
+        console.log('activateDebugMode() called!');
+        console.log('Current debugModeActive:', debugModeActive);
         
         if (debugModeActive) {
-            console.log('⚠️ Debug mode already active, deactivating...');
+            console.log('Debug mode already active, deactivating...');
             deactivateDebugMode();
             return;
         }
 
         debugModeActive = true;
-        console.log('✅ debugModeActive set to true');
-        console.log('🐛 Creating debug panel...');
+        console.log('debugModeActive set to true');
+        console.log('Creating debug panel...');
         
         try {
             createDebugPanel();
-            console.log('✅ Debug panel created successfully');
-            console.log('📢 Showing notification...');
+            console.log('Debug panel created successfully');
+            console.log('Showing notification...');
             if (typeof showNotification === 'function') {
-                showNotification('Debug Mode', 'Debug panel activated! 🐛', 'success');
+                showNotification('Debug Mode', 'Debug panel activated! ', 'success');
             } else {
-                console.warn('⚠️ showNotification function not found');
+                console.warn('showNotification function not found');
             }
         } catch (error) {
-            console.error('❌ Error activating debug mode:', error);
+            console.error('Error activating debug mode:', error);
             console.error('Stack trace:', error.stack);
         }
     }
 
     // ===== DEACTIVATE DEBUG MODE =====
     function deactivateDebugMode() {
-        console.log('🔴 Deactivating debug mode...');
+        console.log('Deactivating debug mode...');
         debugModeActive = false;
         const panel = document.getElementById('vault-debug-panel');
         if (panel) {
             panel.remove();
-            console.log('✅ Debug panel removed');
+            console.log('Debug panel removed');
         } else {
-            console.log('⚠️ Debug panel not found in DOM');
+            console.log('Debug panel not found in DOM');
         }
     }
 
     // ===== CREATE DEBUG PANEL =====
     function createDebugPanel() {
-        console.log('🎨 Creating debug panel UI...');
+        console.log('Creating debug panel UI...');
         
         const existing = document.getElementById('vault-debug-panel');
         if (existing) {
-            console.log('⚠️ Debug panel already exists, removing...');
+            console.log('Debug panel already exists, removing...');
             existing.remove();
             return;
         }
@@ -329,7 +327,7 @@
             animation: panelFadeIn 0.3s ease;
         `;
 
-        console.log('✅ Panel element created with ID:', panel.id);
+        console.log('Panel element created with ID:', panel.id);
 
         const username = (typeof auth !== 'undefined' && auth.currentUser && typeof authSystem !== 'undefined') 
             ? authSystem.getCurrentUsername() 
@@ -373,10 +371,10 @@
             </div>
         `;
 
-        console.log('✅ Panel HTML set');
+        console.log('Panel HTML set');
 
         document.body.appendChild(panel);
-        console.log('✅ Panel added to document.body');
+        console.log('Panel added to document.body');
 
         // Add tab styles
         const style = document.createElement('style');
@@ -410,30 +408,30 @@
             }
         `;
         document.head.appendChild(style);
-        console.log('✅ Tab styles added');
+        console.log('Tab styles added');
 
         // Tab switching
         const tabs = document.querySelectorAll('.debug-tab');
-        console.log('📑 Found', tabs.length, 'tabs');
+        console.log('Found', tabs.length, 'tabs');
         
         tabs.forEach(tab => {
             tab.addEventListener('click', function() {
-                console.log('🖱️ Tab clicked:', this.dataset.tab);
+                console.log('Tab clicked:', this.dataset.tab);
                 document.querySelectorAll('.debug-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
                 loadDebugTab(this.dataset.tab);
             });
         });
-        console.log('✅ Tab click listeners attached');
+        console.log('Tab click listeners attached');
 
         // Close button
         const closeBtn = document.getElementById('close-debug-panel');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
-                console.log('🖱️ Close button clicked');
+                console.log('Close button clicked');
                 deactivateDebugMode();
             });
-            console.log('✅ Close button listener attached');
+            console.log('Close button listener attached');
         }
 
         // ESC key to close
@@ -445,19 +443,19 @@
             }
         };
         document.addEventListener('keydown', escHandler);
-        console.log('✅ Escape key listener attached');
+        console.log('Escape key listener attached');
 
-        console.log('📊 Loading overview tab...');
+        console.log('Loading overview tab...');
         loadDebugTab('overview');
     }
 
     // ===== LOAD TAB CONTENT =====
     function loadDebugTab(tab) {
-        console.log('📂 Loading tab:', tab);
+        console.log('Loading tab:', tab);
         const content = document.getElementById('debug-content');
         
         if (!content) {
-            console.error('❌ debug-content element not found!');
+            console.error('debug-content element not found!');
             return;
         }
 
@@ -479,18 +477,18 @@
                     loadConsoleTab(content);
                     break;
                 default:
-                    console.warn('⚠️ Unknown tab:', tab);
+                    console.warn('Unknown tab:', tab);
             }
-            console.log('✅ Tab loaded:', tab);
+            console.log('Tab loaded:', tab);
         } catch (error) {
-            console.error('❌ Error loading tab:', tab, error);
+            console.error('Error loading tab:', tab, error);
             content.innerHTML = `<div style="color: #ef4444;">Error loading tab: ${error.message}</div>`;
         }
     }
 
     // ===== TAB: OVERVIEW =====
     function loadOverviewTab(content) {
-        console.log('📊 Loading overview tab...');
+        console.log('Loading overview tab...');
         
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
         const firebaseStatus = (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0);
@@ -541,7 +539,7 @@
             </div>
         `;
         
-        console.log('✅ Overview tab rendered');
+        console.log('Overview tab rendered');
     }
 
     // ===== TAB: DIAGNOSTIC =====
@@ -575,7 +573,7 @@
 
     // ===== TAB: FIREBASE =====
     function loadFirebaseTab(content) {
-        console.log('🔥 Loading firebase tab...');
+        console.log('Loading firebase tab...');
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
         
         content.innerHTML = `
@@ -605,7 +603,7 @@
 
     // ===== TAB: STORAGE =====
     function loadStorageTab(content) {
-        console.log('💾 Loading storage tab...');
+        console.log('Loading storage tab...');
         const localStorageSize = new Blob(Object.values(localStorage)).size;
         
         content.innerHTML = `
@@ -650,7 +648,7 @@
 
     // ===== TAB: CONSOLE =====
     function loadConsoleTab(content) {
-        console.log('💻 Loading console tab...');
+        console.log('Loading console tab...');
         content.innerHTML = `
             <h2 style="margin-top: 0; color: #e5e5e5; font-size: 18px;">JavaScript Console</h2>
             
@@ -686,7 +684,7 @@
             addLog('─'.repeat(50), '#444');
             
             if (typeof firebase === 'undefined' || !firebase.database) {
-                addLog('❌ Firebase not initialized', '#c0524d');
+                addLog('Firebase not initialized', '#c0524d');
                 return;
             }
             
@@ -697,7 +695,7 @@
                 const users = snapshot.val();
                 
                 if (!users) {
-                    addLog('❌ No users found in database!', '#c0524d');
+                    addLog('No users found in database!', '#c0524d');
                     return;
                 }
                 
@@ -711,7 +709,7 @@
                     addLog(`USER ${index + 1}: ${userData.username || 'Unknown'}`, '#bba8a8');
                     
                     if (!userData.playtime || !userData.playtime.total) {
-                        addLog('  ❌ Missing playtime data', '#c0524d');
+                        addLog('  Missing playtime data', '#c0524d');
                         globalIssues.push(`${userData.username}: No playtime`);
                         return;
                     }
@@ -848,7 +846,7 @@
         }
     }
     
-    console.log('🐛 Debug System Loaded');
-    console.log('💡 Type "debug" to activate');
+    console.log('Debug System Loaded');
+    console.log('Type "debug" to activate');
 
 })();

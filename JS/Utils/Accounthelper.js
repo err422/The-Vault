@@ -440,5 +440,5 @@
     `;
     document.head.appendChild(style);
     
-    console.log('✅ Enhanced Features loaded - Ranks, Seasons, Streaks, Prestige, Challenges');
+    console.log('Enhanced Features loaded - Ranks, Seasons, Streaks, Prestige, Challenges');
 })();

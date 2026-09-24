@@ -8,6 +8,14 @@
     "url": "https://brainpop.work/"
   },
   {
+    "title":"arctic",
+    "description":"over 1K games available and mostly working",
+    "category": "Games",
+    "rating": "★★★★★",
+    "icon": "🎮",
+    "url": "https://storage.googleapis.com/math-homework/index.html"
+  },
+  {
     "title": "SpaceFlix",
     "description": "collection of Movies and Shows, along with access to live TV",
     "category": "other",
@@ -262,5 +270,13 @@
     "rating": "★★★☆☆",
     "icon": "🎮",
     "url": "https://jmw-v5.pages.dev/"
+  },
+  {
+    "title": "Fern",
+    "description": "It has games and a proxy",
+    "category": "Proxy",
+    "rating":"★★★☆☆",
+    "icon":"🌐",
+    "url": "https://fern.best"
   }
 ]

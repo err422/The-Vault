@@ -1,31 +1,28 @@
 
 
-const CHANGELOG_VERSION = "2.8.5"; // <-- bump this every time you update
+const CHANGELOG_VERSION = "2.9.1"; 
 
 const CHANGELOG_ENTRIES = [
   // Most recent changes first
   {
-    label: "NEW",       // badge text: "NEW", "FIX", "IMPROVED", "REMOVED"
-    text: "Chatbot is refusing to work"
-  },
-  {
-    label: "NEW",
-    text: "Added alt + ` as fullscreen shortcut"
+    label: "REMOVED",       // badge text: "NEW", "FIX", "IMPROVED", "REMOVED", "NOTICE"
+    text: "No more chatbot"
   },
   {
     label: "IMPROVED",
-    text: "Cleaned up debug menu"
+    text: "New accounts page"
+  },
+  {
+    label: "NOTICE",
+    text: "JSdeliver hates me, so some games are not working"
   }
-  // Add more entries above this line, example:
-  // { label: "FIX",      text: "Fixed broken links on the Games page." },
-  // { label: "IMPROVED", text: "Faster load times across all pages." },
 ];
 
 (function () {
   const STORAGE_KEY = "vault_changelog_seen";
 
-  // Only show if user hasn't seen this version yet
-//   if (localStorage.getItem(STORAGE_KEY) === CHANGELOG_VERSION) return;
+  // Only show if user hasn't seen this version yet 
+  // if (localStorage.getItem(STORAGE_KEY) === CHANGELOG_VERSION) return; // Buggy as hell, fix later
 
   // ---- Build styles ----
   const style = document.createElement("style");
@@ -113,6 +110,7 @@ const CHANGELOG_ENTRIES = [
     .vcl-badge-IMPROVED { background: #1a2a3d; color: #60a5fa; border: 1px solid #60a5fa40; }
     .vcl-badge-REMOVED  { background: #2d2014; color: #fb923c; border: 1px solid #fb923c40; }
     .vcl-badge-DEFAULT  { background: #2a2a2a; color: #aaa;    border: 1px solid #444;      }
+    .vcl-badge-NOTICE   { background: #2a2a2a; color: #fff700; border: 1px solid #fff70058; }
 
     #vault-changelog-close {
       display: block;
@@ -140,7 +138,7 @@ const CHANGELOG_ENTRIES = [
   overlay.id = "vault-changelog-overlay";
 
   const badgeClass = (label) => {
-    const known = ["NEW", "FIX", "IMPROVED", "REMOVED"];
+    const known = ["NEW", "FIX", "IMPROVED", "REMOVED", "NOTICE"];
     return known.includes(label.toUpperCase())
       ? `vcl-badge-${label.toUpperCase()}`
       : "vcl-badge-DEFAULT";
