@@ -234,7 +234,7 @@ function saveFavorites() {
             if (syncTimeout) clearTimeout(syncTimeout);
             syncTimeout = setTimeout(() => {
                 database.ref('users/' + user.uid + '/favorites').set(favorites)
-                    .then(() => console.log('Favorites synced to cloud'))
+                    
                     .catch((error) => console.error('Sync error:', error));
             }, 1000); // Only sync after user stops clicking for 1 second
         }
