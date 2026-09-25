@@ -1,11 +1,197 @@
 // Account.js
-// Depends on window.VaultManagers (see JS/Utils/Accounthelper.js — loaded first)
+// Fully self-contained — no dependency on Accounthelper.js or script load order.
 (function () {
-    const { RankManager, StreakManager, DailyChallengeManager, QuestManager } = window.VaultManagers;
+
+// ===== WEEKLY RANK SYSTEM =====
+const RankManager = {
+    RANKS: [
+        { name: 'Bronze', short: 'BRZ', min: 0 },
+        { name: 'Silver', short: 'SLV', min: 10800 },
+        { name: 'Gold', short: 'GLD', min: 25200 },
+        { name: 'Platinum', short: 'PLT', min: 43200 },
+        { name: 'Diamond', short: 'DIA', min: 72000 },
+        { name: 'Mythic', short: 'MYT', min: 108000 }
+    ],
+    getRank(weeklySeconds) {
+        for (let i = this.RANKS.length - 1; i >= 0; i--) {
+            if (weeklySeconds >= this.RANKS[i].min) return this.RANKS[i];
+        }
+        return this.RANKS[0];
+    },
+    getRankIndex(weeklySeconds) {
+        for (let i = this.RANKS.length - 1; i >= 0; i--) {
+            if (weeklySeconds >= this.RANKS[i].min) return i;
+        }
+        return 0;
+    },
+    getWeeklyPlaytime(userData) {
+        if (!userData.playtime?.daily) return 0;
+        let total = 0;
+        const today = new Date();
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            if (userData.playtime.daily[dateStr]) {
+                total += Object.values(userData.playtime.daily[dateStr]).reduce((sum, s) => sum + Number(s), 0);
+            }
+        }
+        return total;
+    }
+};
+
+const StreakManager = {
+    async updateStreak(userId, userData) {
+        const daily = userData.playtime?.daily || {};
+        const dates = Object.keys(daily).sort().reverse();
+        let current = 0;
+        let longest = 0;
+        if (dates.length > 0) {
+            const today = new Date().toISOString().split('T')[0];
+            const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+            if (dates[0] === today || dates[0] === yesterday) {
+                current = 1;
+                let checkDate = new Date(dates[0]);
+                for (let i = 1; i < dates.length; i++) {
+                    const prevDate = new Date(checkDate);
+                    prevDate.setDate(prevDate.getDate() - 1);
+                    const prevDateStr = prevDate.toISOString().split('T')[0];
+                    if (dates[i] === prevDateStr) {
+                        current++;
+                        checkDate = prevDate;
+                    } else break;
+                }
+            }
+            for (let i = 0; i < dates.length; i++) {
+                let tempStreak = 1;
+                let checkDate = new Date(dates[i]);
+                for (let j = i + 1; j < dates.length; j++) {
+                    const prevDate = new Date(checkDate);
+                    prevDate.setDate(prevDate.getDate() - 1);
+                    const prevDateStr = prevDate.toISOString().split('T')[0];
+                    if (dates[j] === prevDateStr) {
+                        tempStreak++;
+                        checkDate = prevDate;
+                    } else break;
+                }
+                longest = Math.max(longest, tempStreak);
+            }
+        }
+        const streak = { current, longest, lastPlayed: dates[0] || null };
+        await database.ref('users/' + userId + '/streak').set(streak);
+        return streak;
+    },
+    getWeekView(userData) {
+        const daily = userData.playtime?.daily || {};
+        const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        const dayOfWeek = now.getDay();
+        const diffToMonday = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() + diffToMonday);
+        const week = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            const dateStr = d.toISOString().split('T')[0];
+            const played = !!daily[dateStr] && Object.values(daily[dateStr]).some(s => Number(s) > 0);
+            week.push({ label: labels[i], done: played, isToday: dateStr === todayStr });
+        }
+        return week;
+    }
+};
+
+const DailyChallengeManager = {
+    _gamesCache: null,
+    async loadGames() {
+        if (this._gamesCache) return this._gamesCache;
+        const res = await fetch('Data/games.json');
+        this._gamesCache = await res.json();
+        return this._gamesCache;
+    },
+    async getTodaysChallenge() {
+        const dateStr = new Date().toISOString().split('T')[0];
+        const ref = database.ref('dailyChallenge/' + dateStr);
+        const snapshot = await ref.once('value');
+        const existing = snapshot.val();
+        if (existing) return existing;
+        const games = await this.loadGames();
+        const seed = dateStr.split('-').reduce((a, n) => a + Number(n), 0);
+        const pick = games[seed % games.length];
+        const challenge = { gameId: pick.id, title: pick.title, icon: pick.icon, url: pick.url, date: dateStr };
+        await ref.set(challenge);
+        return challenge;
+    }
+};
+
+const QuestManager = {
+    getTodaysQuests(userData, challenge) {
+        const dateStr = new Date().toISOString().split('T')[0];
+        const today = userData.playtime?.daily?.[dateStr] || {};
+        const gamesPlayedToday = Object.keys(today).length;
+        const secondsToday = Object.values(today).reduce((s, v) => s + Number(v), 0);
+        const minutesToday = Math.floor(secondsToday / 60);
+        const challengePlayed = !!(challenge && today[challenge.title] > 0);
+        return [
+            { id: 'play_games', label: 'Play 3 games', progress: Math.min(gamesPlayedToday, 3), target: 3, done: gamesPlayedToday >= 3 },
+            { id: 'play_minutes', label: 'Play for 20 minutes', progress: Math.min(minutesToday, 20), target: 20, done: minutesToday >= 20 },
+            { id: 'daily_challenge', label: 'Finish the daily challenge', progress: challengePlayed ? 1 : 0, target: 1, done: challengePlayed }
+        ];
+    }
+};
+
+const LeaderboardManager = {
+    getCalendarWeekPlaytime(userData) {
+        const daily = userData.playtime?.daily || {};
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const diffToMonday = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() + diffToMonday);
+        let total = 0;
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            const dateStr = d.toISOString().split('T')[0];
+            if (daily[dateStr]) total += Object.values(daily[dateStr]).reduce((sum, s) => sum + Number(s), 0);
+        }
+        return total;
+    },
+    buildEntries(users, mode, calcStats) {
+        const entries = Object.entries(users || {}).map(([uid, userData]) => {
+            const stats = calcStats(userData);
+            const weekSeconds = this.getCalendarWeekPlaytime(userData);
+            return {
+                uid,
+                username: userData.username || 'Unknown',
+                level: stats.level,
+                seconds: mode === 'week' ? weekSeconds : stats.totalPlaytime,
+                allTimeSeconds: stats.totalPlaytime
+            };
+        });
+        entries.sort((a,b) => {
+            if (b.seconds !== a.seconds) return b.seconds - a.seconds;
+            if (b.level !== a.level) return b.level - a.level;
+            if (b.allTimeSeconds !== a.allTimeSeconds) return b.allTimeSeconds - a.allTimeSeconds;
+            if (a.username !== b.username) return a.username.localeCompare(b.username);
+            return a.uid.localeCompare(b.uid);
+        });
+        return entries;
+    },
+    formatDuration(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return hours > 0 ? hours + 'h ' + minutes + 'm' : minutes + 'm';
+    }
+};
+
 
     const AccountPage = {
         currentUser: null,
         currentUsername: null,
+        _leaderboard: { week: [], all: [] },
+        _leaderboardTab: 'week',
 
         init() {
             console.log('🎨 Initializing Account Page...');
@@ -64,6 +250,11 @@
             const dailyChallenge = await DailyChallengeManager.getTodaysChallenge();
             const dailyQuests = QuestManager.getTodaysQuests(userData, dailyChallenge);
 
+            const usersSnap = await database.ref('users').once('value');
+            const allUsers = usersSnap.val() || {};
+            this._leaderboard.week = LeaderboardManager.buildEntries(allUsers, 'week', this.calculateStats);
+            this._leaderboard.all = LeaderboardManager.buildEntries(allUsers, 'all', this.calculateStats);
+
             content.innerHTML = `
                 <div class="page-wrap">
                     <h1 class="page-title">Your Record</h1>
@@ -84,6 +275,10 @@
                     <div class="card">
                         <div class="card-label"><span class="dot"></span> Play Activity · Last 30 Days</div>
                         ${this.renderHeatmap(userData)}
+                    </div>
+
+                    <div class="card" id="leaderboard-card">
+                        ${this.renderLeaderboardCardInner()}
                     </div>
 
                     ${this.renderGlanceCard(stats, achievementCount)}
@@ -265,6 +460,51 @@
             `;
         },
 
+
+        // ===== LEADERBOARD =====
+        renderLeaderboardCardInner() {
+            const mode = this._leaderboardTab;
+            const entries = this._leaderboard[mode] || [];
+            const uid = this.currentUser?.uid;
+            const top5 = entries.slice(0, 5);
+            const myIndex = entries.findIndex(e => e.uid === uid);
+            const myRank = myIndex + 1;
+            const inTop5 = myIndex >= 0 && myIndex < 5;
+
+            const escapeHTML = (value) => String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+
+            const rowHTML = (entry, rank, isMe) => `
+                <div class="lb-row ${isMe ? 'me' : ''}">
+                    <div class="lb-rank">${rank}</div>
+                    <div class="lb-name">${escapeHTML(entry.username)} · Level ${entry.level}</div>
+                    <div class="lb-time">${LeaderboardManager.formatDuration(entry.seconds)}</div>
+                </div>
+            `;
+
+            let rows = top5.map((e,i) => rowHTML(e,i+1,e.uid === uid)).join('');
+            if (myIndex >= 0 && !inTop5) {
+                rows += `
+                    <div class="lb-divider"></div>
+                    ${rowHTML(entries[myIndex], myRank, true)}
+                `;
+            }
+            if (entries.length === 0) rows = '<p style="color:#666;font-size:14px;">No players yet.</p>';
+
+            return `
+                <div class="card-label"><span class="dot"></span> Leaderboard</div>
+                <div class="lb-tabs">
+                    <button class="lb-tab ${mode === 'week' ? 'active' : ''}" data-lb-tab="week">This Week</button>
+                    <button class="lb-tab ${mode === 'all' ? 'active' : ''}" data-lb-tab="all">All Time</button>
+                </div>
+                <div class="lb-rows">${rows}</div>
+            `;
+        },
+
         // ===== AT A GLANCE =====
         renderGlanceCard(stats, achievementCount) {
             return `
@@ -305,6 +545,20 @@
                     }
                 });
             }
+
+            this.attachLeaderboardListeners();
+        },
+
+        attachLeaderboardListeners() {
+            const lbCard = document.getElementById('leaderboard-card');
+            if (!lbCard) return;
+            lbCard.querySelectorAll('[data-lb-tab]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    this._leaderboardTab = btn.getAttribute('data-lb-tab');
+                    lbCard.innerHTML = this.renderLeaderboardCardInner();
+                    this.attachLeaderboardListeners();
+                });
+            });
         },
 
         showChangeUsernameForm() {
