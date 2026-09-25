@@ -6,9 +6,8 @@
 
 body {
 	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-	background: linear-gradient(to top, #1a0033, #0d001a, #000000);
-
 }
+
 /* ===== PAGE ===== */
 .page-wrap {
 	max-width: 880px;
@@ -397,6 +396,68 @@ body {
 	color: #777;
 }
 .heatmap-legend .heatmap-cell { width: 12px; height: 12px; aspect-ratio: unset; }
+
+/* ===== LEADERBOARD ===== */
+.lb-tabs {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 18px;
+}
+.lb-tab {
+	flex: 1;
+	padding: 10px;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	color: #888;
+	border-radius: 10px;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 12px;
+	transition: all 0.15s ease;
+	font-family: inherit;
+}
+.lb-tab.active { background: #fff; border-color: #fff; color: #000; }
+.lb-tab:hover:not(.active) { background: rgba(255, 255, 255, 0.06); }
+
+.lb-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 10px 0;
+}
+.lb-row + .lb-row { border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.lb-row.me { background: rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 10px 10px; margin: 0 -10px; }
+.lb-rank {
+	width: 32px;
+	flex-shrink: 0;
+	font-size: 14px;
+	font-weight: 700;
+	color: #888;
+}
+.lb-row.me .lb-rank { color: #fff; }
+.lb-name {
+	flex: 1;
+	min-width: 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: #ddd;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.lb-row.me .lb-name { color: #fff; }
+.lb-time {
+	font-size: 13px;
+	font-weight: 700;
+	color: #888;
+	flex-shrink: 0;
+}
+.lb-row.me .lb-time { color: #fff; }
+.lb-divider {
+	height: 1px;
+	background: rgba(255, 255, 255, 0.06);
+	margin: 4px 0;
+}
 
 /* ===== AT A GLANCE ===== */
 .glance-grid {
