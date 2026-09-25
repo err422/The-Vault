@@ -1,6 +1,5 @@
 // Debug / Admin menu
 (function() {
-    console.log('Debug System Initializing...');
     
     // ===== PASSWORD CONFIGURATION ===== \\
     const DEBUG_CONFIG = {
@@ -12,7 +11,6 @@
     let debugModeActive = false;
     let passwordPromptOpen = false;
 
-    console.log('Debug configuration loaded');
     
     // ===== DEBUG CODE LISTENER ===== \\
     document.addEventListener('keydown', function(event) {
@@ -30,10 +28,8 @@
 
     // ===== PASSWORD PROMPT =====
     function promptPassword() {
-        console.log('Opening password prompt...');
         
         if (passwordPromptOpen) {
-            console.log('Password prompt already open, ignoring');
             return;
         }
         
@@ -124,7 +120,6 @@
 
         backdrop.appendChild(modal);
         document.body.appendChild(backdrop);
-        console.log('Password modal created and added to DOM');
 
         // Add animations for debug menu
         const style = document.createElement('style');
@@ -162,15 +157,12 @@
         // Focus input
         setTimeout(() => {
             input.focus();
-            console.log('Input focused');
         }, 100);
 
         // Handle submit
         const handleSubmit = () => {
-            console.log('🔍 Checking password...');
             const password = input.value.trim();
             if (!password) {
-                console.log('No password entered');
                 errorDiv.textContent = 'Please enter a password';
                 return;
             }
@@ -179,18 +171,13 @@
             submitBtn.disabled = true;
 
             hashPassword(password).then(hash => {
-                console.log('Entered hash:', hash);
-                console.log('Expected hash:', DEBUG_CONFIG.passwordHash);
                 
                 if (hash === DEBUG_CONFIG.passwordHash) {
-                    console.log('Password correct! Activating debug mode...');
                     passwordPromptOpen = false;
                     backdrop.remove();
                     style.remove();
-                    console.log('Modal removed, calling activateDebugMode()...');
                     activateDebugMode();
                 } else {
-                    console.log('Incorrect password');
                     errorDiv.textContent = 'Incorrect password';
                     input.value = '';
                     input.focus();
@@ -207,7 +194,6 @@
 
         // Handle cancel
         const handleCancel = () => {
-            console.log('Password prompt cancelled');
             passwordPromptOpen = false;
             backdrop.remove();
             style.remove();
@@ -218,33 +204,27 @@
         cancelBtn.addEventListener('click', handleCancel);
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                console.log('⏎ Enter key pressed');
                 handleSubmit();
             }
             if (e.key === 'Escape') {
-                console.log('⎋ Escape key pressed');
                 handleCancel();
             }
         });
         backdrop.addEventListener('click', (e) => {
             if (e.target === backdrop) {
-                console.log('Clicked outside modal');
                 handleCancel();
             }
         });
 
-        console.log('Event listeners attached to password modal');
     }
 
     // ===== PASSWORD HASHING =====
     async function hashPassword(password) {
-        console.log('Hashing password...');
         try {
             const msgBuffer = new TextEncoder().encode(password);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            console.log('Password hashed successfully');
             return hashHex;
         } catch (error) {
             console.error('Error hashing password:', error);
@@ -254,23 +234,16 @@
 
     // ===== ACTIVATE DEBUG MODE =====
     function activateDebugMode() {
-        console.log('activateDebugMode() called!');
-        console.log('Current debugModeActive:', debugModeActive);
         
         if (debugModeActive) {
-            console.log('Debug mode already active, deactivating...');
             deactivateDebugMode();
             return;
         }
 
         debugModeActive = true;
-        console.log('debugModeActive set to true');
-        console.log('Creating debug panel...');
         
         try {
             createDebugPanel();
-            console.log('Debug panel created successfully');
-            console.log('Showing notification...');
             if (typeof showNotification === 'function') {
                 showNotification('Debug Mode', 'Debug panel activated! ', 'success');
             } else {
@@ -284,24 +257,19 @@
 
     // ===== DEACTIVATE DEBUG MODE =====
     function deactivateDebugMode() {
-        console.log('Deactivating debug mode...');
         debugModeActive = false;
         const panel = document.getElementById('vault-debug-panel');
         if (panel) {
             panel.remove();
-            console.log('Debug panel removed');
         } else {
-            console.log('Debug panel not found in DOM');
         }
     }
 
     // ===== CREATE DEBUG PANEL =====
     function createDebugPanel() {
-        console.log('Creating debug panel UI...');
         
         const existing = document.getElementById('vault-debug-panel');
         if (existing) {
-            console.log('Debug panel already exists, removing...');
             existing.remove();
             return;
         }
@@ -327,7 +295,6 @@
             animation: panelFadeIn 0.3s ease;
         `;
 
-        console.log('Panel element created with ID:', panel.id);
 
         const username = (typeof auth !== 'undefined' && auth.currentUser && typeof authSystem !== 'undefined') 
             ? authSystem.getCurrentUsername() 
@@ -371,10 +338,8 @@
             </div>
         `;
 
-        console.log('Panel HTML set');
 
         document.body.appendChild(panel);
-        console.log('Panel added to document.body');
 
         // Add tab styles
         const style = document.createElement('style');
@@ -408,50 +373,40 @@
             }
         `;
         document.head.appendChild(style);
-        console.log('Tab styles added');
 
         // Tab switching
         const tabs = document.querySelectorAll('.debug-tab');
-        console.log('Found', tabs.length, 'tabs');
         
         tabs.forEach(tab => {
             tab.addEventListener('click', function() {
-                console.log('Tab clicked:', this.dataset.tab);
                 document.querySelectorAll('.debug-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
                 loadDebugTab(this.dataset.tab);
             });
         });
-        console.log('Tab click listeners attached');
 
         // Close button
         const closeBtn = document.getElementById('close-debug-panel');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
-                console.log('Close button clicked');
                 deactivateDebugMode();
             });
-            console.log('Close button listener attached');
         }
 
         // ESC key to close
         const escHandler = function(e) {
             if (e.key === 'Escape' && debugModeActive) {
-                console.log('⎋ Escape pressed, closing debug panel');
                 deactivateDebugMode();
                 document.removeEventListener('keydown', escHandler);
             }
         };
         document.addEventListener('keydown', escHandler);
-        console.log('Escape key listener attached');
 
-        console.log('Loading overview tab...');
         loadDebugTab('overview');
     }
 
     // ===== LOAD TAB CONTENT =====
     function loadDebugTab(tab) {
-        console.log('Loading tab:', tab);
         const content = document.getElementById('debug-content');
         
         if (!content) {
@@ -479,7 +434,6 @@
                 default:
                     console.warn('Unknown tab:', tab);
             }
-            console.log('Tab loaded:', tab);
         } catch (error) {
             console.error('Error loading tab:', tab, error);
             content.innerHTML = `<div style="color: #ef4444;">Error loading tab: ${error.message}</div>`;
@@ -488,7 +442,6 @@
 
     // ===== TAB: OVERVIEW =====
     function loadOverviewTab(content) {
-        console.log('Loading overview tab...');
         
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
         const firebaseStatus = (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0);
@@ -539,12 +492,10 @@
             </div>
         `;
         
-        console.log('Overview tab rendered');
     }
 
     // ===== TAB: DIAGNOSTIC =====
     function loadDiagnosticTab(content) {
-        console.log('🔬 Loading diagnostic tab...');
         
         content.innerHTML = `
             <h2 style="margin-top: 0; color: #e5e5e5; font-size: 18px;">Leaderboard Diagnostic</h2>
@@ -573,7 +524,6 @@
 
     // ===== TAB: FIREBASE =====
     function loadFirebaseTab(content) {
-        console.log('Loading firebase tab...');
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
         
         content.innerHTML = `
@@ -603,7 +553,6 @@
 
     // ===== TAB: STORAGE =====
     function loadStorageTab(content) {
-        console.log('Loading storage tab...');
         const localStorageSize = new Blob(Object.values(localStorage)).size;
         
         content.innerHTML = `
@@ -648,7 +597,6 @@
 
     // ===== TAB: CONSOLE =====
     function loadConsoleTab(content) {
-        console.log('Loading console tab...');
         content.innerHTML = `
             <h2 style="margin-top: 0; color: #e5e5e5; font-size: 18px;">JavaScript Console</h2>
             
@@ -846,7 +794,5 @@
         }
     }
     
-    console.log('Debug System Loaded');
-    console.log('Type "debug" to activate');
 
 })();
