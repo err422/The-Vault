@@ -360,7 +360,7 @@ function checkAndShowNotifications() {
 }
 
 function createBellScheduleWidget() {
-    console.log('Bell schedule widget initialized - will appear in browser toolbar');
+    
 }
 
 function addBellIconToToolbar() {
