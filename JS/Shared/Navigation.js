@@ -20,7 +20,6 @@
 
                 const labelText = label.textContent.trim().replace(/\s+/g, ' ');
 
-                console.log('Navigation clicked:', labelText);
 
                 e.preventDefault();
                 e.stopPropagation();
