@@ -208,7 +208,11 @@
         `;
 
         btn.addEventListener('click', () => {
-            window.location.href = 'account.html';
+            if (window.navigation?.navigateTo) {
+                window.navigation.navigateTo('account.html');
+            } else {
+                window.location.href = 'account.html';
+            }
         });
 
         const fs = document.getElementById('fullscreen-btn');
@@ -257,7 +261,7 @@
                     </div>
                     <label class="auth-modal-tos">
                         <input type="checkbox" id="auth-signup-tos">
-                        <span>I agree to the <a href="tos.html" target="_blank">Terms of Service</a></span>
+                        <span>I agree to the <a href="https://docs.google.com/document/d/1iEg2ysVHRlZni3fwQHKJUDzd3qKMmcW8FbB6CEl5L_Q/edit?tab=t.0" target="_blank">Terms of Service</a></span>
                     </label>
                     <div class="auth-modal-error" id="auth-signup-error"></div>
                     <button class="auth-modal-btn" id="auth-signup-btn" type="button">Create Account</button>
