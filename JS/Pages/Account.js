@@ -651,7 +651,7 @@ const LeaderboardManager = {
                             <div class="form-group tos-group">
                                 <label>
                                     <input type="checkbox" id="signup-tos">
-                                    <span>I agree to the <a href="tos.html" target="_blank">Terms of Service</a></span>
+                                    <span>I agree to the <a href="https://docs.google.com/document/d/1iEg2ysVHRlZni3fwQHKJUDzd3qKMmcW8FbB6CEl5L_Q/edit?tab=t.0" target="_blank">Terms of Service</a></span>
                                 </label>
                             </div>
                             <div class="form-error" id="signup-error"></div>
