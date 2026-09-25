@@ -237,9 +237,41 @@ body {
 }
 
 #clock {
-	font-size: 1.3rem;
-	color: #fff;
-	padding: 10px auto
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin: 10px auto 35px;
+    padding: 12px 22px;
+    color: rgba(255, 255, 255, .9);
+    font-size: 1.15rem;
+    font-weight: 500;
+    letter-spacing: .04em;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .2);
+    backdrop-filter: blur(10px);
+}
+
+.clock-date {
+    color: rgba(255, 255, 255, .72);
+}
+
+.clock-separator {
+    color: rgba(255, 255, 255, .3);
+}
+
+.clock-time {
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+.clock-period {
+    margin-left: 2px;
+    color: rgba(255, 255, 255, .6);
+    font-size: .8em;
+    font-weight: 600;
+    letter-spacing: .06em;
 }
 
 @media(max-width:768px) {
