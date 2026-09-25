@@ -34,7 +34,6 @@
     
     //  Consolodate entries to save space and keep data clean
     async function consolidatePlaytime(userId) {
-        console.log('Starting playtime consolidation for user:', userId);
         
         try {
             // Get all playtime data
@@ -42,7 +41,6 @@
             const data = snapshot.val();
             
             if (!data) {
-                console.log('No playtime data to consolidate');
                 return;
             }
             
@@ -53,12 +51,10 @@
             let updates = {};
             
             // === STEP 1: Consolidate old daily entries into weekly entries after a week ===
-            console.log('Checking daily entries...');
             for (const dateStr in daily) {
                 const age = daysAgo(dateStr);
                 
                 if (age >= 7) {
-                    console.log(`  Moving ${dateStr} to weekly (${age} days old)`);
                     const weekStr = getWeekNumber(dateStr);
                     
                     // Merge this day's data into the appropriate week
@@ -75,7 +71,6 @@
             }
             
             // === STEP 2: Consolidate old weekly entries into monthly ===
-            console.log('Checking weekly entries...');
             for (const weekStr in weekly) {
                 // Extract year and week number from "2026-W01"
                 const [year, weekPart] = weekStr.split('-W');
@@ -88,7 +83,6 @@
                 const age = daysAgo(weekDate.toISOString().split('T')[0]);
                 
                 if (age >= 28) { // 4 weeks
-                    console.log(`  Moving ${weekStr} to monthly (${age} days old)`);
                     const monthStr = getMonthString(weekDate);
                     
                     // Merge this week's data into the correct month
@@ -105,13 +99,11 @@
             }
             
             // === STEP 3: Consolidate old monthly entries into yearly entries ===
-            console.log('Checking monthly entries...');
             for (const monthStr in monthly) {
                 const monthDate = new Date(monthStr + '-01');
                 const age = daysAgo(monthDate.toISOString().split('T')[0]);
                 
                 if (age >= 365) { // 12 months
-                    console.log(`  Moving ${monthStr} to yearly (${age} days old)`);
                     const yearStr = getYearString(monthDate);
                     
                     // Merge this month's data into the appropriate year
@@ -132,11 +124,8 @@
             
             // === STEP 4: Apply all updates at once ===
             if (Object.keys(updates).length > 0) {
-                console.log('💾 Applying', Object.keys(updates).length, 'updates...');
                 await database.ref(`users/${userId}/playtime`).update(updates);
-                console.log('✅ Consolidation complete!');
             } else {
-                console.log('✅ No consolidation needed - data is already clean!');
             }
             
         } catch (error) {
