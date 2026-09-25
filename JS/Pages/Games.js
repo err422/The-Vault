@@ -10,7 +10,6 @@ var playtimeTracker = {
 function startPlaytimeTracking(title) {
     // Don't track if not logged in
     if (!auth.currentUser) {
-        console.log('Not tracking playtime - user not logged in');
         return;
     }
     // Stop any existing tracking
@@ -18,7 +17,6 @@ function startPlaytimeTracking(title) {
     playtimeTracker.currentGame = title;
     playtimeTracker.startTime = Date.now();
     playtimeTracker.totalSeconds = 0;
-    console.log('Started tracking playtime for:', title);
     // Update playtime every 30 seconds
     playtimeTracker.intervalId = setInterval(() => {
         const elapsed = Math.floor((Date.now() - playtimeTracker.startTime) / 1000);
@@ -42,8 +40,6 @@ function stopPlaytimeTracking() {
         // Save final playtime to Firebase
         savePlaytimeToFirebase();
     }
-    console.log('Stopped tracking playtime for:', playtimeTracker.currentGame, 
-                '- Total:', formatPlaytime(playtimeTracker.totalSeconds));
     // Reset tracker
     playtimeTracker.currentGame = null;
     playtimeTracker.startTime = null;
@@ -66,7 +62,6 @@ function savePlaytimeToFirebase() {
     })
     .then((result) => {
         if (result.committed) {
-            console.log('Daily playtime saved:', gameTitle, '+' + secondsToAdd + 's');
         }
     })
     .catch((error) => {
@@ -78,7 +73,6 @@ function savePlaytimeToFirebase() {
         return (currentSeconds || 0) + secondsToAdd;
     })
     .then(() => {
-        console.log('Total playtime updated');
     })
     .catch((error) => {
         console.error('Error updating total:', error);
@@ -223,7 +217,6 @@ function syncFavoritesFromCloud() {
                 } else if (typeof updateGameCardStars === 'function') {
                     updateGameCardStars();
                 }
-                console.log('Favorites synced from cloud:', favorites.length);
             }
         })
         .catch((error) => {
@@ -273,7 +266,6 @@ function updateFavoritesBadge() {
 function addBellScheduleIconToToolbar() {
     const toolbar = document.getElementById('toolbar');
     if (!toolbar) {
-        console.log('Toolbar not found for bell schedule');
         return;
     }   
     // Remove existing button if present
@@ -313,12 +305,10 @@ function addBellScheduleIconToToolbar() {
         toggleBellSchedulePopup();
     });
     toolbar.appendChild(bellButton);
-    console.log('Bell schedule icon added to toolbar');
 }
 function addFavoritesIconToToolbar() {
     const toolbar = document.getElementById('toolbar');
     if (!toolbar) {
-        console.log('Toolbar not found for favorites');
         return;
     }    
     // Remove existing button if present
@@ -381,7 +371,6 @@ function addFavoritesIconToToolbar() {
         toggleFavoritesPopup();
     });
     toolbar.appendChild(favButton);
-    console.log('Favorites icon added to toolbar');
 }
 function toggleFavoritesPopup() {
     let popup = document.getElementById('favorites-popup');   
@@ -703,7 +692,6 @@ document.addEventListener('visibilitychange', function() {
 function viewPlaytime(range = 'week') {
     const user = auth.currentUser;
     if (!user) {
-        console.log('❌ Not logged in');
         return;
     }    
     let path = 'total'; // default
@@ -723,10 +711,8 @@ function viewPlaytime(range = 'week') {
         .then((snapshot) => {
             const data = snapshot.val();
             if (!data) {
-                console.log(`📊 No playtime data for: ${range}`);
                 return;
             }       
-            console.log(`\n=== PLAYTIME (${range.toUpperCase()}) ===`);
             // If viewing a time range (daily/weekly/monthly)
             if (path !== 'total') {
                 let allGames = {};
@@ -739,20 +725,15 @@ function viewPlaytime(range = 'week') {
                 // Sort and display
                 const sorted = Object.entries(allGames).sort((a, b) => b[1] - a[1]);
                 sorted.forEach(([game, seconds]) => {
-                    console.log(`${game}: ${formatPlaytime(seconds)}`);
                 });
                 const totalSeconds = Object.values(allGames).reduce((a, b) => a + b, 0);
-                console.log(`\n⏱️  Total: ${formatPlaytime(totalSeconds)}`);
             } else {
                 // Viewing lifetime totals
                 const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
                 sorted.forEach(([game, seconds]) => {
-                    console.log(`${game}: ${formatPlaytime(seconds)}`);
                 });
                 const totalSeconds = Object.values(data).reduce((a, b) => a + b, 0);
-                console.log(`\n⏱️  Total: ${formatPlaytime(totalSeconds)}`);
             }
-            console.log('\n💡 Try: viewPlaytime("today"), viewPlaytime("week"), viewPlaytime("month"), viewPlaytime("all")');
         })
         .catch((error) => {
             console.error('Error loading playtime:', error);
