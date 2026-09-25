@@ -3,7 +3,6 @@
 (function() {
     // Check if Firebase is already initialized
     if (window.firebaseInitialized) {
-        console.log('Firebase already initialized, skipping...');
         return;
     }
 
@@ -22,7 +21,6 @@
         // Initialize Firebase only once
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
-            console.log("Firebase initialized successfully");
         }
         
         // Export references
@@ -32,7 +30,6 @@
         // Enable persistence for faster loading
         window.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
             .then(() => {
-                console.log("Auth persistence enabled");
             })
             .catch((error) => {
                 console.error("Persistence error:", error);
