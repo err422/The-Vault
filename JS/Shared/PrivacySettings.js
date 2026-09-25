@@ -1,7 +1,6 @@
 // PrivacySettings.js - Privacy & Safety Systems
 
 (function() {
-    console.log('🛡️ Privacy Settings System Initializing...');
 
     const PrivacySettings = {
         panicKey: null,
@@ -15,7 +14,6 @@
             this.loadSettings();
             this.setupPanicKeyListener();
             this.applyDisguise();
-            console.log('✅ Privacy Settings loaded');
         },
 
         // Load settings from Firebase or localStorage
@@ -33,12 +31,10 @@
                         this.disguiseEnabled = data.disguiseEnabled || false;
                         this.disguiseTitle = data.disguiseTitle || 'Classes';
                         this.disguiseFavicon = data.disguiseFavicon || 'https://ssl.gstatic.com/classroom/ic_product_classroom_32.png';
-                        console.log('✅ Settings loaded from Firebase');
                         return;
                     }
                 }
             } catch (error) {
-                console.log('⚠️ Firebase load failed, using localStorage:', error);
             }
 
             // Fallback to localStorage
@@ -51,7 +47,6 @@
                     this.disguiseEnabled = data.disguiseEnabled || false;
                     this.disguiseTitle = data.disguiseTitle || 'Classes';
                     this.disguiseFavicon = data.disguiseFavicon || 'https://ssl.gstatic.com/classroom/ic_product_classroom_32.png';
-                    console.log('✅ Settings loaded from localStorage');
                 } catch (error) {
                     console.error('❌ Error parsing localStorage:', error);
                 }
@@ -70,17 +65,14 @@
 
             // Always save to localStorage
             localStorage.setItem('vaultPrivacySettings', JSON.stringify(data));
-            console.log('✅ Settings saved to localStorage');
 
             // Try Firebase if logged in
             try {
                 if (typeof auth !== 'undefined' && auth.currentUser) {
                     const userId = auth.currentUser.uid;
                     await database.ref(`users/${userId}/privacy`).set(data);
-                    console.log('✅ Settings saved to Firebase');
                 }
             } catch (error) {
-                console.log('⚠️ Firebase save failed:', error);
             }
         },
 
@@ -92,12 +84,10 @@
                     this.triggerPanic();
                 }
             });
-            console.log('✅ Panic key listener active');
         },
 
         // Trigger panic redirect
         triggerPanic() {
-            console.log('🚨 PANIC TRIGGERED - Redirecting...');
             window.location.href = this.panicURL;
         },
 
@@ -113,7 +103,6 @@
             // Apply disguise
             document.title = this.disguiseTitle;
             this.setFavicon(this.disguiseFavicon);
-            console.log('🎭 Tab disguise applied:', this.disguiseTitle);
         },
 
         // Set favicon
@@ -149,7 +138,6 @@
         async setPanicKey(key) {
             this.panicKey = key;
             await this.saveSettings();
-            console.log('✅ Panic key set to:', key);
         },
 
         // Update panic URL
@@ -160,7 +148,6 @@
             }
             this.panicURL = url;
             await this.saveSettings();
-            console.log('✅ Panic URL set to:', url);
         },
 
         // Toggle disguise
@@ -168,7 +155,6 @@
             this.disguiseEnabled = enabled;
             await this.saveSettings();
             this.applyDisguise();
-            console.log('✅ Disguise', enabled ? 'enabled' : 'disabled');
         },
 
         // Update disguise settings
@@ -179,7 +165,6 @@
             if (this.disguiseEnabled) {
                 this.applyDisguise();
             }
-            console.log('✅ Disguise settings updated');
         },
 
         // Get current settings (for UI)
@@ -204,5 +189,4 @@
         PrivacySettings.init();
     }
 
-    console.log('✅ Privacy Settings System Loaded');
 })();
