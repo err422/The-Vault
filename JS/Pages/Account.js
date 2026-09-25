@@ -194,7 +194,6 @@ const LeaderboardManager = {
         _leaderboardTab: 'week',
 
         init() {
-            console.log('🎨 Initializing Account Page...');
             this.checkAuthState();
         },
 
@@ -807,6 +806,5 @@ const LeaderboardManager = {
     } else {
         AccountPage.init();
     }
-    console.log('✅ Account.js loaded (rebuilt — matches Void-style reference)');
     window.AccountPage = AccountPage;
 })();
