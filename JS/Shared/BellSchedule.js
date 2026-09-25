@@ -265,7 +265,7 @@ function playNotificationSound() {
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.3);
     } catch (e) {
-        console.log('Could not play notification sound:', e);
+
     }
 }
 
@@ -366,7 +366,7 @@ function createBellScheduleWidget() {
 function addBellIconToToolbar() {
     const toolbar = document.getElementById('toolbar');
     if (!toolbar) {
-        console.log('Toolbar not found');
+
         return;
     }
     
@@ -403,7 +403,7 @@ function addBellIconToToolbar() {
     
     bellButton.addEventListener('click', function(e) {
         e.stopPropagation();
-        console.log('Bell button clicked!');
+
         toggleBellSchedulePopup();
     });
     
@@ -414,7 +414,7 @@ function addBellIconToToolbar() {
         toolbar.appendChild(bellButton);
     }
     
-    console.log('Bell icon added to toolbar');
+
     
     // Update every second
     setInterval(() => {
@@ -510,7 +510,7 @@ function toggleBellSchedulePopup() {
     
     browserWindow.appendChild(popup);
     
-    console.log('Bell schedule popup created and appended');
+
     
     // Notification toggle
     const notifToggle = document.getElementById('notification-toggle');
