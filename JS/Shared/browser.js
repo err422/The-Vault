@@ -20,10 +20,8 @@
 
     // Public API
     window.openIframe = function (url, title) {
-        console.log('Opening:', url, title);
         if (window.starManager) {
             window.starManager.remove();
-            console.log('Unloading Stars');
         }
 
         let overlay = document.getElementById('game-iframe-overlay');
@@ -549,7 +547,6 @@
 
         if (window.starManager) {
             window.starManager.init();
-            console.log('Rendering Stars');
         }
     }
 
