@@ -14,7 +14,6 @@
     window.CustomEntriesSystem = {
         init(pageType) {
             currentPageType = pageType;
-            console.log(`Initializing Custom Entries for ${pageType}`);
             
             this.createFloatingButton();
             
@@ -22,10 +21,8 @@
             if (typeof auth !== 'undefined') {
                 auth.onAuthStateChanged((user) => {
                     if (user) {
-                        console.log('User aufentication loaded, Loading custom entries...');
                         this.loadCustomEntries();
                     } else {
-                        console.log('No user logged in');
                         customEntries = [];
                         this.renderCustomEntries();
                     }
@@ -78,20 +75,17 @@
             fab.addEventListener('click', () => this.openModal());
 
             document.body.appendChild(fab);
-            console.log('Floating button created');
         },
 
         async loadCustomEntries() {
             const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
             if (!user) {
-                console.log('No user logged in, cannot load custom entries');
                 customEntries = [];
                 this.renderCustomEntries();
                 return;
             }
 
             try {
-                console.log(`📥 Loading custom ${currentPageType} for user ${user.uid}...`);
                 
                 // Load from top-level customEntries path
                 const snapshot = await database.ref(`customEntries/${currentPageType}`).once('value');
@@ -110,7 +104,6 @@
                     });
                 }
 
-                console.log(`✅ Loaded ${customEntries.length} custom ${currentPageType}`);
                 this.renderCustomEntries();
             } catch (error) {
                 console.error('❌ Error loading custom entries:', error);
@@ -124,11 +117,9 @@
                 return;
             }
 
-            console.log(`🎨 Rendering ${customEntries.length} custom entries...`);
 
             // Remove old custom entries
             const oldCards = grid.querySelectorAll('.custom-entry-card');
-            console.log(`🗑️ Removing ${oldCards.length} old custom entry cards`);
             oldCards.forEach(card => card.remove());
 
             // Add new custom entries at the beginning
@@ -137,7 +128,6 @@
                 grid.insertBefore(card, grid.firstChild);
             });
 
-            console.log(`✅ Rendered ${customEntries.length} custom entry cards`);
 
             // Re-add stars to cards
             if (typeof addStarsToCards === 'function') {
@@ -417,7 +407,6 @@
             }
 
             try {
-                console.log(`Saving custom entry to top-level path...`);
                 
                 // Get username for better organization
                 const username = (typeof AuthCore !== 'undefined' && AuthCore.currentUsername) 
@@ -435,11 +424,9 @@
                 if (editingId) {
                     // Update existing entry at top level
                     await database.ref(`customEntries/${currentPageType}/${editingId}`).update(entryData);
-                    console.log(`Updated entry ${editingId} at customEntries/${currentPageType}`);
                 } else {
                     // Create new entry at top level
                     await database.ref(`customEntries/${currentPageType}`).push(entryData);
-                    console.log(`Created new entry at customEntries/${currentPageType}`);
                 }
 
                 document.getElementById('custom-entry-modal').remove();
@@ -481,9 +468,7 @@
             if (!user) return;
 
             try {
-                console.log(`🗑️ Deleting entry ${id} from customEntries/${currentPageType}`);
                 await database.ref(`customEntries/${currentPageType}/${id}`).remove();
-                console.log(`✅ Deleted entry ${id}`);
                 await this.loadCustomEntries();
             } catch (error) {
                 console.error('❌ Error deleting entry:', error);
@@ -492,7 +477,6 @@
         }
     };
 
-    console.log('✅ CustomEntries.js loaded');
 })();
 
 // Add CSS for fade-in animation
