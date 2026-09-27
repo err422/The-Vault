@@ -65,6 +65,12 @@
             currentContent.innerHTML = newContent.innerHTML;
             currentContent.dataset.page = newContent.dataset.page || '';
 
+            // Show the Buy Me a Coffee button only on the Home page.
+            const bmcButton = document.getElementById('bmc-home-button');
+            if (bmcButton) {
+                bmcButton.style.display = currentContent.dataset.page === 'home' ? '' : 'none';
+            }
+
             const newStyle = doc.getElementById(STYLE_ID);
             const currentStyle = document.getElementById(STYLE_ID);
             if (newStyle && currentStyle) {
