@@ -276,6 +276,15 @@
       "category":"puzzle",
       "icon":"🎭",
       "rating":"★★★★★",
-      "url":"n/a"
+      "url":"https://fireboy-andwatergirl.io/"
+   },
+   {
+      "id":32,
+      "title":"Conflict of Nations",
+      "description":"Real-time modern military     strategy game",
+      "category":"strategy",
+      "icon":"🌍",
+      "rating":"★★★★★",
+      "url":"https://www.conflictnations.com/"
    }
 ]
