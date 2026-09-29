@@ -20,7 +20,6 @@
 
                 const labelText = label.textContent.trim().replace(/\s+/g, ' ');
 
-
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -44,8 +43,6 @@
     async function navigateTo(page, pushState = true) {
         const currentContent = document.getElementById(CONTENT_ID);
 
-        // No swappable container on this page (or something's off) — fall
-        // back to a real navigation rather than silently doing nothing.
         if (!currentContent) {
             window.location.href = page;
             return;
@@ -65,6 +62,11 @@
             currentContent.innerHTML = newContent.innerHTML;
             currentContent.dataset.page = newContent.dataset.page || '';
 
+            // Count every SPA navigation to Home as a page view.
+            if (page === 'index.html' && typeof window.recordVaultVisit === 'function') {
+                window.recordVaultVisit();
+            }
+
             // Show the Buy Me a Coffee button only on the Home page.
             const bmcButton = document.getElementById('bmc-home-button');
             if (bmcButton) {
@@ -83,14 +85,7 @@
                 history.pushState({ page }, '', page);
             }
 
-            // Some "shared" scripts (browser.js, BellSchedule.js, etc.) are
-            // only referenced on a subset of pages, not every page. If the
-            // person is navigating in from a page that never loaded one of
-            // those, load it now — otherwise page scripts that depend on it
-            // (e.g. Games.js calling openIframe(), defined in browser.js)
-            // silently fail because the function doesn't exist yet.
             await loadMissingSharedScripts(doc);
-
             await runPageScripts(doc);
 
             setupNavigation();
@@ -112,16 +107,13 @@
         );
 
         const toLoad = fetchedScripts.filter(s => {
-            if (s.hasAttribute('data-page-script')) return false; // handled by runPageScripts, always re-run
+            if (s.hasAttribute('data-page-script')) return false;
             const src = s.getAttribute('src');
             if (!src) return false;
             const absoluteSrc = new URL(src, document.baseURI).href;
             return !alreadyLoaded.has(absoluteSrc);
         });
 
-        // Load sequentially, in document order, so scripts that depend on
-        // an earlier one (e.g. Firebase SDK before FirebaseConfig.js) still
-        // initialize in the right order.
         return toLoad.reduce((chain, script) => {
             return chain.then(() => loadSharedScript(script));
         }, Promise.resolve());
@@ -142,7 +134,6 @@
     function runPageScripts(doc) {
         const scripts = Array.from(doc.querySelectorAll('script[data-page-script]'));
 
-        // Run sequentially so init order matches the source page's order.
         return scripts.reduce((chain, script) => {
             return chain.then(() => runScript(script));
         }, Promise.resolve());
@@ -150,8 +141,6 @@
 
     function runScript(oldScript) {
         return new Promise((resolve, reject) => {
-            // Remove any page-script instances from the previous page first,
-            // so they don't pile up in the DOM on every navigation.
             document.querySelectorAll('script[data-page-script-instance]').forEach(s => s.remove());
 
             const newScript = document.createElement('script');
@@ -218,6 +207,5 @@
         toggleFullScreen: toggleFullScreen,
         navigateTo: navigateTo,
         setup: setupNavigation
-    }
-    
+    };
 })();
