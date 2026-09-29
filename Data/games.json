@@ -286,5 +286,14 @@
       "icon":"🌍",
       "rating":"★★★★★",
       "url":"https://www.conflictnations.com/"
+   },
+   {
+      "id":33,
+      "title":"2V2.io",
+      "description":"Web-Browser Fortnight",
+      "category":"FPS",
+      "icon":"n/a",
+      "rating":"★★★★★",
+      "url":"2v2.io"
    }
 ]
