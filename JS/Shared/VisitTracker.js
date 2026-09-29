@@ -1,5 +1,5 @@
 // The Vault visit tracker
-// Increments the global visit count once every time index.html loads.
+// Counts every real index.html load and every SPA navigation that loads index.html.
 (function () {
     'use strict';
 
@@ -18,8 +18,6 @@
 
         const visitsRef = database.ref('siteStats/visits');
 
-        // transaction() makes the increment atomic, so simultaneous visitors
-        // cannot overwrite each other's counts.
         visitsRef.transaction(function (currentVisits) {
             const count = Number(currentVisits);
             return Number.isFinite(count) ? count + 1 : 1;
@@ -34,8 +32,10 @@
         });
     }
 
-    // FirebaseConfig.js is loaded immediately before this file.
-    // Use the load event as a fallback in case initialization is still settling.
+    // Make this available to the SPA navigation system.
+    window.recordVaultVisit = recordVisit;
+
+    // The initial index.html load counts once here.
     if (typeof database !== 'undefined' && database) {
         recordVisit();
     } else {
