@@ -3,6 +3,13 @@
 (function () {
     'use strict';
 
+    function updateVisitDisplay(count) {
+        const display = document.getElementById('visit-count');
+        if (display) {
+            display.textContent = 'Total visits: ' + count;
+        }
+    }
+
     function recordVisit() {
         if (typeof database === 'undefined' || !database) {
             console.warn('[VisitTracker] Firebase database is not available.');
@@ -19,6 +26,7 @@
         }).then(function (result) {
             if (result.committed) {
                 window.vaultVisitCount = result.snapshot.val();
+                updateVisitDisplay(window.vaultVisitCount);
                 console.log('[VisitTracker] Visit recorded. Total:', window.vaultVisitCount);
             }
         }).catch(function (error) {
