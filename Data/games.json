@@ -295,5 +295,14 @@
       "icon":"n/a",
       "rating":"★★★★★",
       "url":"https://2v2.io/"
+   },
+   {
+      "id": 32,
+      "title": "CSGO 1.6",
+      "description": "Play Counter-Strike directly in your browser",
+      "category": "action",
+      "icon": "🔫",
+      "rating": "★★★★★",
+      "url": "https://play-cs.com"
    }
 ]
