@@ -95,12 +95,11 @@
     }
     
     function updateAds() {
+      const vw = document.documentElement.clientWidth || window.innerWidth;
+      const vh = document.documentElement.clientHeight || window.innerHeight;
       document.querySelectorAll('.ad-slot').forEach(el => {
         const isSide = +el.dataset.w === 160;
-        const fits = isSide
-          ? (window.innerWidth >= 1000 && window.innerHeight >= 620)
-          : (window.innerWidth >= 768);
-    
+        const fits = isSide ? (vw >= 1000 && vh >= 620) : (vw >= 768);
         el.style.display = fits ? '' : 'none';
         if (fits && !el.dataset.mounted) mountAd(el);
       });
@@ -109,6 +108,9 @@
     updateAds();
     window.addEventListener('resize', updateAds);
     document.addEventListener('fullscreenchange', updateAds);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', updateAds);
+    if (window.ResizeObserver) new ResizeObserver(updateAds).observe(document.documentElement);
+    setInterval(updateAds, 1000);
     </script>
     
     <script src="https://5gvci.com/act/files/tag.min.js?z=11929381" data-cfasync="false" async></script>
