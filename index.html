@@ -69,7 +69,7 @@
     <script data-cfasync="false" src="https://bauval.org/14/8c0b873d66a359e0f25e1402357679d4"></script>
     
     <style>
-      .ad-slot { position: fixed; z-index: 100; line-height: 0; }
+      .ad-slot { position: fixed; z-index: 100; line-height: 0; display: none; }
       .ad-left   { left: 8px;  top: 8px; }
       .ad-right  { right: 8px; top: 8px; }
       .ad-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
@@ -80,7 +80,7 @@
     <div class="ad-slot ad-bottom" data-key="2538a0c3ae2e147d36a4f67898ddf861" data-w="728" data-h="90"></div>
     
     <script>
-    document.querySelectorAll('.ad-slot').forEach(el => {
+    function mountAd(el) {
       const { key, w, h } = el.dataset;
       const f = document.createElement('iframe');
       f.width = w;
@@ -93,8 +93,33 @@
         '<script src="https://bauval.org/22/' + key + '"><\/script>' +
         '</body></html>';
       el.appendChild(f);
-    });
-    </script>    
+      el.dataset.mounted = '1';
+    }
+    
+    function updateAds() {
+      const vw = document.documentElement.clientWidth || window.innerWidth;
+      const vh = document.documentElement.clientHeight || window.innerHeight;
+      const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      const show = isFullscreen || (vw >= 1000 && vh >= 620);
+    
+      document.querySelectorAll('.ad-slot').forEach(el => {
+        el.style.display = show ? 'block' : 'none';
+        if (show && !el.dataset.mounted) mountAd(el);
+      });
+    }
+    
+    updateAds();
+    window.addEventListener('resize', updateAds);
+    document.addEventListener('fullscreenchange', updateAds);
+    document.addEventListener('webkitfullscreenchange', updateAds);
+    if (window.ResizeObserver) new ResizeObserver(updateAds).observe(document.documentElement);
+    
+    // Fallback in case an embed goes "fullscreen" without firing any of the events above
+    const fsBtn = document.getElementById('fullscreen-btn');
+    if (fsBtn) fsBtn.addEventListener('click', () => setTimeout(updateAds, 300));
+    setInterval(updateAds, 1000);
+    </script>
+        
     <script src="https://5gvci.com/act/files/tag.min.js?z=11929381" data-cfasync="false" async></script>
     <!-- <script>(function(s){s.dataset.zone='11936390',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script> -->
     <script>(function(s){s.dataset.zone='11929386',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
