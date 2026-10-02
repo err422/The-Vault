@@ -70,8 +70,8 @@
     
     <style>
       .ad-slot { position: fixed; z-index: 100; line-height: 0; }
-      .ad-left   { left: 8px;  top: 50%; transform: translateY(-50%); }
-      .ad-right  { right: 8px; top: 50%; transform: translateY(-50%); }
+      .ad-left   { left: 8px;  top: 8px; }
+      .ad-right  { right: 8px; top: 8px; }
       .ad-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
     </style>
     
@@ -96,10 +96,8 @@
     }
     
     document.querySelectorAll('.ad-slot').forEach(el => {
-      const w = +el.dataset.w, h = +el.dataset.h;
-      const isSide = w === 160;
-      // Only load ads that actually fit, so you don't waste impressions on hidden ones
-      if (isSide && (window.innerWidth < 1100 || window.innerHeight < 700)) return;
+      const isSide = +el.dataset.w === 160;
+      if (isSide && (window.innerWidth < 1000 || window.innerHeight < 620)) return;
       if (!isSide && window.innerWidth < 768) return;
       mountAd(el);
     });
