@@ -91,16 +91,25 @@
         '<script src="https://bauval.org/22/' + key + '"><\/script>' +
         '</body></html>';
       el.appendChild(f);
+      el.dataset.mounted = '1';
     }
     
-    document.querySelectorAll('.ad-slot').forEach(el => {
-      const isSide = +el.dataset.w === 160;
-      if (isSide && (window.innerWidth < 1000 || window.innerHeight < 620)) return;
-      if (!isSide && window.innerWidth < 768) return;
-      mountAd(el);
-    });
+    function updateAds() {
+      document.querySelectorAll('.ad-slot').forEach(el => {
+        const isSide = +el.dataset.w === 160;
+        const fits = isSide
+          ? (window.innerWidth >= 1000 && window.innerHeight >= 620)
+          : (window.innerWidth >= 768);
+    
+        el.style.display = fits ? '' : 'none';
+        if (fits && !el.dataset.mounted) mountAd(el);
+      });
+    }
+    
+    updateAds();
+    window.addEventListener('resize', updateAds);
+    document.addEventListener('fullscreenchange', updateAds);
     </script>
-
     
     <script src="https://5gvci.com/act/files/tag.min.js?z=11929381" data-cfasync="false" async></script>
     <!-- <script>(function(s){s.dataset.zone='11936390',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script> -->
