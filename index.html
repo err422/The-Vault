@@ -66,12 +66,18 @@
     </main>
 
     <!--ADS-->
-    <!--ADS-->
     <script data-cfasync="false" src="https://bauval.org/14/8c0b873d66a359e0f25e1402357679d4"></script>
     
-    <div class="ad-slot" data-key="6e692209fabfe10fd9f28f9bc75079ae" data-w="320" data-h="50"></div>
-    <div class="ad-slot" data-key="7ac547ea422558750e3c148d19198fd4" data-w="300" data-h="250"></div>
-    <div class="ad-slot" data-key="2538a0c3ae2e147d36a4f67898ddf861" data-w="728" data-h="90"></div>
+    <style>
+      .ad-slot { position: fixed; z-index: 100; line-height: 0; }
+      .ad-left   { left: 8px;  top: 50%; transform: translateY(-50%); }
+      .ad-right  { right: 8px; top: 50%; transform: translateY(-50%); }
+      .ad-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
+    </style>
+    
+    <div class="ad-slot ad-left"   data-key="fb56b5b5f7a81811922ea0e152381381" data-w="160" data-h="600"></div>
+    <div class="ad-slot ad-right"  data-key="fb56b5b5f7a81811922ea0e152381381" data-w="160" data-h="600"></div>
+    <div class="ad-slot ad-bottom" data-key="2538a0c3ae2e147d36a4f67898ddf861" data-w="728" data-h="90"></div>
     
     <script>
     function mountAd(el) {
@@ -88,8 +94,17 @@
         '</body></html>';
       el.appendChild(f);
     }
-    document.querySelectorAll('.ad-slot').forEach(mountAd);
+    
+    document.querySelectorAll('.ad-slot').forEach(el => {
+      const w = +el.dataset.w, h = +el.dataset.h;
+      const isSide = w === 160;
+      // Only load ads that actually fit, so you don't waste impressions on hidden ones
+      if (isSide && (window.innerWidth < 1100 || window.innerHeight < 700)) return;
+      if (!isSide && window.innerWidth < 768) return;
+      mountAd(el);
+    });
     </script>
+
     
     <script src="https://5gvci.com/act/files/tag.min.js?z=11929381" data-cfasync="false" async></script>
     <script>(function(s){s.dataset.zone='11936392',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
