@@ -19,12 +19,12 @@
    },
    {
       "id":3,
-      "title":"Minecraft 1.12.2",
-      "description":"Custom made Minecraft launcher",
+      "title":"Buckshot Roulette",
+      "description":"Rusian roulette but more american",
       "category":"simulation",
       "icon":"⛏ ",
       "rating":"★★★☆☆",
-      "url":"https://irv77.github.io/AmplerLauncher/"
+      "url":"https://badparentingame.io/play/buckshot-roulette"
    },
    {
       "id":4,
@@ -37,12 +37,12 @@
    },
    {
       "id":5,
-      "title":"Idle Breakout",
-      "description":"An idle clicker game combining classic brick breaking with automated ball upgrades to destroy billions of bricks.",
+      "title":"Run 3",
+      "description":"It's run 3",
       "category":"idle",
       "icon":"🧱",
       "rating":"★★★★☆",
-      "url":"https://idle-breakout.neocities.org/"
+      "url":"https://badparentingame.io/play/run-3"
    },
    {
       "id":6,
@@ -118,12 +118,12 @@
    },
    {
       "id":14,
-      "title":"Capybara Clicker",
-      "description":"An idle clicker game centered around cute capybaras where players click to generate resources and unlock adorable capybara upgrades.",
+      "title":"Thats Not my Neighbor",
+      "description":"idk",
       "category":"idle",
       "icon":"🦫",
       "rating":"★★★☆☆",
-      "url":"https://synergism.cc/"
+      "url":"https://badparentingame.io/play/thats-not-my-neighbor"
    },
    {
       "id":15,
