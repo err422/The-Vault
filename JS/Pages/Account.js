@@ -119,7 +119,7 @@ const DailyChallengeManager = {
         const games = await this.loadGames();
         const seed = dateStr.split('-').reduce((a, n) => a + Number(n), 0);
         const pick = games[seed % games.length];
-        const challenge = { gameId: pick.id, title: pick.title, icon: pick.icon, url: pick.url, date: dateStr };
+        const challenge = { title: pick.title, icon: pick.icon, url: pick.url, date: dateStr };
         await ref.set(challenge);
         return challenge;
     }
