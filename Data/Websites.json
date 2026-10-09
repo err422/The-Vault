@@ -286,5 +286,13 @@
     "rating": "★★★☆☆",
     "icon":"🌐",
     "url":"https://err422.github.io/mantle-host/"
+  },
+  {
+    "title": "Magma",
+    "description": "Minecraft, AI, Unblocked Browser, and lots of games to play",
+    "category": "Games",
+    "rating": "★★★☆☆",
+    "icon": "🎮",
+    "url":"https://magma2-mantle.laneesports.com/"
   }
 ]
