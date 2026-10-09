@@ -278,5 +278,13 @@
       "icon": "🔫",
       "rating": "★★★★★",
       "url": "https://play-cs.com"
+   },
+   {
+      "title": "Call of Duty",
+      "description": "A browser-based Call of Duty-style FPS with multiplayer combat.",
+      "category": "fps",
+      "icon": "🎖️",
+      "rating": "★★★★☆",
+      "url": "http://vibeslops.luckeysystems.com/"
    }
 ]
