@@ -286,5 +286,13 @@
       "icon": "🎖️",
       "rating": "★★★★☆",
       "url": "http://vibeslops.luckeysystems.com/"
+   },
+   {
+      "title": "Call of Duty: Zombies",
+      "description": "A lightweight browser-based take on classic Call of Duty Zombies survival gameplay.",
+      "category": "fps",
+      "icon": "🧟",
+      "rating": "★★★★☆",
+      "url": "https://nzp.gay/"
    }
 ]
