@@ -133,7 +133,7 @@
       "category": "racing",
       "icon": "🏎",
       "rating": "★★★★☆",
-      "url": "https://www.kodub.com/apps/polytrack"
+      "url": "https://app-polytrack.kodub.com/0.5.0/?"
    },
    {
       "title": "OpenGuessr",
@@ -294,5 +294,21 @@
       "icon": "🧟",
       "rating": "★★★★☆",
       "url": "https://nzp.gay/"
+   },
+   {
+      "title": "Townscaper",
+      "description": "A relaxing creative building toy where you place colorful blocks to create charming island towns.",
+      "category": "simulation",
+      "icon": "🏘️",
+      "rating": "★★★★☆",
+      "url": "https://oskarstalberg.com/Townscaper/"
+   },
+   {
+      "title": "Smash Karts",
+      "description": "A fast-paced multiplayer kart arena game with chaotic driving and power-ups.",
+      "category": "racing",
+      "icon": "🏎️",
+      "rating": "★★★★☆",
+      "url": "https://smashkarts.io/"
    }
 ]
