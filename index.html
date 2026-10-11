@@ -100,11 +100,21 @@
       const vw = document.documentElement.clientWidth || window.innerWidth;
       const vh = document.documentElement.clientHeight || window.innerHeight;
       const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-      const show = isFullscreen || (vw >= 1000 && vh >= 620);
-    
+
+      // Side ads need enough horizontal room and must never bypass this check in fullscreen.
+      const showSideAds = vw >= 1300 && vh >= 620;
+
+      // Preserve the existing bottom-ad behavior.
+      const showBottomAd = isFullscreen || (vw >= 1000 && vh >= 620);
+
       document.querySelectorAll('.ad-slot').forEach(el => {
-        el.style.display = show ? 'block' : 'none';
-        if (show && !el.dataset.mounted) mountAd(el);
+        const isSideAd =
+          el.classList.contains('ad-left') ||
+          el.classList.contains('ad-right');
+        const shouldShow = isSideAd ? showSideAds : showBottomAd;
+
+        el.style.display = shouldShow ? 'block' : 'none';
+        if (shouldShow && !el.dataset.mounted) mountAd(el);
       });
     }
     
