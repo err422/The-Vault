@@ -8,8 +8,8 @@
     "url": "https://brainpop.work/"
   },
   {
-    "title":"arctic",
-    "description":"over 1K games available and mostly working",
+    "title": "arctic",
+    "description": "over 1K games available and mostly working",
     "category": "Games",
     "rating": "★★★★★",
     "icon": "🎮",
@@ -275,17 +275,17 @@
     "title": "Fern",
     "description": "It has games and a proxy",
     "category": "Proxy",
-    "rating":"★★★☆☆",
-    "icon":"🌐",
-    "url":"https://d3mw92i6v5lgd9.cloudfront.net/"
+    "rating": "★★★☆☆",
+    "icon": "🌐",
+    "url": "https://d3mw92i6v5lgd9.cloudfront.net/"
   },
   {
     "title": "Mantle",
     "description": "Minecraft, AI, Unblocked Browser, and lots of games to play",
     "category": "Proxy",
     "rating": "★★★☆☆",
-    "icon":"🌐",
-    "url":"https://err422.github.io/mantle-host/"
+    "icon": "🌐",
+    "url": "https://err422.github.io/mantle-host/"
   },
   {
     "title": "Magma",
@@ -293,6 +293,14 @@
     "category": "Games",
     "rating": "★★★☆☆",
     "icon": "🎮",
-    "url":"https://magma2-mantle.laneesports.com/"
+    "url": "https://magma2-mantle.laneesports.com/"
+  },
+  {
+    "title": "WASM Arcade",
+    "description": "Browser-based arcade featuring games powered by WebAssembly.",
+    "category": "Games",
+    "rating": "★★★★☆",
+    "icon": "🎮",
+    "url": "https://wasmarcade.com/"
   }
 ]
