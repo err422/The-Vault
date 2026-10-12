@@ -310,5 +310,13 @@
       "icon": "🏎️",
       "rating": "★★★★☆",
       "url": "https://smashkarts.io/"
+   },
+   {
+      "title": "SurfD",
+      "description": "A browser-based Counter-Strike-style surfing game focused on momentum, air-strafing, and navigating surf maps.",
+      "category": "simulation",
+      "icon": "🏄",
+      "rating": "★★★★☆",
+      "url": "http://surfd.net/"
    }
 ]
