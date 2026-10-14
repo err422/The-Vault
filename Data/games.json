@@ -318,5 +318,13 @@
       "icon": "🏄",
       "rating": "★★★★☆",
       "url": "https://surfd.net/"
+   },
+   {
+      "title": "All-22 Pokémon",
+      "description": "Build a 22-Pokémon American football lineup, draft teams, and play retro football challenges in your browser.",
+      "category": "sports",
+      "icon": "🏈",
+      "rating": "★★★★☆",
+      "url": "https://all22pokemon.com/"
    }
 ]
