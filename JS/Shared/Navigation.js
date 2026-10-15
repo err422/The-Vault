@@ -130,8 +130,14 @@
             }
 
             const newStyle = doc.getElementById(STYLE_ID);
-            const currentStyle = document.getElementById(STYLE_ID);
-            if (newStyle && currentStyle) {
+            let currentStyle = document.getElementById(STYLE_ID);
+            if (newStyle) {
+                if (!currentStyle) {
+                    currentStyle = document.createElement('link');
+                    currentStyle.rel = 'stylesheet';
+                    currentStyle.id = STYLE_ID;
+                    document.head.appendChild(currentStyle);
+                }
                 currentStyle.setAttribute('href', newStyle.getAttribute('href'));
             }
 
