@@ -46,6 +46,46 @@
         });
     }
 
+    function buildPageContent(doc, page) {
+        const content = doc.getElementById(CONTENT_ID);
+        if (content) return content;
+
+        // The admin console predates the SPA shell and stores its UI outside #app-content.
+        // Move only its page UI into the shared content slot; keep the existing site nav alive.
+        if (page === 'admin.html' || page.endsWith('/admin.html')) {
+            const adminRoot = doc.getElementById('admin-root');
+            if (!adminRoot) return null;
+
+            const wrapper = doc.createElement('main');
+            wrapper.id = CONTENT_ID;
+            wrapper.dataset.page = 'admin';
+
+            [adminRoot, doc.getElementById('admin-loading'), doc.getElementById('toast')]
+                .filter(Boolean)
+                .forEach(element => wrapper.appendChild(element.cloneNode(true)));
+
+            return wrapper;
+        }
+
+        return null;
+    }
+
+    function updateActiveNavigation(page) {
+        const activeLabel = ({
+            'index.html': 'Home',
+            'games.html': 'Games',
+            'websites.html': 'Websites',
+            'settings.html': 'Settings',
+            'account.html': 'Account',
+            'admin.html': 'Admin'
+        })[page] || '';
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            const label = item.querySelector('.nav-label')?.textContent.trim();
+            item.classList.toggle('active', !!activeLabel && label === activeLabel);
+        });
+    }
+
     async function navigateTo(page, pushState = true) {
         const currentContent = document.getElementById(CONTENT_ID);
 
@@ -55,6 +95,13 @@
         }
 
         try {
+            // Do not let an SPA route expose the admin shell to a non-admin session.
+            if ((page === 'admin.html' || page.endsWith('/admin.html')) &&
+                window.AuthCore?.profileReady &&
+                (!window.AuthCore.currentUser || window.AuthCore.currentAdmin !== true)) {
+                page = 'index.html';
+            }
+
             const res = await fetch(page, { cache: 'no-store' });
             if (!res.ok) throw new Error('Failed to fetch ' + page + ': ' + res.status);
             const html = await res.text();
@@ -62,8 +109,11 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
-            const newContent = doc.getElementById(CONTENT_ID);
+            const newContent = buildPageContent(doc, page);
             if (!newContent) throw new Error('No #' + CONTENT_ID + ' found in ' + page);
+
+            // Notify page-specific code before its old DOM is removed.
+            window.dispatchEvent(new CustomEvent('pageUnloading', { detail: { page } }));
 
             currentContent.innerHTML = newContent.innerHTML;
             currentContent.dataset.page = newContent.dataset.page || '';
@@ -95,6 +145,7 @@
             await runPageScripts(doc);
 
             setupNavigation();
+            updateActiveNavigation(page);
 
             window.dispatchEvent(new CustomEvent('pageLoaded', { detail: { page } }));
         } catch (err) {
