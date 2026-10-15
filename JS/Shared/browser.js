@@ -649,3 +649,5 @@
         return bar;
     }
 })();
+
+// Harmless deployment-trigger commit: retry GitHub Pages publishing.
