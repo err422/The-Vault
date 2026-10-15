@@ -20,6 +20,11 @@
 
     // Public API
     window.openIframe = function (url, title) {
+        // Disable popunder loading before opening any game or website iframe.
+        if (typeof window.setPopunderEnabled === 'function') {
+            window.setPopunderEnabled(false);
+        }
+
         if (window.starManager) {
             window.starManager.remove();
         }
@@ -543,6 +548,11 @@
             activeTabId = null;
             tabCounter = 0;
             isSelectingNewTab = false;
+
+            // Re-enable only after the iframe browser has actually been removed.
+            if (typeof window.setPopunderEnabled === 'function') {
+                window.setPopunderEnabled(true);
+            }
         }, 300);
 
         if (window.starManager) {
