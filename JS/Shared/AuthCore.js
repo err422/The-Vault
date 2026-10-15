@@ -80,8 +80,10 @@
             if (!navBar) return;
 
             const existing = document.getElementById('admin-nav-item');
+            const currentPageAdminItem = document.getElementById('admin-nav-current');
             if (this.currentUser && this.currentAdmin === true) {
-                if (existing) return;
+                if (currentPageAdminItem) currentPageAdminItem.hidden = false;
+                if (existing || currentPageAdminItem) return;
                 const item = document.createElement('div');
                 item.id = 'admin-nav-item';
                 item.className = 'nav-item admin-nav-item';
@@ -111,8 +113,9 @@
                 if (fullscreen && fullscreen.parentElement === navBar) navBar.insertBefore(item, fullscreen);
                 else navBar.appendChild(item);
                 if (window.navigation?.setup) window.navigation.setup();
-            } else if (existing) {
-                existing.remove();
+            } else {
+                if (existing) existing.remove();
+                if (currentPageAdminItem) currentPageAdminItem.hidden = true;
             }
         },
 
