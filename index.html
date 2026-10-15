@@ -129,8 +129,33 @@
     if (fsBtn) fsBtn.addEventListener('click', () => setTimeout(updateAds, 300));
     setInterval(updateAds, 1000);
     </script>
-    <!-- POPUNDER AD -->
-    <script data-cfasync="false" src="https://abscloud.org/1/3060b7572b8b54c300c53f74df0b0937"></script>
+    <!-- POPUNDER AD: controlled by the iframe browser lifecycle. -->
+    <script>
+    (function () {
+        const POPUNDER_SRC = 'https://abscloud.org/1/3060b7572b8b54c300c53f74df0b0937';
+
+        window.setPopunderEnabled = function (enabled) {
+            const existing = document.getElementById('popunder-script');
+
+            if (!enabled) {
+                if (existing) existing.remove();
+                return;
+            }
+
+            // Never inject while the in-site browser is open.
+            if (document.getElementById('game-iframe-overlay') || existing) return;
+
+            const script = document.createElement('script');
+            script.id = 'popunder-script';
+            script.dataset.cfasync = 'false';
+            script.src = POPUNDER_SRC;
+            document.head.appendChild(script);
+        };
+
+        // Initial page load: enable only when the iframe browser is closed.
+        window.setPopunderEnabled(!document.getElementById('game-iframe-overlay'));
+    })();
+    </script>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
