@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   const $ = (selector) => document.querySelector(selector);
-  const state = { games: [], websites: [], users: [], profile: null, allowed: false, loading: false };
+  const state = { games: [], websites: [], users: [], profile: null, allowed: false, loading: false, boundRoot: null, disposed: false };
   const views = ['dashboard', 'games', 'users', 'diagnostics', 'storage', 'activity'];
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -47,6 +47,7 @@
 
   async function loadLiveData() {
     if (!state.allowed || state.loading) return;
+    const rootAtStart = $('#admin-root');
     state.loading = true;
     try {
       const [games, websites, usersSnapshot] = await Promise.all([
@@ -54,6 +55,7 @@
         loadCatalog('Data/Websites.json'),
         database.ref('users').once('value')
       ]);
+      if (state.disposed || !rootAtStart?.isConnected || rootAtStart !== $('#admin-root')) return;
       state.games = games;
       state.websites = websites;
       const rawUsers = usersSnapshot.val() || {};
@@ -156,6 +158,9 @@
   }
 
   function bindUI() {
+    const root = $('#admin-root');
+    if (!root || state.boundRoot === root) return;
+    state.boundRoot = root;
     document.querySelectorAll('.side-link').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
     document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); button.click(); }
@@ -173,6 +178,7 @@
   }
 
   function grantAccess() {
+    state.disposed = false;
     state.allowed = true;
     state.profile = auth.currentUser;
     const username = window.AuthCore?.currentUsername || 'Admin';
@@ -199,15 +205,40 @@
     grantAccess();
   }
 
-  window.addEventListener('authProfileReady', checkAccess);
-  window.addEventListener('pageLoaded', () => {
-    if (location.pathname.toLowerCase().endsWith('/admin.html') || location.pathname.toLowerCase().endsWith('admin.html')) checkAccess();
-  });
-  document.addEventListener('DOMContentLoaded', () => {
+  function handlePageLoaded(event) {
+    const page = event.detail?.page || '';
+    if (page === 'admin.html' || page.endsWith('/admin.html')) {
+      state.disposed = false;
+      checkAccess();
+    }
+  }
+
+  function cleanup() {
+    state.disposed = true;
+    state.allowed = false;
+    state.boundRoot = null;
+    window.removeEventListener('authProfileReady', checkAccess);
+    window.removeEventListener('pageLoaded', handlePageLoaded);
+    window.removeEventListener('pageUnloading', cleanup);
+    document.removeEventListener('DOMContentLoaded', handleDOMContentLoaded);
+    if (window.__adminPageCleanup === cleanup) delete window.__adminPageCleanup;
+  }
+
+  function handleDOMContentLoaded() {
     if (window.AuthCore?.profileReady) checkAccess();
     else setTimeout(() => {
-      if (!window.AuthCore?.profileReady) denyAccess('Could not verify your account. Please return to the site and sign in again.');
-      else checkAccess();
+      if (!state.disposed && !window.AuthCore?.profileReady) denyAccess('Could not verify your account. Please return to the site and sign in again.');
+      else if (!state.disposed) checkAccess();
     }, 10000);
-  });
+  }
+
+  // Each SPA visit creates a fresh admin DOM. Dispose the prior instance so global
+  // listeners and delayed work cannot accumulate when users enter and leave the console.
+  if (typeof window.__adminPageCleanup === 'function') window.__adminPageCleanup();
+  window.__adminPageCleanup = cleanup;
+  window.addEventListener('authProfileReady', checkAccess);
+  window.addEventListener('pageLoaded', handlePageLoaded);
+  window.addEventListener('pageUnloading', cleanup);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', handleDOMContentLoaded);
+  else handleDOMContentLoaded();
 })();
