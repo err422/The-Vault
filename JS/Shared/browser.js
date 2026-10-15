@@ -191,7 +191,16 @@
         });
 
         maximizeBtn.addEventListener('click', toggleFullscreen);
-        closeBrowserBtn.addEventListener('click', closeBrowser);
+        closeBrowserBtn.addEventListener('click', function () {
+            // Open the sponsored link directly from the user's click so popup blockers
+            // are less likely to prevent it, then close the in-site browser.
+            window.open(
+                'https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991',
+                '_blank',
+                'noopener,noreferrer'
+            );
+            closeBrowser();
+        });
         addHoverEffect(
             closeBrowserBtn, 
             { background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)' }, 
