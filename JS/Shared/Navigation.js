@@ -139,6 +139,9 @@
                     document.head.appendChild(currentStyle);
                 }
                 currentStyle.setAttribute('href', newStyle.getAttribute('href'));
+            } else if (currentStyle) {
+                // Do not let a previous page's stylesheet leak into pages without page-specific CSS.
+                currentStyle.remove();
             }
 
             if (doc.title) document.title = doc.title;
