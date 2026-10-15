@@ -3,27 +3,66 @@
     window.AuthCore = {
         currentUser: null,
         currentUsername: null,
+        currentAdmin: false,
+        profileReady: false,
         
         init() {
             auth.onAuthStateChanged((user) => {
                 this.currentUser = user;
                 
+                this.profileReady = false;
+                this.currentAdmin = false;
+
                 if (user) {
-                    database.ref('users/' + user.uid + '/username').once('value')
-                        .then((snapshot) => {
-                            this.currentUsername = snapshot.val();
+                    database.ref('users/' + user.uid).once('value')
+                        .then(async (snapshot) => {
+                            const userData = snapshot.val() || {};
+                            this.currentUsername = userData.username || null;
+
+                            // Missing admin flags are treated as non-admin. Backfill old
+                            // accounts on their next sign-in without overwriting true flags.
+                            if (typeof userData.admin !== 'boolean') {
+                                try {
+                                    await database.ref('users/' + user.uid + '/admin').set(false);
+                                } catch (error) {
+                                    console.warn('Could not backfill default admin flag:', error);
+                                }
+                                this.currentAdmin = false;
+                            } else {
+                                this.currentAdmin = userData.admin === true;
+                            }
+
+                            this.profileReady = true;
                             this.updateUI();
+                            window.dispatchEvent(new CustomEvent('authProfileReady', {
+                                detail: { user, username: this.currentUsername, admin: this.currentAdmin }
+                            }));
                             setTimeout(() => this.loadUserData(), 500);
                         })
-                        .catch(() => this.updateUI());
+                        .catch((error) => {
+                            console.error('Could not load account profile:', error);
+                            this.currentUsername = null;
+                            this.currentAdmin = false;
+                            this.profileReady = true;
+                            this.updateUI();
+                            window.dispatchEvent(new CustomEvent('authProfileReady', {
+                                detail: { user, username: null, admin: false, error: true }
+                            }));
+                        });
                 } else {
                     this.currentUsername = null;
+                    this.currentAdmin = false;
+                    this.profileReady = true;
                     this.updateUI();
+                    window.dispatchEvent(new CustomEvent('authProfileReady', {
+                        detail: { user: null, username: null, admin: false }
+                    }));
                 }
             });
         },
         
         updateUI() {
+            this.updateAdminNavigation();
             const authButtons = document.querySelectorAll('.auth-button');
             authButtons.forEach(btn => {
                 if (this.currentUser && this.currentUsername) {
@@ -36,6 +75,50 @@
             });
         },
         
+        updateAdminNavigation() {
+            const navBar = document.querySelector('.nav-bar');
+            if (!navBar) return;
+
+            const existing = document.getElementById('admin-nav-item');
+            const currentPageAdminItem = document.getElementById('admin-nav-current');
+            if (this.currentUser && this.currentAdmin === true) {
+                if (currentPageAdminItem) currentPageAdminItem.hidden = false;
+                if (existing || currentPageAdminItem) return;
+                const item = document.createElement('div');
+                item.id = 'admin-nav-item';
+                item.className = 'nav-item admin-nav-item';
+                item.setAttribute('role', 'link');
+                item.setAttribute('tabindex', '0');
+                item.title = 'Admin dashboard';
+                item.innerHTML = `
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="8" height="8" rx="1.5"/>
+                        <rect x="13" y="3" width="8" height="5" rx="1.5"/>
+                        <rect x="13" y="10" width="8" height="11" rx="1.5"/>
+                        <rect x="3" y="13" width="8" height="8" rx="1.5"/>
+                    </svg>
+                    <span class="nav-label">Admin</span>
+                `;
+                item.addEventListener('click', () => {
+                    if (window.navigation?.navigateTo) window.navigation.navigateTo('admin.html');
+                    else window.location.href = 'admin.html';
+                });
+                item.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        item.click();
+                    }
+                });
+                const fullscreen = document.getElementById('fullscreen-btn');
+                if (fullscreen && fullscreen.parentElement === navBar) navBar.insertBefore(item, fullscreen);
+                else navBar.appendChild(item);
+                if (window.navigation?.setup) window.navigation.setup();
+            } else {
+                if (existing) existing.remove();
+                if (currentPageAdminItem) currentPageAdminItem.hidden = true;
+            }
+        },
+
         validateUsername(username) {
             if (!username) return 'Username is required';
             if (username.length < 3) return 'Username must be at least 3 characters';
@@ -95,7 +178,8 @@
                 email: email,
                 createdAt: Date.now(),
                 favorites: [],
-                playtime: { daily: {}, weekly: {}, total: {} }
+                playtime: { daily: {}, weekly: {}, total: {} },
+                admin: false
             };
             updates['usernames/' + username] = userId;
             

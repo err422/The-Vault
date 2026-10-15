@@ -33,6 +33,12 @@
                     navigateTo('settings.html');
                 } else if (labelText === 'Account' || labelText === 'Sign In' || labelText.startsWith('@')) {
                     navigateTo('account.html');
+                } else if (labelText === 'Admin') {
+                    if (window.AuthCore?.currentUser && window.AuthCore?.currentAdmin === true) {
+                        navigateTo('admin.html');
+                    } else {
+                        document.getElementById('admin-nav-item')?.remove();
+                    }
                 } else if (labelText === 'Fullscreen') {
                     toggleFullScreen();
                 }
