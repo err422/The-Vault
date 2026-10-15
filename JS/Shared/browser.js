@@ -162,6 +162,26 @@
         const fsIframeBtn = createControlButton('⛶', 'Fullscreen (content only)');
         const maximizeBtn = createControlButton('□', 'Fullscreen — Alt+`');
         const closeBrowserBtn = createControlButton('×', 'Close');
+        const sponsoredBtn = document.createElement('a');
+        sponsoredBtn.href = 'https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991';
+        sponsoredBtn.target = '_blank';
+        sponsoredBtn.rel = 'sponsored noopener noreferrer';
+        sponsoredBtn.textContent = 'Sponsored ↗';
+        sponsoredBtn.title = 'Open sponsored link in a new tab';
+        Object.assign(sponsoredBtn.style, {
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            height: '30px', padding: '0 10px', borderRadius: '16px',
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.16)',
+            color: 'rgba(255, 255, 255, 0.72)', fontSize: '11px',
+            fontFamily: 'inherit', textDecoration: 'none', whiteSpace: 'nowrap', cursor: 'pointer'
+        });
+        sponsoredBtn.addEventListener('mouseenter', function () {
+            this.style.background = 'rgba(255, 255, 255, 0.16)'; this.style.color = '#fff';
+        });
+        sponsoredBtn.addEventListener('mouseleave', function () {
+            this.style.background = 'rgba(255, 255, 255, 0.08)'; this.style.color = 'rgba(255, 255, 255, 0.72)';
+        });
 
         fsIframeBtn.addEventListener('click', function () {
             const iframe = document.getElementById(`iframe-${activeTabId}`);
@@ -178,7 +198,7 @@
             { background: 'rgba(239, 68, 68, 0.8)', color: '#fff' }
         );
 
-        windowControls.append(minimizeBtn, fsIframeBtn, maximizeBtn, closeBrowserBtn);
+        windowControls.append(minimizeBtn, fsIframeBtn, maximizeBtn, sponsoredBtn, closeBrowserBtn);
         browserWindow.appendChild(windowControls);
 
         overlay.appendChild(browserWindow);
