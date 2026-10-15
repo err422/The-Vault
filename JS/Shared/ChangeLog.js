@@ -113,6 +113,9 @@ const CHANGELOG_ENTRIES = [
     .vcl-badge-DEFAULT  { background: #2a2a2a; color: #aaa;    border: 1px solid #444;      }
     .vcl-badge-NOTICE   { background: #2a2a2a; color: #fff700; border: 1px solid #fff70058; }
 
+    #vault-changelog-actions { display: flex; flex-direction: column; gap: 8px; }
+    #vault-changelog-sponsored { display: block; width: 100%; box-sizing: border-box; padding: 8px 10px; text-align: center; color: #aaa; font-size: 0.78rem; text-decoration: underline; text-underline-offset: 3px; font-family: inherit; }
+    #vault-changelog-sponsored:hover { color: #fff; }
     #vault-changelog-close {
       display: block;
       width: 100%;
@@ -158,7 +161,10 @@ const CHANGELOG_ENTRIES = [
       <h2>What's New</h2>
       <span class="vcl-version">Version ${CHANGELOG_VERSION}</span>
       <ul>${items}</ul>
-      <button id="vault-changelog-close">Got it</button>
+      <div id="vault-changelog-actions">
+        <a id="vault-changelog-sponsored" href="https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991" target="_blank" rel="sponsored noopener noreferrer">Sponsored link ↗</a>
+        <button id="vault-changelog-close">Got it</button>
+      </div>
     </div>
   `;
 
