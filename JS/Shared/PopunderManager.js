@@ -35,7 +35,9 @@
         script.async = true;
         script.setAttribute('data-cfasync', 'false');
         script.src = SCRIPT_URL;
-        script.onload = function () { scriptLoaded = true; };
+        // Mark it as loaded before appending so close/open cycles never inject
+        // duplicate provider scripts and duplicate pop-under event handlers.
+        scriptLoaded = true;
         script.onerror = function () {
             script.remove();
             scriptLoaded = false;
