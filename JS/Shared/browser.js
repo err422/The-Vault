@@ -24,6 +24,10 @@
             window.starManager.remove();
         }
 
+        if (typeof window.setVaultPopunderEnabled === 'function') {
+            window.setVaultPopunderEnabled(false);
+        }
+
         let overlay = document.getElementById('game-iframe-overlay');
         if (!overlay) {
             createBrowserWindow();
@@ -539,6 +543,9 @@
         setTimeout(() => {
             if (overlay) overlay.remove();
             document.body.style.overflow = 'auto';
+            if (typeof window.setVaultPopunderEnabled === 'function') {
+                window.setVaultPopunderEnabled(true);
+            }
             browserTabs = [];
             activeTabId = null;
             tabCounter = 0;
