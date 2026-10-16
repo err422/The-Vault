@@ -40,7 +40,15 @@
                         document.getElementById('admin-nav-item')?.remove();
                     }
                 } else if (labelText === 'Fullscreen') {
-                    toggleFullScreen();
+                    // Alternate sponsored-link and fullscreen actions on each click.
+                    // Keep the site in this tab; the sponsored destination opens separately.
+                    if (window.__vaultFullscreenAdNext !== false) {
+                        window.__vaultFullscreenAdNext = false;
+                        window.open('https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991', '_blank', 'noopener,noreferrer');
+                    } else {
+                        window.__vaultFullscreenAdNext = true;
+                        toggleFullScreen();
+                    }
                 }
             });
         });
