@@ -32,6 +32,8 @@
                 } else if (labelText === 'Settings') {
                     navigateTo('settings.html');
                 } else if (labelText === 'Account' || labelText === 'Sign In' || labelText.startsWith('@')) {
+                    // Open the smart link from the existing account navigation button.
+                    window.open('https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991', '_blank', 'noopener,noreferrer');
                     navigateTo('account.html');
                 } else if (labelText === 'Admin') {
                     if (window.AuthCore?.currentUser && window.AuthCore?.currentAdmin === true) {
