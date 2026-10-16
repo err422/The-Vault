@@ -284,7 +284,6 @@ const LeaderboardManager = {
 
                     <div class="action-buttons">
                         <button class="btn" id="change-username-btn">Change Username</button>
-                        <button class="btn" id="account-sponsored-link-btn" type="button">Sponsored Link ↗</button>
                         <button class="btn btn-danger" id="sign-out-btn">Sign Out</button>
                     </div>
                 </div>
@@ -530,14 +529,7 @@ const LeaderboardManager = {
 
         attachEventListeners() {
             const changeBtn = document.getElementById('change-username-btn');
-            const sponsoredLinkBtn = document.getElementById('account-sponsored-link-btn');
             const signOutBtn = document.getElementById('sign-out-btn');
-
-            if (sponsoredLinkBtn) {
-                sponsoredLinkBtn.addEventListener('click', () => {
-                    window.open('https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991', '_blank', 'noopener,noreferrer');
-                });
-            }
 
             if (changeBtn) {
                 changeBtn.addEventListener('click', () => this.showChangeUsernameForm());
