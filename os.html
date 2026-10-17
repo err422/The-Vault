@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Web Vault OS — Prototype</title>
+<style>
+:root{color-scheme:dark;--bg:#080711;--panel:rgba(17,15,31,.86);--panel-solid:#11101e;--panel-2:#19152b;--purple:#8b5cf6;--purple-bright:#a78bfa;--purple-deep:#5426b8;--text:#f5f2ff;--muted:#b9b1d3;--line:rgba(167,139,250,.28);--shadow:0 24px 80px #0009}
+*{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden;font:14px/1.4 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+.desktop{position:relative;height:100%;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 50% 72%,#32156e 0,transparent 34%),radial-gradient(ellipse at 12% 18%,#211344 0,transparent 36%),linear-gradient(145deg,#100d20 0%,#080711 62%,#10091f 100%)}
+.desktop:before{content:"";position:absolute;inset:42% -10% -20%;z-index:-1;opacity:.48;background:repeating-radial-gradient(ellipse at 50% 100%,transparent 0 34px,#6f35d9 35px 36px,transparent 37px 64px);transform:perspective(380px) rotateX(58deg) scale(1.5);mask-image:linear-gradient(transparent,#000)}
+.menubar{height:34px;position:absolute;z-index:50;inset:0 0 auto;display:flex;align-items:center;gap:18px;padding:0 14px;background:rgba(8,7,17,.78);backdrop-filter:blur(24px);border-bottom:1px solid #ffffff0b;font-size:12px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;white-space:nowrap}.brand-mark{display:grid;place-items:center;width:21px;height:21px;border-radius:6px;background:linear-gradient(145deg,#a78bfa,#5426b8);box-shadow:0 0 16px #7c3aed44;font-size:14px}
+.menu-links{display:flex;gap:18px;color:#e4dcff}.menu-links button,.system button{border:0;background:none;padding:3px 0}.menu-links button:hover,.system button:hover{color:var(--purple-bright)}.system{margin-left:auto;display:flex;align-items:center;gap:15px;color:#e4dcff;white-space:nowrap}
+.desktop-icons{position:absolute;top:58px;left:22px;display:flex;flex-direction:column;gap:20px;width:86px}
+.desktop-icon{border:0;background:transparent;border-radius:12px;padding:5px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:7px;color:#f4efff;font-size:12px;text-shadow:0 1px 5px #000;min-height:85px}
+.desktop-icon:hover,.desktop-icon:focus-visible{background:#9b7aff20;outline:1px solid #a78bfa55}
+.app-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:linear-gradient(145deg,#3a1b79,#1b123a);border:1px solid #a78bfa30;color:#c4b5fd;box-shadow:inset 0 1px #ffffff12,0 7px 20px #0002}
+.app-icon svg{width:27px;height:27px}
+.dock-wrap{position:absolute;z-index:60;bottom:13px;left:50%;transform:translateX(-50%);max-width:calc(100vw - 24px)}
+.dock{display:flex;align-items:flex-end;gap:9px;padding:9px 12px 8px;border:1px solid #b9a0ff3a;border-radius:20px;background:rgba(20,16,37,.78);backdrop-filter:blur(28px) saturate(1.35);box-shadow:0 12px 42px #0007,inset 0 1px #ffffff13}
+.dock-button{position:relative;width:52px;height:55px;display:grid;place-items:center;border:0;border-radius:13px;background:transparent;transition:transform .14s,background .14s;padding:0}
+.dock-button:hover{transform:translateY(-7px) scale(1.08);background:#a78bfa16}.dock-button .app-icon{width:45px;height:45px;border-radius:13px}.dock-button.active:after{content:"";position:absolute;bottom:-4px;width:4px;height:4px;border-radius:50%;background:#c4b5fd;box-shadow:0 0 7px #a78bfa}
+.dock-separator{width:1px;height:35px;background:#8f7bb455;margin:0 3px 4px}
+.window{position:absolute;z-index:20;left:50%;top:49%;transform:translate(-50%,-50%);width:min(1080px,calc(100vw - 180px));height:min(700px,calc(100vh - 116px));min-width:320px;min-height:260px;display:none;flex-direction:column;overflow:hidden;border:1px solid #9d77ff8a;border-radius:14px;background:#0d0b17;box-shadow:var(--shadow),0 0 0 1px #ffffff08}
+.window.open{display:flex}.window.maximized{left:12px;top:44px;transform:none;width:calc(100vw - 24px);height:calc(100vh - 108px);border-radius:10px}
+.titlebar{height:42px;flex:0 0 42px;display:flex;align-items:center;gap:12px;padding:0 12px;background:linear-gradient(180deg,#171328,#100e1c);border-bottom:1px solid #ffffff10;cursor:grab;user-select:none}.titlebar:active{cursor:grabbing}
+.traffic{display:flex;gap:7px;align-items:center}.traffic button{width:12px;height:12px;border:0;border-radius:50%;padding:0;box-shadow:inset 0 1px #ffffff50}.close{background:#ff5f57}.minimize{background:#febc2e}.zoom{background:#28c840}
+.window-title{display:flex;align-items:center;gap:8px;color:#e9ddff;font-weight:600;font-size:12px}.window-title .tiny{color:var(--purple-bright)}.window-actions{margin-left:auto;display:flex;gap:6px}.window-actions button{width:27px;height:25px;border:1px solid transparent;border-radius:6px;background:transparent;color:#bfb1e9}.window-actions button:hover{background:#a78bfa18;border-color:#a78bfa30}
+.app-content{flex:1;min-height:0;background:#090811}.app-content iframe{display:block;width:100%;height:100%;border:0;background:#090811}
+.empty-hint{position:absolute;right:24px;top:58px;color:#b4a7d3;font-size:12px;opacity:.7;text-align:right}
+@media(max-width:700px){.menu-links{display:none}.menubar{gap:10px}.system{gap:9px}.desktop-icons{left:10px;top:50px}.window{left:8px;top:44px;transform:none;width:calc(100vw - 16px);height:calc(100vh - 124px);min-width:0}.window.maximized{left:4px;top:40px;width:calc(100vw - 8px);height:calc(100vh - 110px)}.dock{gap:3px;padding:7px 8px}.dock-button{width:45px;height:49px}.dock-button .app-icon{width:40px;height:40px}.empty-hint{display:none}}
+</style>
+</head>
+<body>
+<div class="desktop" id="desktop">
+  <header class="menubar">
+    <div class="brand"><span class="brand-mark">◈</span><span>The Web Vault</span></div>
+    <nav class="menu-links" aria-label="Application menus"><button type="button">File</button><button type="button">Edit</button><button type="button">View</button><button type="button">Window</button><button type="button">Help</button></nav>
+    <div class="system"><span title="Wi-Fi">⌁</span><span title="Battery">▰</span><span id="clock">--:--</span></div>
+  </header>
+  <div class="desktop-icons">
+    <button class="desktop-icon" type="button" data-launch-vault aria-label="Open The Vault">
+      <span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 10 3 8.5 4.5 5l5 1.5a8 8 0 0 1 5 0L19.5 5 21 8.5 17.5 10"/><path d="M6 10.5 3.5 12v4a2 2 0 0 0 2 2h2l2-2h5l2 2h2a2 2 0 0 0 2-2v-4l-2.5-1.5"/><path d="M8 11v4m-2-2h4m6-1h.01M18 14h.01"/></svg></span>
+      <span>The Vault</span>
+    </button>
+  </div>
+  <div class="empty-hint">Your desktop, your space.<br>Open The Vault to get started.</div>
+  <section class="window" id="vault-window" role="dialog" aria-label="The Vault app" aria-hidden="true">
+    <div class="titlebar" id="titlebar">
+      <div class="traffic"><button class="close" id="close-window" aria-label="Close window" title="Close"></button><button class="minimize" id="minimize-window" aria-label="Minimize window" title="Minimize"></button><button class="zoom" id="maximize-window" aria-label="Toggle maximize" title="Maximize"></button></div>
+      <div class="window-title"><span class="tiny">◈</span> The Vault</div>
+      <div class="window-actions"><button id="window-min" aria-label="Minimize">—</button><button id="window-max" aria-label="Maximize">□</button><button id="window-close" aria-label="Close">×</button></div>
+    </div>
+    <div class="app-content"><iframe id="vault-frame" title="The Vault website" src="about:blank" loading="eager"></iframe></div>
+  </section>
+  <div class="dock-wrap"><nav class="dock" aria-label="Dock">
+    <button class="dock-button" data-launch-vault aria-label="The Vault" title="The Vault"><span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 10 3 8.5 4.5 5l5 1.5a8 8 0 0 1 5 0L19.5 5 21 8.5 17.5 10"/><path d="M6 10.5 3.5 12v4a2 2 0 0 0 2 2h2l2-2h5l2 2h2a2 2 0 0 0 2-2v-4l-2.5-1.5"/><path d="M8 11v4m-2-2h4m6-1h.01M18 14h.01"/></svg></span></button>
+    <div class="dock-separator"></div>
+    <button class="dock-button" id="trash-button" aria-label="Trash (not implemented)" title="Trash — not implemented" disabled style="opacity:.35;cursor:default"><span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v5m4-5v5"/></svg></span></button>
+  </nav></div>
+</div>
+<script>
+(() => {
+ const win=document.getElementById('vault-window');
+ const frame=document.getElementById('vault-frame');
+ const titlebar=document.getElementById('titlebar');
+ let openedOnce=false, restoreBox=null, dragging=null;
+ const launch=()=>{
+   if(!openedOnce){frame.src='https://thewebvault.org/';openedOnce=true}
+   win.classList.add('open');win.setAttribute('aria-hidden','false');
+   win.style.zIndex=String(Date.now()%1000000);
+   document.querySelectorAll('[data-launch-vault]').forEach(b=>b.classList.add('active'));
+ };
+ const close=()=>{win.classList.remove('open');win.setAttribute('aria-hidden','true');document.querySelectorAll('[data-launch-vault]').forEach(b=>b.classList.remove('active'))};
+ const minimize=()=>{win.classList.remove('open');win.setAttribute('aria-hidden','true')};
+ const maximize=()=>{win.classList.toggle('maximized')};
+ document.querySelectorAll('[data-launch-vault]').forEach(b=>b.addEventListener('click',launch));
+ ['close-window','window-close'].forEach(id=>document.getElementById(id).addEventListener('click',close));
+ ['minimize-window','window-min'].forEach(id=>document.getElementById(id).addEventListener('click',minimize));
+ ['maximize-window','window-max'].forEach(id=>document.getElementById(id).addEventListener('click',maximize));
+ document.getElementById('clock').textContent='';
+ const tick=()=>{document.getElementById('clock').textContent=new Intl.DateTimeFormat(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date())};
+ tick();setInterval(tick,30000);
+ titlebar.addEventListener('pointerdown',e=>{
+   if(e.target.closest('button')||win.classList.contains('maximized'))return;
+   const r=win.getBoundingClientRect();dragging={x:e.clientX-r.left,y:e.clientY-r.top};
+   titlebar.setPointerCapture(e.pointerId);
+ });
+ titlebar.addEventListener('pointermove',e=>{
+   if(!dragging)return;
+   win.style.left=Math.max(8,Math.min(innerWidth-win.offsetWidth-8,e.clientX-dragging.x+win.offsetWidth/2))+'px';
+   win.style.top=Math.max(40,Math.min(innerHeight-win.offsetHeight-80,e.clientY-dragging.y+42))+'px';
+   win.style.transform='none';
+ });
+ const stopDrag=()=>dragging=null;
+ titlebar.addEventListener('pointerup',stopDrag);titlebar.addEventListener('pointercancel',stopDrag);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&win.classList.contains('open'))close()});
+})();
+</script>
+</body>
+</html>
