@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#100b20">
+<title>The Web Vault OS</title>
+<style>
+:root{color-scheme:dark;--bg:#090711;--panel:rgba(20,16,37,.82);--panel-solid:#151025;--line:rgba(168,126,255,.28);--purple:#a875ff;--purple2:#6e35d4;--text:#f4efff;--muted:#b9accf;--bar:34px;--dock:76px}
+*{box-sizing:border-box}html,body{height:100%;width:100%;margin:0;overflow:hidden;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}button:focus-visible{outline:2px solid var(--purple);outline-offset:3px}
+.desktop{position:relative;width:100%;height:100%;overflow:hidden;background:radial-gradient(ellipse at 50% 68%,rgba(94,37,176,.38),transparent 42%),radial-gradient(ellipse at 8% 8%,rgba(64,36,121,.24),transparent 34%),linear-gradient(145deg,#100b20,#080711 72%);isolation:isolate}
+.wallpaper{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:-1}.wallpaper:before,.wallpaper:after{content:"";position:absolute;width:130vw;height:45vh;left:-15vw;bottom:2vh;border:1px solid rgba(149,87,255,.18);border-radius:50%;transform:rotate(-12deg);box-shadow:0 -16px 80px rgba(102,40,217,.09),inset 0 14px 50px rgba(103,43,196,.06)}.wallpaper:after{bottom:-9vh;transform:rotate(9deg);border-color:rgba(103,76,190,.22);box-shadow:0 -10px 50px rgba(117,49,225,.15)}
+.menubar{height:var(--bar);position:absolute;z-index:1000;inset:0 0 auto;display:flex;align-items:center;gap:20px;padding:0 14px;background:rgba(8,6,16,.72);border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(22px);font-size:12px}.brand{display:flex;align-items:center;gap:8px;font-weight:650;white-space:nowrap}.brand-mark{width:20px;height:20px;display:grid;place-items:center;border-radius:6px;background:linear-gradient(145deg,#a77aff,#5724b6);box-shadow:0 0 18px #7334d544}.menumid{display:flex;align-items:center;gap:18px;color:#e5dcf5}.menumid button,.sys-button{border:0;background:transparent;padding:4px 0}.menumid button:hover,.sys-button:hover{color:var(--purple)}.sysbar{margin-left:auto;display:flex;align-items:center;gap:13px;color:#ded2f4;white-space:nowrap}
+.desktop-icons{position:absolute;top:calc(var(--bar) + 22px);left:24px;display:grid;grid-template-columns:repeat(2,84px);gap:22px 10px;align-content:start}.desktop-icon{width:84px;min-height:92px;display:flex;flex-direction:column;align-items:center;gap:7px;padding:5px 3px;border:1px solid transparent;border-radius:12px;background:transparent;font-size:12px;text-shadow:0 1px 5px #000}.desktop-icon:hover,.desktop-icon:focus-visible{background:rgba(133,83,220,.14);border-color:rgba(168,126,255,.25)}.app-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:#d5baff;background:linear-gradient(145deg,rgba(127,71,219,.45),rgba(42,25,77,.88));border:1px solid rgba(179,137,255,.25);box-shadow:inset 0 1px 0 #ffffff12,0 7px 20px #0002}.app-icon svg{width:25px;height:25px}
+.dock-wrap{position:absolute;z-index:500;left:50%;bottom:12px;transform:translateX(-50%);max-width:calc(100vw - 24px);padding:7px;border:1px solid rgba(173,133,255,.3);border-radius:21px;background:rgba(20,15,35,.72);backdrop-filter:blur(28px) saturate(1.4);box-shadow:0 12px 40px #0006,inset 0 1px 0 #ffffff0d}.dock{display:flex;align-items:flex-end;justify-content:center;gap:7px}.dock-button{position:relative;width:54px;height:54px;border:1px solid transparent;border-radius:15px;background:transparent;display:grid;place-items:center;transition:transform .14s ease,background .14s ease}.dock-button:hover{transform:translateY(-5px) scale(1.07);background:#a875ff22}.dock-button .app-icon{width:45px;height:45px;border-radius:13px}.dock-button svg{width:24px;height:24px}.dock-button .dot{position:absolute;bottom:-3px;left:50%;width:4px;height:4px;border-radius:50%;background:#c8a9ff;transform:translateX(-50%);display:none}.dock-button.running .dot{display:block}.dock-separator{width:1px;height:36px;margin:0 4px 5px;background:#a78bcf45}
+.window{position:absolute;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);width:min(900px,calc(100vw - 80px));height:min(620px,calc(100vh - 150px));min-width:320px;min-height:220px;display:none;flex-direction:column;overflow:hidden;border:1px solid rgba(166,115,255,.55);border-radius:14px;background:#0d0b16;box-shadow:0 28px 90px #0009,0 0 0 1px #a875ff10}.window.open{display:flex}.window.active{z-index:100}.titlebar{height:42px;flex:0 0 42px;display:flex;align-items:center;gap:12px;padding:0 12px;background:linear-gradient(180deg,#1c172b,#151122);border-bottom:1px solid #a875ff28;cursor:grab;user-select:none}.titlebar:active{cursor:grabbing}.traffic{display:flex;gap:7px}.traffic button{width:12px;height:12px;border:0;border-radius:50%;padding:0;background:#ff625e}.traffic button:nth-child(2){background:#ffc04d}.traffic button:nth-child(3){background:#36c96b}.window-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#e5d8ff}.window-title svg{width:16px;height:16px;color:#b88cff}.window-actions{margin-left:auto;display:flex;gap:5px}.window-actions button{width:28px;height:25px;border:0;border-radius:6px;background:transparent;color:#cbb8ed}.window-actions button:hover{background:#a875ff22}.window-body{position:relative;flex:1;min-height:0;background:#08070e}.window-body iframe{width:100%;height:100%;display:block;border:0;background:#0b0911}.window-body .loading{position:absolute;inset:0;display:grid;place-items:center;background:#0b0911;color:#bba8d9;font-size:13px;pointer-events:none;transition:opacity .25s}.window-body.loaded .loading{opacity:0}.window-body .loading span{display:flex;align-items:center;gap:10px}.spinner{width:16px;height:16px;border:2px solid #a875ff44;border-top-color:#b98cff;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.window.maximized{left:10px!important;top:calc(var(--bar) + 8px)!important;transform:none!important;width:calc(100vw - 20px)!important;height:calc(100vh - var(--bar) - var(--dock) - 32px)!important;max-width:none!important;border-radius:12px}.window.minimized{display:none}.workspace-indicator{position:absolute;right:18px;top:calc(var(--bar) + 16px);display:flex;gap:5px}.workspace-indicator button{width:24px;height:24px;border:1px solid #a875ff2c;border-radius:7px;background:#110d20a8;color:#bba9d8;font-size:10px}.workspace-indicator button.selected{background:#6c39b8;color:white;border-color:#a875ff}
+.context-hint{position:absolute;bottom:calc(var(--dock) + 22px);left:50%;transform:translateX(-50%);color:#b7a8cc;font-size:11px;opacity:.72;white-space:nowrap}
+@media(max-width:650px){.menubar{gap:10px;padding:0 9px}.menumid{gap:9px}.menumid button:nth-last-child(-n+3){display:none}.sysbar{gap:7px}.desktop-icons{left:10px;grid-template-columns:repeat(2,72px);gap:12px 4px}.desktop-icon{width:72px}.app-icon{width:43px;height:43px}.window{width:calc(100vw - 18px);height:calc(100vh - 135px);min-width:0}.dock-wrap{bottom:7px}.dock{gap:2px}.dock-button{width:45px;height:48px}.dock-button .app-icon{width:39px;height:39px}.workspace-indicator{display:none}.context-hint{display:none}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="desktop" id="desktop">
+  <div class="wallpaper"></div>
+  <header class="menubar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">V</span><span>The Web Vault</span></div>
+    <nav class="menumid" aria-label="Application menu"><button type="button">File</button><button type="button">Edit</button><button type="button">View</button><button type="button">Window</button><button type="button">Help</button></nav>
+    <div class="sysbar"><span aria-label="Wi-Fi">⌁</span><span aria-label="Battery">▰</span><span id="date">Fri, Oct 16</span><span id="clock">8:31 AM</span></div>
+  </header>
+  <main class="desktop-icons" aria-label="Desktop apps">
+    <button class="desktop-icon launch-vault" type="button" aria-label="Open The Vault"><span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5 5.2 6h13.6L21 8.5l-1.5 9.2a2 2 0 0 1-2 1.7H6.5a2 2 0 0 1-2-1.7L3 8.5Z"/><path d="M3 9h18M8 13h.01M11 13h.01M15 12l3 3m0-3-3 3"/></svg></span><span>The Vault</span></button>
+    <button class="desktop-icon" type="button" aria-label="Browser app coming later" title="Planned for a future phase"><span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><span>Browser</span></button>
+    <button class="desktop-icon" type="button" aria-label="Files app coming later" title="Planned for a future phase"><span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6.5h7l2 2H21v10H3z"/><path d="M3 10h18"/></svg></span><span>Files</span></button>
+  </main>
+  <div class="workspace-indicator" aria-label="Workspace selector"><button class="selected" type="button" title="Workspace 1">1</button><button type="button" title="Workspace 2">2</button><button type="button" title="Workspace 3">3</button><button type="button" title="Workspace 4">4</button></div>
+  <section class="window" id="vault-window" role="dialog" aria-label="The Vault app" aria-hidden="true">
+    <div class="titlebar" id="titlebar">
+      <div class="traffic"><button type="button" id="close-window" aria-label="Close window" title="Close"></button><button type="button" id="minimize-window" aria-label="Minimize window" title="Minimize"></button><button type="button" id="maximize-window" aria-label="Maximize window" title="Maximize"></button></div>
+      <div class="window-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5 5.2 6h13.6L21 8.5l-1.5 9.2a2 2 0 0 1-2 1.7H6.5a2 2 0 0 1-2-1.7L3 8.5Z"/></svg>The Vault</div>
+      <div class="window-actions"><button id="reload-vault" type="button" title="Reload app" aria-label="Reload app">↻</button></div>
+    </div>
+    <div class="window-body" id="window-body"><iframe id="vault-frame" title="The existing Vault website" src="about:blank" loading="eager"></iframe><div class="loading" id="loading"><span><i class="spinner"></i> Opening The Vault…</span></div></div>
+  </section>
+  <div class="context-hint">Open The Vault from the desktop or dock</div>
+  <footer class="dock-wrap"><nav class="dock" aria-label="Dock">
+    <button class="dock-button launch-vault" type="button" aria-label="The Vault" title="The Vault"><span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5 5.2 6h13.6L21 8.5l-1.5 9.2a2 2 0 0 1-2 1.7H6.5a2 2 0 0 1-2-1.7L3 8.5Z"/><path d="M3 9h18M8 13h.01M11 13h.01M15 12l3 3m0-3-3 3"/></svg></span><i class="dot"></i></button>
+    <span class="dock-separator"></span>
+    <button class="dock-button" type="button" aria-label="Browser app coming later" title="Browser (planned)"><span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span></button>
+    <button class="dock-button" type="button" aria-label="Files app coming later" title="Files (planned)"><span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6.5h7l2 2H21v10H3z"/><path d="M3 10h18"/></svg></span></button>
+  </nav></footer>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const win = $('vault-window'), frame = $('vault-frame'), body = $('window-body');
+  let z = 20, loadedOnce = false, drag = null, previous = null;
+  function clock(){const now=new Date();$('clock').textContent=now.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});$('date').textContent=now.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});}
+  clock();setInterval(clock,15000);
+  function focusWindow(){z++;win.style.zIndex=z;win.classList.add('active');}
+  function openVault(){if(!loadedOnce){frame.src='https://thewebvault.org/';loadedOnce=true;}win.classList.remove('minimized');win.classList.add('open');win.setAttribute('aria-hidden','false');focusWindow();document.querySelectorAll('.launch-vault').forEach(b=>b.classList.add('running')); }
+  function closeVault(){win.classList.remove('open','minimized','maximized');win.setAttribute('aria-hidden','true');document.querySelectorAll('.launch-vault').forEach(b=>b.classList.remove('running'));}
+  document.querySelectorAll('.launch-vault').forEach(b=>b.addEventListener('click',openVault));
+  $('close-window').addEventListener('click',closeVault);
+  $('minimize-window').addEventListener('click',()=>win.classList.add('minimized'));
+  $('maximize-window').addEventListener('click',()=>{if(win.classList.contains('maximized')){win.classList.remove('maximized');if(previous){win.style.left=previous.left;win.style.top=previous.top;win.style.width=previous.width;win.style.height=previous.height;win.style.transform=previous.transform;}}else{previous={left:win.style.left,top:win.style.top,width:win.style.width,height:win.style.height,transform:win.style.transform};win.classList.add('maximized');}focusWindow();});
+  $('reload-vault').addEventListener('click',()=>{if(loadedOnce){body.classList.remove('loaded');$('loading').style.display='grid';frame.src='https://thewebvault.org/';}});
+  frame.addEventListener('load',()=>{body.classList.add('loaded');$('loading').style.display='none';});
+  win.addEventListener('pointerdown',focusWindow);
+  const titlebar=$('titlebar');
+  titlebar.addEventListener('pointerdown',e=>{if(e.target.closest('button')||win.classList.contains('maximized'))return;const r=win.getBoundingClientRect();drag={x:e.clientX-r.left,y:e.clientY-r.top};titlebar.setPointerCapture(e.pointerId);});
+  titlebar.addEventListener('pointermove',e=>{if(!drag)return;const x=Math.max(0,Math.min(innerWidth-win.offsetWidth,e.clientX-drag.x));const y=Math.max(34,Math.min(innerHeight-100,e.clientY-drag.y));win.style.transform='none';win.style.left=x+'px';win.style.top=y+'px';});
+  titlebar.addEventListener('pointerup',()=>drag=null);titlebar.addEventListener('pointercancel',()=>drag=null);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&win.classList.contains('open'))closeVault();if((e.metaKey||e.ctrlKey)&&e.key==='w'&&win.classList.contains('open')){e.preventDefault();closeVault();}});
+  document.querySelectorAll('.workspace-indicator button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.workspace-indicator button').forEach(x=>x.classList.toggle('selected',x===b));}));
+})();
+</script>
+</body>
+</html>
