@@ -9,6 +9,12 @@
     <title>The Vault</title>
     <link rel="stylesheet" href="CSS/shared.css">
     <link rel="stylesheet" href="CSS/home.css" id="page-style">
+    <!-- WebOS Tokens & Stylesheets -->
+    <link rel="stylesheet" href="os/styles/tokens.css">
+    <link rel="stylesheet" href="os/styles/desktop.css">
+    <link rel="stylesheet" href="os/styles/window.css">
+    <link rel="stylesheet" href="os/styles/shell.css">
+    <link rel="stylesheet" href="os/styles/apps.css">
 </head>
 <body>
     <nav class="nav-bar">
@@ -50,6 +56,10 @@
             </svg>
             <span class="nav-label">Settings</span>
         </div>
+        <div class="nav-item" id="webos-toggle-btn">
+            <span style="font-size:1.15rem; line-height:1; display:flex; align-items:center;">🖥️</span>
+            <span class="nav-label">WebOS</span>
+        </div>
         <div class="nav-item" id="fullscreen-btn">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
@@ -89,8 +99,8 @@
       f.scrolling = 'no';
       f.srcdoc =
         '<!DOCTYPE html><html><body style="margin:0">' +
-        "<script>atOptions={'key':'" + key + "','format':'iframe','height':" + h + ",'width':" + w + ",'params':{}};<\/script>" +
-        '<script src="https://bauval.org/22/' + key + '"><\/script>' +
+        '<scr' + "ipt>atOptions={'key':'" + key + "','format':'iframe','height':" + h + ",'width':" + w + ",'params':{}};</scr" + 'ipt>' +
+        '<scr' + 'ipt src="https://bauval.org/22/' + key + '"></scr' + 'ipt>' +
         '</body></html>';
       el.appendChild(f);
       el.dataset.mounted = '1';
@@ -179,5 +189,41 @@
         }
     </style>
 <script data-cfasync="false" src="https://bauval.org/14/8c0b873d66a359e0f25e1402357679d4"></script>
+    <!-- WebOS Desktop Shell Host & Window Layers -->
+    <div id="vault-desktop"></div>
+    <div id="vault-windows-layer"></div>
+
+    <!-- WebOS Boot Script -->
+    <script type="module">
+        import { boot } from './os/core/Kernel.js';
+
+        // Check view mode: defaults to WebOS unless user specifically chose classic
+        const params = new URLSearchParams(window.location.search);
+        const modeParam = params.get('mode');
+        const savedMode = localStorage.getItem('vault_view_mode');
+        const isClassic = modeParam === 'classic' || (savedMode === 'classic' && modeParam !== 'webos');
+
+        if (!isClassic) {
+            document.body.classList.add('vault-os-active');
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => boot());
+            } else {
+                boot();
+            }
+        } else {
+            document.body.classList.add('vault-classic-active');
+        }
+
+        // Handle WebOS toggle from classic nav bar
+        const webosBtn = document.getElementById('webos-toggle-btn');
+        if (webosBtn) {
+            webosBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                localStorage.setItem('vault_view_mode', 'webos');
+                window.location.href = 'index.html?mode=webos';
+            });
+        }
+    </script>
 </body>
 </html>

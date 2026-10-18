@@ -1,0 +1,374 @@
+/* ==========================================================================
+   DESIGN TOKENS — The Web Vault WebOS
+   ==========================================================================
+   Single source of truth for every visual value in the OS layer.
+   Import this file FIRST in every stylesheet via @import or <link>.
+
+   Token naming convention:
+     --vault-{category}-{property}[-{variant}]
+
+   Categories: bg, surface, glass, accent, border, text, radius, shadow,
+               transition, z, spacing, font, icon
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. DARK THEME (default)
+   -------------------------------------------------------------------------- */
+:root {
+  /* --- Color: Backgrounds & Surfaces ------------------------------------ */
+  --vault-bg-deep:             #07050c;            /* Deepest shell background       */
+  --vault-bg-body:             #0b0714;            /* Body / wallpaper fallback       */
+  --vault-bg-gradient:         linear-gradient(
+                                 180deg,
+                                 #000000 0%,
+                                 #0d001a 40%,
+                                 #1a0033 100%
+                               );                  /* Legacy page gradient (ref only) */
+
+  --vault-surface-base:        rgba(15, 11, 26, 0.78);   /* Default panel bg          */
+  --vault-surface-elevated:    rgba(26, 18, 44, 0.85);   /* Raised cards, popovers    */
+  --vault-surface-active:      rgba(42, 28, 72, 0.92);   /* Hovered / pressed surface */
+  --vault-surface-sunken:      rgba(8, 5, 16, 0.60);     /* Inset wells, input bgs    */
+  --vault-surface-overlay:     rgba(0, 0, 0, 0.45);      /* Scrim behind modals       */
+
+  /* --- Color: Glassmorphism --------------------------------------------- */
+  --vault-glass-blur:          blur(20px) saturate(160%);
+  --vault-glass-blur-heavy:    blur(32px) saturate(180%);
+  --vault-glass-blur-light:    blur(12px) saturate(140%);
+  --vault-glass-tint:          rgba(15, 11, 26, 0.55);   /* Extra tint layer          */
+
+  /* --- Color: Accent palette -------------------------------------------- */
+  --vault-accent-primary:      #8b5cf6;            /* Main purple                    */
+  --vault-accent-secondary:    #a855f7;            /* Lighter purple                 */
+  --vault-accent-tertiary:     #6366f1;            /* Indigo (from existing site)    */
+  --vault-accent-pink:         #fc72ff;            /* Pink highlight                 */
+  --vault-accent-blue:         #487bff;            /* Blue variant                   */
+  --vault-accent-glow:         rgba(139, 92, 246, 0.35); /* Glow / focus ring        */
+  --vault-accent-glow-strong:  rgba(139, 92, 246, 0.55); /* Intense glow             */
+  --vault-accent-gradient:     linear-gradient(
+                                 135deg,
+                                 #fc72ff 0%,
+                                 #8f68ff 40%,
+                                 #487bff 100%
+                               );                  /* Hero / heading gradient         */
+
+  /* --- Color: Semantic -------------------------------------------------- */
+  --vault-color-success:       #34d399;
+  --vault-color-warning:       #fbbf24;
+  --vault-color-danger:        #f87171;
+  --vault-color-info:          #60a5fa;
+
+  /* --- Color: Borders --------------------------------------------------- */
+  --vault-border-subtle:       rgba(168, 85, 247, 0.18);
+  --vault-border-default:      rgba(168, 85, 247, 0.28);
+  --vault-border-focused:      rgba(139, 92, 246, 0.55);
+  --vault-border-muted:        rgba(60, 60, 60, 0.50);   /* Neutral grey border       */
+
+  /* --- Color: Text ------------------------------------------------------ */
+  --vault-text-primary:        #f5f3ff;
+  --vault-text-secondary:      #c4b5fd;
+  --vault-text-muted:          #7c6f9f;
+  --vault-text-disabled:       #4a4162;
+  --vault-text-inverse:        #1e1b2e;
+  --vault-text-link:           #a78bfa;
+  --vault-text-on-accent:      #ffffff;
+
+  /* --- Typography ------------------------------------------------------- */
+  --vault-font-sans:           -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                               Roboto, Oxygen, Ubuntu, Cantarell,
+                               'Helvetica Neue', sans-serif;
+  --vault-font-display:        'Poppins', var(--vault-font-sans);
+  --vault-font-mono:           'SF Mono', 'Fira Code', 'Cascadia Code',
+                               'JetBrains Mono', Menlo, Monaco, Consolas,
+                               'Liberation Mono', monospace;
+
+  --vault-text-xs:             0.6875rem;          /* 11px — tiny labels             */
+  --vault-text-sm:             0.8125rem;          /* 13px — secondary / captions    */
+  --vault-text-base:           0.875rem;           /* 14px — body text               */
+  --vault-text-md:             1rem;               /* 16px — prominent body          */
+  --vault-text-lg:             1.25rem;            /* 20px — sub-headings            */
+  --vault-text-xl:             1.5rem;             /* 24px — section headings        */
+  --vault-text-2xl:            2rem;               /* 32px — page titles             */
+
+  --vault-leading-tight:       1.2;
+  --vault-leading-normal:      1.5;
+  --vault-leading-relaxed:     1.75;
+
+  --vault-weight-normal:       400;
+  --vault-weight-medium:       500;
+  --vault-weight-semibold:     600;
+  --vault-weight-bold:         700;
+
+  /* --- Spacing scale (4px base) ----------------------------------------- */
+  --vault-space-0:             0;
+  --vault-space-px:            1px;
+  --vault-space-0_5:           2px;
+  --vault-space-1:             4px;
+  --vault-space-1_5:           6px;
+  --vault-space-2:             8px;
+  --vault-space-3:             12px;
+  --vault-space-4:             16px;
+  --vault-space-5:             20px;
+  --vault-space-6:             24px;
+  --vault-space-8:             32px;
+  --vault-space-10:            40px;
+  --vault-space-12:            48px;
+  --vault-space-16:            64px;
+
+  /* --- Border radii ----------------------------------------------------- */
+  --vault-radius-xs:           4px;
+  --vault-radius-sm:           6px;
+  --vault-radius-control:      8px;
+  --vault-radius-md:           10px;
+  --vault-radius-window:       12px;
+  --vault-radius-panel:        14px;
+  --vault-radius-lg:           16px;
+  --vault-radius-xl:           20px;
+  --vault-radius-full:         9999px;
+
+  /* --- Shadows ---------------------------------------------------------- */
+  --vault-shadow-sm:           0 1px 3px rgba(0, 0, 0, 0.30),
+                               0 1px 2px rgba(0, 0, 0, 0.20);
+  --vault-shadow-md:           0 4px 12px rgba(0, 0, 0, 0.35),
+                               0 2px 4px  rgba(0, 0, 0, 0.25);
+  --vault-shadow-lg:           0 8px 24px rgba(0, 0, 0, 0.40),
+                               0 4px 8px  rgba(0, 0, 0, 0.30);
+  --vault-shadow-window:       0 8px 32px rgba(0, 0, 0, 0.55),
+                               0 2px 8px  rgba(0, 0, 0, 0.35),
+                               inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+  --vault-shadow-focused:      0 12px 48px rgba(139, 92, 246, 0.25),
+                               0 8px 32px  rgba(0, 0, 0, 0.50),
+                               0 2px 8px   rgba(0, 0, 0, 0.30),
+                               inset 0 0.5px 0 rgba(255, 255, 255, 0.08);
+  --vault-shadow-dock:         0 -4px 24px rgba(0, 0, 0, 0.40),
+                               0 -1px 6px  rgba(0, 0, 0, 0.25);
+  --vault-shadow-menubar:      0 2px 12px rgba(0, 0, 0, 0.35);
+  --vault-shadow-notification: 0 6px 20px rgba(0, 0, 0, 0.45),
+                               0 2px 6px  rgba(0, 0, 0, 0.30);
+  --vault-shadow-glow:         0 0 16px rgba(139, 92, 246, 0.35),
+                               0 0 40px rgba(139, 92, 246, 0.15);
+
+  /* --- Transitions & Easing -------------------------------------------- */
+  --vault-ease-out:            cubic-bezier(0.16, 1, 0.3, 1);
+  --vault-ease-in-out:         cubic-bezier(0.4, 0, 0.2, 1);
+  --vault-ease-bounce:         cubic-bezier(0.2, 0.8, 0.2, 1);
+  --vault-ease-spring:         cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --vault-transition-instant:  80ms  var(--vault-ease-out);
+  --vault-transition-fast:     150ms var(--vault-ease-bounce);
+  --vault-transition-smooth:   260ms var(--vault-ease-out);
+  --vault-transition-gentle:   400ms var(--vault-ease-out);
+  --vault-transition-slow:     600ms var(--vault-ease-out);
+
+  --vault-duration-fast:       150ms;
+  --vault-duration-smooth:     260ms;
+  --vault-duration-gentle:     400ms;
+
+  /* --- Z-Index Layering System ------------------------------------------ */
+  /* Each range is documented so modules stay in their lane.                */
+  --vault-z-wallpaper:         0;       /* Desktop wallpaper               */
+  --vault-z-desktop-icons:     10;      /* Desktop icon grid               */
+  --vault-z-selection:         20;      /* Rubber-band selection overlay    */
+  --vault-z-snap-preview:      90;      /* Window snap preview              */
+  --vault-z-window-base:       100;     /* Bottom of window stack           */
+  --vault-z-window-max:        899;     /* Top of window stack              */
+  --vault-z-menubar:           900;     /* Top menu bar                     */
+  --vault-z-dock:              910;     /* Bottom dock                      */
+  --vault-z-launcher:          950;     /* App launcher / search overlay    */
+  --vault-z-context-menu:      980;     /* Right-click context menus        */
+  --vault-z-notification:      990;     /* Toast notifications              */
+  --vault-z-tooltip:           995;     /* Tooltips (above everything)      */
+  --vault-z-overlay:           1000;    /* System modal overlays            */
+
+  /* --- Icon sizes ------------------------------------------------------- */
+  --vault-icon-xs:             14px;
+  --vault-icon-sm:             18px;
+  --vault-icon-md:             24px;
+  --vault-icon-lg:             32px;
+  --vault-icon-xl:             44px;
+  --vault-icon-desktop:        48px;    /* Icons on the desktop grid        */
+
+  /* --- Shell geometry --------------------------------------------------- */
+  --vault-menubar-height:      32px;
+  --vault-dock-height:         60px;
+  --vault-dock-icon-size:      44px;
+  --vault-dock-padding:        6px;
+  --vault-titlebar-height:     38px;
+  --vault-desktop-padding-top: 40px;    /* = menubar + 8                    */
+  --vault-desktop-padding-bottom: 72px; /* = dock + 12                      */
+
+  /* --- Scrollbar styling ------------------------------------------------ */
+  --vault-scrollbar-size:      8px;
+  --vault-scrollbar-track:     transparent;
+  --vault-scrollbar-thumb:     rgba(168, 85, 247, 0.25);
+  --vault-scrollbar-thumb-hover: rgba(168, 85, 247, 0.40);
+}
+
+
+/* --------------------------------------------------------------------------
+   2. LIGHT THEME
+   --------------------------------------------------------------------------
+   Applied via [data-theme="light"] on <html> or <body>.
+   Lavender-tinted surfaces keep the purple identity.
+   -------------------------------------------------------------------------- */
+[data-theme="light"] {
+  --vault-bg-deep:             #f0ecf8;
+  --vault-bg-body:             #f5f3ff;
+
+  --vault-surface-base:        rgba(255, 255, 255, 0.82);
+  --vault-surface-elevated:    rgba(255, 255, 255, 0.92);
+  --vault-surface-active:      rgba(237, 228, 255, 0.95);
+  --vault-surface-sunken:      rgba(230, 220, 248, 0.50);
+  --vault-surface-overlay:     rgba(0, 0, 0, 0.18);
+
+  --vault-glass-tint:          rgba(255, 255, 255, 0.45);
+
+  --vault-accent-glow:         rgba(139, 92, 246, 0.18);
+  --vault-accent-glow-strong:  rgba(139, 92, 246, 0.30);
+
+  --vault-border-subtle:       rgba(139, 92, 246, 0.15);
+  --vault-border-default:      rgba(139, 92, 246, 0.22);
+  --vault-border-focused:      rgba(139, 92, 246, 0.50);
+  --vault-border-muted:        rgba(0, 0, 0, 0.10);
+
+  --vault-text-primary:        #1e1b2e;
+  --vault-text-secondary:      #5b4f7a;
+  --vault-text-muted:          #8e82a6;
+  --vault-text-disabled:       #b5adc8;
+  --vault-text-inverse:        #f5f3ff;
+  --vault-text-link:           #7c3aed;
+
+  --vault-shadow-sm:           0 1px 3px rgba(0, 0, 0, 0.08),
+                               0 1px 2px rgba(0, 0, 0, 0.05);
+  --vault-shadow-md:           0 4px 12px rgba(0, 0, 0, 0.10),
+                               0 2px 4px  rgba(0, 0, 0, 0.06);
+  --vault-shadow-lg:           0 8px 24px rgba(0, 0, 0, 0.12),
+                               0 4px 8px  rgba(0, 0, 0, 0.08);
+  --vault-shadow-window:       0 8px 32px rgba(0, 0, 0, 0.14),
+                               0 2px 8px  rgba(0, 0, 0, 0.08),
+                               inset 0 0.5px 0 rgba(255, 255, 255, 0.80);
+  --vault-shadow-focused:      0 12px 48px rgba(139, 92, 246, 0.12),
+                               0 8px 32px  rgba(0, 0, 0, 0.12),
+                               0 2px 8px   rgba(0, 0, 0, 0.06),
+                               inset 0 0.5px 0 rgba(255, 255, 255, 0.90);
+  --vault-shadow-dock:         0 -4px 24px rgba(0, 0, 0, 0.08),
+                               0 -1px 6px  rgba(0, 0, 0, 0.04);
+  --vault-shadow-menubar:      0 2px 12px rgba(0, 0, 0, 0.06);
+  --vault-shadow-notification: 0 6px 20px rgba(0, 0, 0, 0.10),
+                               0 2px 6px  rgba(0, 0, 0, 0.06);
+  --vault-shadow-glow:         0 0 16px rgba(139, 92, 246, 0.15),
+                               0 0 40px rgba(139, 92, 246, 0.06);
+
+  --vault-scrollbar-thumb:     rgba(139, 92, 246, 0.18);
+  --vault-scrollbar-thumb-hover: rgba(139, 92, 246, 0.30);
+}
+
+
+/* --------------------------------------------------------------------------
+   3. REDUCED MOTION
+   --------------------------------------------------------------------------
+   Respect prefers-reduced-motion: collapse all durations & transitions.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --vault-transition-instant: 0ms linear;
+    --vault-transition-fast:    0ms linear;
+    --vault-transition-smooth:  0ms linear;
+    --vault-transition-gentle:  0ms linear;
+    --vault-transition-slow:    0ms linear;
+
+    --vault-duration-fast:      0ms;
+    --vault-duration-smooth:    0ms;
+    --vault-duration-gentle:    0ms;
+  }
+
+  /* Kill any remaining animations globally */
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* --------------------------------------------------------------------------
+   4. HIGH CONTRAST (forced-colors)
+   --------------------------------------------------------------------------
+   When the OS enables high-contrast / forced-colors mode, fall back to
+   system colors so the UI remains accessible.
+   -------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  :root {
+    --vault-accent-primary:   LinkText;
+    --vault-accent-secondary: LinkText;
+    --vault-text-primary:     CanvasText;
+    --vault-text-secondary:   CanvasText;
+    --vault-surface-base:     Canvas;
+    --vault-border-default:   CanvasText;
+  }
+}
+
+
+/* --------------------------------------------------------------------------
+   5. CUSTOM SCROLLBAR (WebKit + Firefox)
+   -------------------------------------------------------------------------- */
+/* WebKit / Blink */
+.vault-scrollbar::-webkit-scrollbar,
+.os-desktop ::-webkit-scrollbar {
+  width:  var(--vault-scrollbar-size);
+  height: var(--vault-scrollbar-size);
+}
+
+.vault-scrollbar::-webkit-scrollbar-track,
+.os-desktop ::-webkit-scrollbar-track {
+  background: var(--vault-scrollbar-track);
+}
+
+.vault-scrollbar::-webkit-scrollbar-thumb,
+.os-desktop ::-webkit-scrollbar-thumb {
+  background: var(--vault-scrollbar-thumb);
+  border-radius: var(--vault-radius-full);
+}
+
+.vault-scrollbar::-webkit-scrollbar-thumb:hover,
+.os-desktop ::-webkit-scrollbar-thumb:hover {
+  background: var(--vault-scrollbar-thumb-hover);
+}
+
+/* Firefox */
+.vault-scrollbar,
+.os-desktop * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--vault-scrollbar-thumb) var(--vault-scrollbar-track);
+}
+
+
+/* --------------------------------------------------------------------------
+   6. FOCUS UTILITIES
+   --------------------------------------------------------------------------
+   Standard focus-visible ring for keyboard navigation.
+   -------------------------------------------------------------------------- */
+.vault-focusable:focus-visible,
+.os-desktop *:focus-visible {
+  outline: 2px solid var(--vault-accent-primary);
+  outline-offset: 2px;
+  border-radius: var(--vault-radius-xs);
+}
+
+/* --------------------------------------------------------------------------
+   7. MODE DISPLAY RULES (WebOS vs Classic Vault)
+   -------------------------------------------------------------------------- */
+body.vault-os-active .nav-bar,
+body.vault-os-active #app-content,
+body.vault-os-active #bmc-home-button {
+  display: none !important;
+}
+
+body.vault-classic-active #vault-desktop,
+body.vault-classic-active .vault-topbar,
+body.vault-classic-active .vault-dock,
+body.vault-classic-active #vault-windows-layer,
+body.vault-classic-active .vault-launcher-overlay {
+  display: none !important;
+}
+

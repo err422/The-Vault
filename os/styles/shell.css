@@ -1,0 +1,830 @@
+/* ==========================================================================
+   SHELL UI — The Web Vault WebOS
+   ==========================================================================
+   Chrome that surrounds the desktop:
+     - Top menu bar (macOS-style)
+     - Bottom dock (app launcher bar)
+     - Start / search overlay
+     - Notification toasts
+     - Quick settings popover
+
+   Depends on: tokens.css
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. TOP MENU BAR
+   --------------------------------------------------------------------------
+   Full-width, 32px tall, glass background.  Contains:
+     Left:   Apple-style logo button → app name → menus
+     Right:  Status icons, clock
+   -------------------------------------------------------------------------- */
+.os-menubar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--vault-menubar-height);
+  z-index: var(--vault-z-menubar);
+
+  display: flex;
+  align-items: center;
+  padding: 0 var(--vault-space-3);
+
+  /* Glass surface */
+  background: var(--vault-surface-base);
+  backdrop-filter: var(--vault-glass-blur);
+  -webkit-backdrop-filter: var(--vault-glass-blur);
+  border-bottom: 1px solid var(--vault-border-subtle);
+  box-shadow: var(--vault-shadow-menubar);
+
+  font-family: var(--vault-font-sans);
+  font-size: var(--vault-text-sm);
+  color: var(--vault-text-primary);
+  user-select: none;
+  -webkit-user-select: none;
+
+  /* Prevent menubar from becoming a scroll container */
+  overflow: visible;
+}
+
+/* --- Left section: logo + app menus ------------------------------------- */
+.os-menubar__left {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+/* Logo / home button */
+.os-menubar__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: var(--vault-menubar-height);
+  cursor: pointer;
+  border-radius: var(--vault-radius-xs);
+  transition: background var(--vault-transition-instant);
+}
+
+.os-menubar__logo:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.os-menubar__logo img,
+.os-menubar__logo svg {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+/* Active app name — displayed bold right after the logo */
+.os-menubar__app-name {
+  font-weight: var(--vault-weight-semibold);
+  padding: 0 var(--vault-space-3);
+  height: var(--vault-menubar-height);
+  line-height: var(--vault-menubar-height);
+  cursor: default;
+}
+
+/* Menu item (File, Edit, View, …) */
+.os-menubar__menu {
+  position: relative;
+  padding: 0 var(--vault-space-3);
+  height: var(--vault-menubar-height);
+  line-height: var(--vault-menubar-height);
+  cursor: default;
+  border-radius: var(--vault-radius-xs);
+  transition: background var(--vault-transition-instant);
+  white-space: nowrap;
+}
+
+.os-menubar__menu:hover,
+.os-menubar__menu.is-open {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.os-menubar__menu.is-open {
+  background: var(--vault-surface-active);
+}
+
+/* --- Right section: status tray + clock --------------------------------- */
+.os-menubar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--vault-space-1);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Tray icon button (Wi-Fi, Battery, etc.) */
+.os-menubar__tray-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--vault-text-primary);
+  border-radius: var(--vault-radius-xs);
+  cursor: pointer;
+  transition: background var(--vault-transition-instant);
+  padding: 0;
+}
+
+.os-menubar__tray-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.os-menubar__tray-btn svg {
+  width: var(--vault-icon-sm);
+  height: var(--vault-icon-sm);
+  pointer-events: none;
+}
+
+/* Clock */
+.os-menubar__clock {
+  padding: 0 var(--vault-space-3);
+  height: var(--vault-menubar-height);
+  line-height: var(--vault-menubar-height);
+  cursor: default;
+  border-radius: var(--vault-radius-xs);
+  transition: background var(--vault-transition-instant);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--vault-weight-medium);
+}
+
+.os-menubar__clock:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* --- Dropdown panel (menu bar dropdowns) -------------------------------- */
+.os-menubar__dropdown {
+  position: absolute;
+  top: calc(var(--vault-menubar-height) + 2px);
+  left: 0;
+  min-width: 220px;
+  padding: var(--vault-space-1_5) 0;
+
+  background: var(--vault-surface-elevated);
+  backdrop-filter: var(--vault-glass-blur);
+  -webkit-backdrop-filter: var(--vault-glass-blur);
+  border: 1px solid var(--vault-border-subtle);
+  border-radius: var(--vault-radius-control);
+  box-shadow: var(--vault-shadow-lg);
+
+  /* Entry animation */
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity   var(--vault-transition-fast),
+              transform var(--vault-transition-fast);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.os-menubar__dropdown.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Dropdown items re-use context menu styles from desktop.css.
+   The .os-context-menu__item class can be applied, or duplicated here
+   for independence: */
+.os-menubar__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--vault-space-3);
+  padding: var(--vault-space-1_5) var(--vault-space-4);
+  min-height: 28px;
+  cursor: default;
+  transition: background var(--vault-transition-instant);
+  font-size: var(--vault-text-sm);
+  color: var(--vault-text-primary);
+}
+
+.os-menubar__dropdown-item:hover {
+  background: var(--vault-accent-primary);
+  color: var(--vault-text-on-accent);
+}
+
+.os-menubar__dropdown-item.is-disabled {
+  opacity: 0.40;
+  pointer-events: none;
+}
+
+.os-menubar__dropdown-separator {
+  height: 1px;
+  margin: var(--vault-space-1_5) var(--vault-space-3);
+  background: var(--vault-border-subtle);
+}
+
+.os-menubar__dropdown-shortcut {
+  margin-left: auto;
+  font-size: var(--vault-text-xs);
+  color: var(--vault-text-muted);
+}
+
+.os-menubar__dropdown-item:hover .os-menubar__dropdown-shortcut {
+  color: rgba(255, 255, 255, 0.70);
+}
+
+
+/* --------------------------------------------------------------------------
+   2. TASKBAR DOCK
+   --------------------------------------------------------------------------
+   Centered bar at the bottom of the screen.  Contains app icons with
+   running-state indicators.
+   -------------------------------------------------------------------------- */
+.os-dock {
+  position: fixed;
+  bottom: var(--vault-space-2);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--vault-z-dock);
+
+  display: flex;
+  align-items: center;
+  gap: var(--vault-space-1);
+  padding: var(--vault-dock-padding) var(--vault-space-3);
+  height: var(--vault-dock-height);
+
+  /* Glass surface */
+  background: var(--vault-surface-base);
+  backdrop-filter: var(--vault-glass-blur-heavy);
+  -webkit-backdrop-filter: var(--vault-glass-blur-heavy);
+  border: 1px solid var(--vault-border-subtle);
+  border-radius: var(--vault-radius-lg);
+  box-shadow: var(--vault-shadow-dock);
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* --- Dock Icon Wrapper -------------------------------------------------- */
+.os-dock__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: var(--vault-space-1);
+  border-radius: var(--vault-radius-control);
+  transition: transform var(--vault-transition-fast),
+              background var(--vault-transition-fast);
+}
+
+.os-dock__item:hover {
+  transform: translateY(-4px) scale(1.12);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.os-dock__item:active {
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* Dock icon image */
+.os-dock__icon {
+  width: var(--vault-dock-icon-size);
+  height: var(--vault-dock-icon-size);
+  border-radius: var(--vault-radius-md);
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
+
+  /* Subtle reflection */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+  transition: filter var(--vault-transition-fast);
+}
+
+.os-dock__item:hover .os-dock__icon {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.50))
+          brightness(1.08);
+}
+
+/* --- Running Indicator Dot ---------------------------------------------- */
+.os-dock__indicator {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--vault-text-secondary);
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity var(--vault-transition-fast);
+}
+
+.os-dock__item.is-running .os-dock__indicator {
+  opacity: 1;
+}
+
+/* Focused app gets a brighter dot */
+.os-dock__item.is-active .os-dock__indicator {
+  background: var(--vault-accent-primary);
+  box-shadow: 0 0 6px var(--vault-accent-glow);
+}
+
+/* --- Dock Separator (between pinned and open apps) ---------------------- */
+.os-dock__separator {
+  width: 1px;
+  height: 36px;
+  background: var(--vault-border-subtle);
+  margin: 0 var(--vault-space-1);
+  flex-shrink: 0;
+}
+
+/* --- Dock Tooltip ------------------------------------------------------- */
+.os-dock__tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: var(--vault-space-1) var(--vault-space-3);
+  font-size: var(--vault-text-xs);
+  font-weight: var(--vault-weight-medium);
+  color: var(--vault-text-primary);
+  background: var(--vault-surface-elevated);
+  backdrop-filter: var(--vault-glass-blur-light);
+  -webkit-backdrop-filter: var(--vault-glass-blur-light);
+  border: 1px solid var(--vault-border-subtle);
+  border-radius: var(--vault-radius-sm);
+  box-shadow: var(--vault-shadow-sm);
+  white-space: nowrap;
+  pointer-events: none;
+
+  opacity: 0;
+  transition: opacity   var(--vault-transition-fast),
+              transform var(--vault-transition-fast);
+}
+
+.os-dock__item:hover .os-dock__tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* --- Dock Bounce Animation (launching app) ------------------------------ */
+@keyframes vault-dock-bounce {
+  0%, 100% { transform: translateY(-4px) scale(1.12); }
+  25%      { transform: translateY(-18px) scale(1.12); }
+  50%      { transform: translateY(-4px) scale(1.12); }
+  75%      { transform: translateY(-10px) scale(1.12); }
+}
+
+.os-dock__item.is-bouncing {
+  animation: vault-dock-bounce 0.8s var(--vault-ease-bounce) 2;
+}
+
+
+/* --------------------------------------------------------------------------
+   3. APP LAUNCHER / SEARCH OVERLAY
+   --------------------------------------------------------------------------
+   Full-screen overlay with a centered panel containing:
+     - Search input at top
+     - App grid below
+   -------------------------------------------------------------------------- */
+.os-launcher-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--vault-z-launcher);
+  background: var(--vault-surface-overlay);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+
+  /* Entry / exit transitions */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--vault-transition-smooth);
+}
+
+.os-launcher-overlay.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* --- Launcher Panel ----------------------------------------------------- */
+.os-launcher {
+  width: min(600px, 90vw);
+  max-height: 65vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--vault-surface-elevated);
+  backdrop-filter: var(--vault-glass-blur-heavy);
+  -webkit-backdrop-filter: var(--vault-glass-blur-heavy);
+  border: 1px solid var(--vault-border-subtle);
+  border-radius: var(--vault-radius-panel);
+  box-shadow: var(--vault-shadow-focused);
+  overflow: hidden;
+
+  /* Slide + fade in */
+  transform: translateY(16px) scale(0.97);
+  transition: transform var(--vault-transition-smooth),
+              opacity   var(--vault-transition-smooth);
+}
+
+.os-launcher-overlay.is-visible .os-launcher {
+  transform: translateY(0) scale(1);
+}
+
+/* --- Search Input ------------------------------------------------------- */
+.os-launcher__search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--vault-space-3);
+  padding: var(--vault-space-4) var(--vault-space-6);
+  border-bottom: 1px solid var(--vault-border-subtle);
+}
+
+.os-launcher__search-icon {
+  width: var(--vault-icon-md);
+  height: var(--vault-icon-md);
+  color: var(--vault-text-muted);
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.os-launcher__search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--vault-font-sans);
+  font-size: var(--vault-text-lg);
+  font-weight: var(--vault-weight-normal);
+  color: var(--vault-text-primary);
+  caret-color: var(--vault-accent-primary);
+}
+
+.os-launcher__search-input::placeholder {
+  color: var(--vault-text-muted);
+}
+
+/* --- App Grid ----------------------------------------------------------- */
+.os-launcher__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--vault-space-2);
+  padding: var(--vault-space-4) var(--vault-space-6);
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Individual app tile */
+.os-launcher__app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--vault-space-2);
+  padding: var(--vault-space-3);
+  border-radius: var(--vault-radius-control);
+  cursor: pointer;
+  transition: background var(--vault-transition-fast),
+              transform var(--vault-transition-fast);
+}
+
+.os-launcher__app:hover {
+  background: var(--vault-surface-active);
+  transform: scale(1.04);
+}
+
+.os-launcher__app:active {
+  transform: scale(0.97);
+}
+
+.os-launcher__app-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--vault-radius-md);
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.os-launcher__app-name {
+  font-size: var(--vault-text-xs);
+  font-weight: var(--vault-weight-medium);
+  color: var(--vault-text-secondary);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 80px;
+}
+
+/* --- No Results --------------------------------------------------------- */
+.os-launcher__empty {
+  padding: var(--vault-space-10);
+  text-align: center;
+  color: var(--vault-text-muted);
+  font-size: var(--vault-text-md);
+}
+
+
+/* --------------------------------------------------------------------------
+   4. NOTIFICATION TOASTS
+   --------------------------------------------------------------------------
+   Stack in the top-right corner.
+   -------------------------------------------------------------------------- */
+.os-notification-area {
+  position: fixed;
+  top: calc(var(--vault-menubar-height) + var(--vault-space-3));
+  right: var(--vault-space-4);
+  z-index: var(--vault-z-notification);
+  display: flex;
+  flex-direction: column;
+  gap: var(--vault-space-2);
+  pointer-events: none;
+  max-width: 360px;
+  width: 100%;
+}
+
+.os-notification {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--vault-space-3);
+  padding: var(--vault-space-3) var(--vault-space-4);
+  background: var(--vault-surface-elevated);
+  backdrop-filter: var(--vault-glass-blur);
+  -webkit-backdrop-filter: var(--vault-glass-blur);
+  border: 1px solid var(--vault-border-subtle);
+  border-radius: var(--vault-radius-control);
+  box-shadow: var(--vault-shadow-notification);
+  pointer-events: auto;
+  cursor: default;
+
+  /* Entry animation */
+  animation: vault-notification-in var(--vault-duration-smooth) var(--vault-ease-out) both;
+}
+
+/* --- Notification icon -------------------------------------------------- */
+.os-notification__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--vault-radius-sm);
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* --- Notification body -------------------------------------------------- */
+.os-notification__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.os-notification__title {
+  font-size: var(--vault-text-sm);
+  font-weight: var(--vault-weight-semibold);
+  color: var(--vault-text-primary);
+  margin-bottom: 2px;
+}
+
+.os-notification__message {
+  font-size: var(--vault-text-sm);
+  color: var(--vault-text-secondary);
+  line-height: var(--vault-leading-normal);
+
+  /* Truncate long messages */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.os-notification__time {
+  font-size: var(--vault-text-xs);
+  color: var(--vault-text-muted);
+  margin-top: var(--vault-space-1);
+}
+
+/* --- Close button ------------------------------------------------------- */
+.os-notification__close {
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: var(--vault-text-muted);
+  cursor: pointer;
+  border-radius: var(--vault-radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background var(--vault-transition-instant),
+              color var(--vault-transition-instant);
+}
+
+.os-notification__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--vault-text-primary);
+}
+
+/* --- Animations --------------------------------------------------------- */
+@keyframes vault-notification-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Dismissal — JS adds this class then removes the element after anim */
+.os-notification.is-dismissing {
+  animation: vault-notification-out var(--vault-duration-fast) var(--vault-ease-in-out) forwards;
+  pointer-events: none;
+}
+
+@keyframes vault-notification-out {
+  to {
+    opacity: 0;
+    transform: translateX(32px) scale(0.95);
+  }
+}
+
+/* --- Semantic variants -------------------------------------------------- */
+.os-notification--success {
+  border-left: 3px solid var(--vault-color-success);
+}
+
+.os-notification--warning {
+  border-left: 3px solid var(--vault-color-warning);
+}
+
+.os-notification--error {
+  border-left: 3px solid var(--vault-color-danger);
+}
+
+.os-notification--info {
+  border-left: 3px solid var(--vault-color-info);
+}
+
+
+/* --------------------------------------------------------------------------
+   5. QUICK SETTINGS POPOVER
+   --------------------------------------------------------------------------
+   Drops down from the menubar tray icon area.
+   -------------------------------------------------------------------------- */
+.os-quick-settings {
+  position: fixed;
+  top: calc(var(--vault-menubar-height) + 4px);
+  right: var(--vault-space-3);
+  width: 320px;
+  z-index: var(--vault-z-context-menu);
+
+  background: var(--vault-surface-elevated);
+  backdrop-filter: var(--vault-glass-blur-heavy);
+  -webkit-backdrop-filter: var(--vault-glass-blur-heavy);
+  border: 1px solid var(--vault-border-subtle);
+  border-radius: var(--vault-radius-panel);
+  box-shadow: var(--vault-shadow-lg);
+  padding: var(--vault-space-4);
+
+  /* Entry animation */
+  opacity: 0;
+  transform: translateY(-8px) scale(0.97);
+  pointer-events: none;
+  transition: opacity   var(--vault-transition-fast),
+              transform var(--vault-transition-fast);
+}
+
+.os-quick-settings.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* --- Toggle Row --------------------------------------------------------- */
+.os-quick-settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--vault-space-2) 0;
+}
+
+.os-quick-settings__label {
+  font-size: var(--vault-text-sm);
+  color: var(--vault-text-secondary);
+}
+
+/* --- Toggle Switch ------------------------------------------------------ */
+.os-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: var(--vault-radius-full);
+  background: var(--vault-surface-sunken);
+  border: 1px solid var(--vault-border-muted);
+  cursor: pointer;
+  transition: background var(--vault-transition-fast),
+              border-color var(--vault-transition-fast);
+  flex-shrink: 0;
+}
+
+.os-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--vault-text-secondary);
+  transition: transform var(--vault-transition-fast),
+              background var(--vault-transition-fast);
+}
+
+.os-toggle.is-on {
+  background: var(--vault-accent-primary);
+  border-color: var(--vault-accent-secondary);
+}
+
+.os-toggle.is-on::after {
+  transform: translateX(16px);
+  background: #ffffff;
+}
+
+/* --- Slider (volume / brightness) --------------------------------------- */
+.os-quick-settings__slider {
+  display: flex;
+  align-items: center;
+  gap: var(--vault-space-3);
+  padding: var(--vault-space-2) 0;
+}
+
+.os-quick-settings__slider-icon {
+  width: var(--vault-icon-sm);
+  height: var(--vault-icon-sm);
+  color: var(--vault-text-muted);
+  flex-shrink: 0;
+}
+
+.os-quick-settings__slider-track {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: var(--vault-radius-full);
+  background: var(--vault-surface-sunken);
+  outline: none;
+  cursor: pointer;
+}
+
+.os-quick-settings__slider-track::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--vault-accent-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  cursor: grab;
+}
+
+.os-quick-settings__slider-track::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--vault-accent-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  cursor: grab;
+}
+
+/* --- Quick Settings Section Separator ----------------------------------- */
+.os-quick-settings__separator {
+  height: 1px;
+  margin: var(--vault-space-2) 0;
+  background: var(--vault-border-subtle);
+}
+
+/* --- User Info Row ------------------------------------------------------ */
+.os-quick-settings__user {
+  display: flex;
+  align-items: center;
+  gap: var(--vault-space-3);
+  padding: var(--vault-space-2) 0;
+}
+
+.os-quick-settings__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--vault-border-subtle);
+}
+
+.os-quick-settings__username {
+  font-size: var(--vault-text-sm);
+  font-weight: var(--vault-weight-medium);
+  color: var(--vault-text-primary);
+}
