@@ -7,6 +7,8 @@
  */
 import AppRegistry from '../core/AppRegistry.js';
 
+const mountedCleanup = new WeakMap();
+
 export const AppManifest = {
   id: 'games',
   name: 'Games',
@@ -81,7 +83,7 @@ export const AppManifest = {
     $('#zg-open-browser').addEventListener('click', () => {
       if (!currentGameDetail) return;
       const url = window.ZenGS?.playUrl?.(currentGameDetail.item) || currentGameDetail.url;
-      if (url) AppRegistry.launch('browser', { launchOptions: { url, title: currentGameDetail.title || 'Game' } });
+      if (url) AppRegistry.launch('browser', { url, title: currentGameDetail.title || 'Game' });
     });
     searchInput.addEventListener('input', () => {
       const query = searchInput.value.trim().toLowerCase();
@@ -98,10 +100,15 @@ export const AppManifest = {
       $('#zg').appendChild(notice);
     }
 
-    return () => {
+    mountedCleanup.set(containerEl, () => {
       window.removeEventListener('zengs:select', onSelectGame);
       viewerEl.replaceChildren();
-    };
+    });
+  },
+
+  unmount(containerEl) {
+    mountedCleanup.get(containerEl)?.();
+    mountedCleanup.delete(containerEl);
   }
 };
 
