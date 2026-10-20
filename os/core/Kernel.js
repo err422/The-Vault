@@ -31,6 +31,7 @@ import QuickSettings from '../ui/QuickSettings.js';
 // Import all 10 core applications
 import VaultHubApp from '../apps/VaultHubApp.js';
 import BrowserApp from '../apps/BrowserApp.js';
+import GamesApp from '../apps/GamesApp.js';
 import FileExplorerApp from '../apps/FileExplorerApp.js';
 import TerminalApp from '../apps/TerminalApp.js';
 import SettingsApp from '../apps/SettingsApp.js';
@@ -155,7 +156,7 @@ export async function boot() {
 
   /* ---- 6. Register all built-in apps ---- */
   _registerCoreApps();
-  printBootLine('[<span style=\"color:#10b981">  OK  </span>] Registered 10 core WebOS applications.');
+  printBootLine('[<span style=\"color:#10b981">  OK  </span>] Registered core WebOS applications.');
 
   /* ---- 7. Mount Shell UI components ---- */
   _mountShell();
@@ -211,6 +212,7 @@ function _registerCoreApps() {
   const apps = [
     VaultHubApp,
     BrowserApp,
+    GamesApp,
     FileExplorerApp,
     TerminalApp,
     SettingsApp,
