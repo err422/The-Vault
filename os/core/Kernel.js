@@ -61,7 +61,28 @@ export async function boot() {
     terminalOut.scrollTop = terminalOut.scrollHeight;
   };
 
+  // --- FULLSCREEN SUPPORT ---
+  const requestFullscreen = () => {
+    const el = document.documentElement;
+
+    if (document.fullscreenElement || !el.requestFullscreen) {
+      return Promise.resolve(false);
+    }
+
+    // Call immediately from the user gesture so browsers allow fullscreen.
+    return el.requestFullscreen()
+      .then(() => {
+        console.log('[Kernel] Entered fullscreen mode.');
+        return true;
+      })
+      .catch((err) => {
+        console.warn('[Kernel] Fullscreen request was blocked:', err);
+        return false;
+      });
+  };
+
   // --- STEP 1: AWAIT USER INTERACTION TO START ---
+
 
   
   
@@ -78,20 +99,38 @@ export async function boot() {
   printBootLine('Press <span style="color:#fff; background:#4c1d95; padding:0 4px;">ENTER</span> or click to initialize kernel sequence...', '#c4b5fd');
   
   await new Promise((resolve) => {
-    const handleKey = (e) => {
-      if (e.key === 'Enter') {
-        cleanup();
-        resolve();
-      }
-    };
-    const handleClick = () => {
-      cleanup();
-      resolve();
-    };
+    let firstClickHandled = false;
+
     const cleanup = () => {
       window.removeEventListener('keydown', handleKey);
       if (bootScreen) bootScreen.removeEventListener('click', handleClick);
       if (actionText) actionText.textContent = 'BOOTING...';
+    };
+
+    const handleKey = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        cleanup();
+        // ENTER remains a one-step boot shortcut and requests fullscreen
+        // during the same user gesture.
+        requestFullscreen();
+        resolve();
+      }
+    };
+
+    const handleClick = () => {
+      if (!firstClickHandled) {
+        firstClickHandled = true;
+        // First click is reserved for the browser's fullscreen permission.
+        requestFullscreen();
+        if (actionText) actionText.textContent = 'CLICK AGAIN TO BOOT';
+        printBootLine('Fullscreen requested. Click again to initialize the kernel...', '#c4b5fd');
+        return;
+      }
+
+      // Second click starts the actual boot sequence.
+      cleanup();
+      resolve();
     };
 
     window.addEventListener('keydown', handleKey);
