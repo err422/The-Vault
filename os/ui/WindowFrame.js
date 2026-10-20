@@ -298,6 +298,10 @@ function getWorkArea() {
     getComputedStyle(root).getPropertyValue('--vault-taskbar-height') || '48',
     10,
   );
+  // Maximized windows use the full viewport while shell chrome is hidden.
+  if (document.body.classList.contains('os-window-maximized')) {
+    return { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
+  }
   return {
     x: 0,
     y: 0,
@@ -806,6 +810,7 @@ export default class WindowFrame {
     const wa = getWorkArea();
     this.#bounds = { x: wa.x, y: wa.y, width: wa.width, height: wa.height };
     this.#state = 'maximized';
+    document.body.classList.add('os-window-maximized');
     this.#el.classList.add('state-maximized');
     this.#animateToBounds();
     this.#commitToStore();
@@ -845,6 +850,7 @@ export default class WindowFrame {
   restore() {
     const wasMinimized = this.#state === 'minimized';
     this.#state = 'normal';
+    document.body.classList.remove('os-window-maximized');
     this.#el.classList.remove('state-maximized', 'state-minimized');
     this.#el.style.display = '';
     this.#el.style.opacity = '1';
