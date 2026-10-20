@@ -1,12 +1,9 @@
 /**
  * @fileoverview Multi-tab Web Browser for The Web Vault WebOS.
  *
- * Every tab's page area is the Scramjet proxy. Each tab owns one iframe that loads
- * https://proxy.thewebvault.org/embed.html; this app talks to it with postMessage:
- *
- *   app   -> embed : { type: 'go', url }        load a URL through the proxy
- *   embed -> app   : { type: 'ready' }          Scramjet is initialised
- *   embed -> app   : { type: 'urlchange', url } the proxied page navigated
+ * Each tab can toggle between two channels:
+ * - Proxy Mode (default): Loads https://proxy.thewebvault.org/embed.html and communicates via postMessage.
+ * - Direct Mode: Loads the target URL directly into the tab's iframe.
  *
  * @module os/apps/BrowserApp
  */
@@ -16,7 +13,7 @@ export const AppManifest = {
   name: 'Vault Browser',
   icon: '🌐',
   category: 'Utility',
-  version: '3.0.0',
+  version: '3.1.0',
   singleton: false,
   defaultSize: { width: 900, height: 600 },
   minSize: { width: 440, height: 320 },
@@ -41,18 +38,19 @@ export const AppManifest = {
     // ---- Proxy configuration -------------------------------------------------
     const PROXY_ORIGIN = 'https://proxy.thewebvault.org';
     const EMBED_URL = `${PROXY_ORIGIN}/embed.html`;
-    const SEARCH_URL = 'https://duckduckgo.com/?q=';    const FRAME_ALLOW =
+    const SEARCH_URL = 'https://duckduckgo.com/?q=';
+    const FRAME_ALLOW =
       'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
 
     const initialUrl = context?.launchOptions?.url || 'about:home';
     const initialTitle = context?.launchOptions?.title || 'Home';
 
-    // Each tab: { id, title, url, history, histIdx, frameEl, ready, queued }
+    // Each tab: { id, title, url, history, histIdx, frameEl, frameMode, useProxy, ready, queued }
     let tabs = [
       {
         id: 1, title: initialTitle, url: initialUrl,
         history: [initialUrl], histIdx: 0,
-        frameEl: null, ready: false, queued: null
+        frameEl: null, frameMode: null, useProxy: true, ready: false, queued: null
       }
     ];
     let activeTabId = 1;
@@ -87,8 +85,8 @@ export const AppManifest = {
             <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; opacity:0.6;">🔒</span>
           </div>
 
-          <!-- Popout button -->
-          <button id="browser-popout-btn" title="Open the real address in an external tab (leaves the proxy)" style="height:30px; padding:0 10px; border:1px solid rgba(168,85,247,0.3); border-radius:8px; background:rgba(139,92,246,0.15); color:#c4b5fd; font-size:11px; cursor:pointer; white-space:nowrap;">Pop Out ↗</button>
+          <!-- Channel Toggle Button (Proxy vs Direct) -->
+          <button id="browser-mode-btn" title="Toggle between Vault Proxy and Direct iframe loading" style="height:30px; padding:0 12px; border-radius:8px; font-size:11.5px; font-weight:500; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; transition:all 0.15s ease;"></button>
         </div>
 
         <!-- Bookmarks Bar -->
@@ -101,12 +99,12 @@ export const AppManifest = {
           `).join('')}
         </div>
 
-        <!-- Browser View Area: home screen + one proxy iframe per tab -->
+        <!-- Browser View Area: home screen + one iframe per tab -->
         <div id="browser-viewport" style="flex:1; position:relative; overflow:hidden; background:#07050c;">
           <div id="browser-home" style="position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; background:radial-gradient(ellipse at 50% 40%, #1a0b33, #07050c); overflow:auto;">
             <div style="font-size:48px; margin-bottom:12px;">🌐</div>
             <h2 style="margin:0 0 8px 0; font-size:22px; font-weight:700; color:#fff;">Vault Browser</h2>
-            <p style="margin:0 0 24px 0; color:#c4b5fd; font-size:13px; max-width:420px;">Type an address or a search above. Every page loads through the Vault proxy.</p>
+            <p id="browser-home-desc" style="margin:0 0 24px 0; color:#c4b5fd; font-size:13px; max-width:420px;">Type an address or a search above. Use the toggle in the toolbar to switch between Proxy and Direct modes.</p>
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:12px; max-width:600px; width:100%;">
               ${BOOKMARKS.map(bm => `
                 <div class="home-bm-card" data-url="${bm.url}" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px; background:rgba(255,255,255,0.04); border:1px solid rgba(168,85,247,0.18); border-radius:12px; cursor:pointer;">
@@ -127,7 +125,7 @@ export const AppManifest = {
     const backBtn = containerEl.querySelector('#browser-back-btn');
     const fwdBtn = containerEl.querySelector('#browser-fwd-btn');
     const reloadBtn = containerEl.querySelector('#browser-reload-btn');
-    const popoutBtn = containerEl.querySelector('#browser-popout-btn');
+    const modeBtn = containerEl.querySelector('#browser-mode-btn');
     const addTabBtn = containerEl.querySelector('#browser-add-tab-btn');
 
     const getActiveTab = () => tabs.find(t => t.id === activeTabId) || tabs[0];
@@ -136,31 +134,49 @@ export const AppManifest = {
       try { return new URL(url).hostname || url; } catch { return url; }
     };
 
-    // ---- Proxy frames --------------------------------------------------------
+    // ---- Iframes (Proxy & Direct) --------------------------------------------
 
-    const createFrame = (tab) => {
-      const el = document.createElement('iframe');
-      el.allow = FRAME_ALLOW;
-      el.allowFullscreen = true;
-      el.style.cssText =
-        'position:absolute; inset:0; width:100%; height:100%; border:none; background:#07050c; display:none;';
-      viewport.appendChild(el);
-      el.src = EMBED_URL;
-      tab.frameEl = el;
-      tab.ready = false;
+    const ensureFrameElement = (tab) => {
+      if (!tab.frameEl) {
+        const el = document.createElement('iframe');
+        el.allow = FRAME_ALLOW;
+        el.allowFullscreen = true;
+        el.style.cssText =
+          'position:absolute; inset:0; width:100%; height:100%; border:none; background:#07050c; display:none;';
+        viewport.appendChild(el);
+        tab.frameEl = el;
+      }
     };
 
     const sendToFrame = (tab, message) => {
       tab.frameEl?.contentWindow?.postMessage(message, PROXY_ORIGIN);
     };
 
-    /** Load a URL in a tab's proxy frame, waiting for the frame to be ready if needed. */
+    /** Load a URL in a tab's frame according to its current mode (Proxy vs Direct). */
     const loadInTab = (tab, url) => {
-      if (!tab.frameEl) createFrame(tab);
-      if (tab.ready) {
-        sendToFrame(tab, { type: 'go', url });
+      ensureFrameElement(tab);
+
+      if (tab.useProxy) {
+        // Switch iframe to Scramjet embed if it wasn't already in proxy mode
+        if (tab.frameMode !== 'proxy') {
+          tab.frameMode = 'proxy';
+          tab.ready = false;
+          tab.queued = url;
+          tab.frameEl.src = EMBED_URL;
+          return;
+        }
+
+        if (tab.ready) {
+          sendToFrame(tab, { type: 'go', url });
+        } else {
+          tab.queued = url;
+        }
       } else {
-        tab.queued = url;
+        // Direct mode: bypass proxy and load URL straight into the iframe
+        tab.frameMode = 'direct';
+        tab.ready = false;
+        tab.queued = null;
+        tab.frameEl.src = url;
       }
     };
 
@@ -172,7 +188,7 @@ export const AppManifest = {
       }
       if (e.origin !== PROXY_ORIGIN) return;
       const tab = tabs.find(t => t.frameEl && t.frameEl.contentWindow === e.source);
-      if (!tab) return;
+      if (!tab || !tab.useProxy) return;
       const data = e.data;
       if (!data || typeof data !== 'object') return;
 
@@ -183,8 +199,6 @@ export const AppManifest = {
           tab.queued = null;
         }
       } else if (data.type === 'urlchange' && typeof data.url === 'string') {
-        // Navigations we started ourselves already set tab.url; only record new ones
-        // (link clicks, redirects inside the proxied page).
         if (data.url !== tab.url) {
           tab.url = data.url;
           tab.title = hostOf(data.url);
@@ -199,6 +213,22 @@ export const AppManifest = {
     window.addEventListener('message', onMessage);
 
     // ---- Rendering -----------------------------------------------------------
+
+    const renderModeToggle = (active) => {
+      if (active.useProxy) {
+        modeBtn.innerHTML = '<span>🛡️</span><span>Proxy</span>';
+        modeBtn.style.background = 'rgba(139, 92, 246, 0.2)';
+        modeBtn.style.border = '1px solid rgba(168, 85, 247, 0.45)';
+        modeBtn.style.color = '#d8b4fe';
+        modeBtn.title = 'Channel: Vault Proxy (Click to switch to Direct iframe)';
+      } else {
+        modeBtn.innerHTML = '<span>⚡</span><span>Direct</span>';
+        modeBtn.style.background = 'rgba(245, 158, 11, 0.15)';
+        modeBtn.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+        modeBtn.style.color = '#fcd34d';
+        modeBtn.title = 'Channel: Direct Iframe (Click to switch to Vault Proxy)';
+      }
+    };
 
     const renderTabs = () => {
       tabHeadersContainer.innerHTML = '';
@@ -216,7 +246,7 @@ export const AppManifest = {
 
         const icon = document.createElement('span');
         icon.style.fontSize = '13px';
-        icon.textContent = '🌐';
+        icon.textContent = tab.useProxy ? '🌐' : '⚡';
 
         const label = document.createElement('span');
         label.style.cssText = 'flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
@@ -250,6 +280,8 @@ export const AppManifest = {
       backBtn.style.opacity = backBtn.disabled ? '0.3' : '1';
       fwdBtn.disabled = active.histIdx >= active.history.length - 1;
       fwdBtn.style.opacity = fwdBtn.disabled ? '0.3' : '1';
+
+      renderModeToggle(active);
 
       homeEl.style.display = home ? 'flex' : 'none';
       for (const tab of tabs) {
@@ -300,6 +332,7 @@ export const AppManifest = {
         // Reset the last tab to home
         tab.frameEl?.remove();
         tab.frameEl = null;
+        tab.frameMode = null;
         tab.ready = false;
         tab.queued = null;
         tab.url = 'about:home';
@@ -320,9 +353,11 @@ export const AppManifest = {
 
     const addTab = (url = 'about:home', title = 'New Tab') => {
       const newId = nextTabId++;
+      // Inherit the current tab's channel preference when opening a new tab
+      const defaultProxyState = getActiveTab()?.useProxy ?? true;
       tabs.push({
         id: newId, title, url, history: [url], histIdx: 0,
-        frameEl: null, ready: false, queued: null
+        frameEl: null, frameMode: null, useProxy: defaultProxyState, ready: false, queued: null
       });
       switchTab(newId);
       if (!isHomeUrl(url)) loadInTab(getActiveTab(), url);
@@ -363,11 +398,15 @@ export const AppManifest = {
       if (!isHomeUrl(active.url)) loadInTab(active, active.url);
     });
 
-    popoutBtn.addEventListener('click', () => {
+    // Toggle between Proxy and Direct channels
+    modeBtn.addEventListener('click', () => {
       const active = getActiveTab();
-      if (active.url && !isHomeUrl(active.url)) {
-        window.open(active.url, '_blank', 'noopener,noreferrer');
+      active.useProxy = !active.useProxy;
+      if (!isHomeUrl(active.url)) {
+        loadInTab(active, active.url);
       }
+      renderTabs();
+      renderViewport();
     });
 
     addTabBtn.addEventListener('click', () => addTab());
