@@ -11,6 +11,7 @@ import { showContextMenu } from './ContextMenu.js';
 const DEFAULT_ICONS = [
   { appId: 'file-explorer', label: 'File Explorer', icon: '📁' },
   { appId: 'browser',       label: 'Browser',       icon: '🌐' },
+  { appId: 'games',         label: 'Games',         icon: '🎮' },
   { appId: 'terminal',      label: 'Terminal',       icon: '💻' },
   { appId: 'notes',         label: 'Notes',          icon: '📝' },
   { appId: 'settings',      label: 'Settings',       icon: '⚙️' },
