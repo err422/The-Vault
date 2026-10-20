@@ -355,7 +355,7 @@ class WindowManager {
 
     const frame = this._frames.get(instanceId);
     if (frame) {
-      frame.updateBounds(maxBounds, true);
+      // Let the frame preserve its pre-maximize bounds before applying the new geometry.
       frame.updateState('maximized');
     }
 
