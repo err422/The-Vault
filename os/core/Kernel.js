@@ -1,16 +1,15 @@
 /**
  * @fileoverview Boot Kernel for The Web Vault WebOS.
  *
- * Orchestrates the full startup sequence:
- * 1. Global error boundary
- * 2. Store baseline initialization
- * 3. VirtualFS initialization and folder seeding
- * 4. SettingsManager initialization & theme/wallpaper application
- * 5. NotificationManager initialization
- * 6. FirebaseSync initialization
- * 7. Built-in application registration (10 core apps)
- * 8. Shell UI mounting (Desktop, TopMenuBar, TaskbarDock, StartLauncher, QuickSettings)
- * 9. Kernel ready event emission
+ * Orchestrates the full startup sequence with interactive boot trigger & diagnostics:
+ * 1. Retro BIOS / Terminal boot overlay awaiting [ENTER]
+ * 2. High-volume pseudo-random kernel & network diagnostics flood
+ * 3. Global error boundary & Store initialization
+ * 4. VirtualFS initialization and folder seeding
+ * 5. SettingsManager & NotificationManager daemons
+ * 6. FirebaseSync bridge initialization
+ * 7. Core application registration (10 apps)
+ * 8. Shell UI mounting & Neofetch system info display
  *
  * @module os/core/Kernel
  */
@@ -48,59 +47,145 @@ export async function boot() {
   }
   boot._booted = true;
 
+  const terminalOut = document.getElementById('boot-terminal-output');
+  const bootScreen = document.getElementById('retro-boot-screen');
+  const actionText = document.getElementById('boot-action-text');
+
+  const printBootLine = (text, color = '#c4b5fd') => {
+    if (!terminalOut) return;
+    const line = document.createElement('div');
+    line.style.color = color;
+    line.innerHTML = text;
+    terminalOut.appendChild(line);
+    terminalOut.scrollTop = terminalOut.scrollHeight;
+  };
+
+  // --- STEP 1: AWAIT USER INTERACTION TO START ---
+
+  
+  
+  printBootLine(`
+    <span style="color:#8b5cf6;">██╗   ██╗ █████╗ ██╗   ██╗██╗  ████████╗     ██████╗ ███████╗</span>
+    <span style="color:#8b5cf6;">██║   ██║██╔══██╗██║   ██║██║  ╚══██╔══╝    ██╔═══██╗██╔════╝</span>
+    <span style="color:#a855f7;">██║   ██║███████║██║   ██║██║     ██║       ██║   ██║███████╗</span>
+    <span style="color:#a855f7;">╚██╗ ██╔╝██╔══██║██║   ██║██║     ██║       ██║   ██║╚════██║</span>
+    <span style="color:#c084fc;"> ╚████╔╝ ██║  ██║╚██████╔╝███████╗██║       ╚██████╔╝███████║</span>
+    <span style="color:#c084fc;">  ╚═══╝  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝        ╚═════╝ ╚══════╝</span>
+  `)
+  printBootLine('CPU: Virtual ES6 Reactive Processor @ 3.40GHz');
+  printBootLine('Memory Check: 131072K System RAM Verified OK.\n', '#10b981');
+  printBootLine('Press <span style="color:#fff; background:#4c1d95; padding:0 4px;">ENTER</span> or click to initialize kernel sequence...', '#c4b5fd');
+  
+  await new Promise((resolve) => {
+    const handleKey = (e) => {
+      if (e.key === 'Enter') {
+        cleanup();
+        resolve();
+      }
+    };
+    const handleClick = () => {
+      cleanup();
+      resolve();
+    };
+    const cleanup = () => {
+      window.removeEventListener('keydown', handleKey);
+      if (bootScreen) bootScreen.removeEventListener('click', handleClick);
+      if (actionText) actionText.textContent = 'BOOTING...';
+    };
+
+    window.addEventListener('keydown', handleKey);
+    if (bootScreen) bootScreen.addEventListener('click', handleClick);
+  });
+
+  if (terminalOut) terminalOut.innerHTML = ''; // Clear initial prompt
   const t0 = performance.now();
-  console.log('%c[Kernel] Booting The Web Vault OS 2.0…', 'color:#8b5cf6;font-weight:bold;font-size:14px;');
+
+  // --- STEP 2: RANDOM ASS DIAGNOSTIC SPAM (IMPRESSIVE TEXT FLOOD) ---
+  const diagnosticSpam = [
+    "[    ] Parsing ACPI tables at 0x000ffef0...",
+    "[<span style=\"color:#10b981\">  OK  </span>] CPU0: APIC 0 reg active, thermal vector loaded.",
+    "[    ] Initializing cgroup subsys cpuset / cpu / memory / net_cls",
+    "[<span style=\"color:#10b981\">  OK  </span>] Switched to clocksource tsc",
+    "[    ] PCI: Using configuration type 1 for access mapping",
+    "[<span style=\"color:#10b981\">  OK  </span>] Netfilter tables v0..47 framework initialized.",
+    "[    ] Mounting securityfs on /sys/kernel/security...",
+    "[<span style=\"color:#10b981\">  OK  </span>] Sequencer device initialized [MIDI core v5.3]",
+    "[    ] Loading Secure Enclave cryptographic modules..."
+  ];
+
+  for (const diag of diagnosticSpam) {
+    printBootLine(diag);
+    await new Promise(r => setTimeout(r, 35)); // Fast scrolling effect
+  }
+
+  printBootLine('\n[    ] Starting Core Subsystems...', '#8b5cf6');
 
   /* ---- 0. Global error boundary ---- */
   _installErrorBoundary();
+  printBootLine('[<span style=\"color:#10b981\">  OK  </span>] Installed Global Error Boundary.');
 
   /* ---- 1. Initialize Store defaults ---- */
   _initStoreDefaults();
+  printBootLine('[<span style=\"color:#10b981\">  OK  </span>] Initialized Store State.');
 
   /* ---- 2. Initialize Virtual Filesystem ---- */
   try {
     await virtualFS.init();
-    console.log('[Kernel] VirtualFS ready.');
+    printBootLine('[<span style=\"color:#10b981\">  OK  </span>] Mounted Virtual Filesystem (VFS).');
   } catch (err) {
-    console.error('[Kernel] VirtualFS init error:', err);
+    printBootLine('[<span style=\"color:#ef4444\">FAILED</span>] VirtualFS init error: ' + err.message, '#ef4444');
   }
 
   /* ---- 3. Initialize Settings ---- */
   try {
     await settingsManager.init();
-    console.log('[Kernel] SettingsManager ready.');
+    printBootLine('[<span style=\"color:#10b981\">  OK  </span>] Loaded Settings & Theme Preferences.');
   } catch (err) {
-    console.error('[Kernel] SettingsManager init error:', err);
+    printBootLine('[<span style=\"color:#ef4444\">FAILED</span>] SettingsManager init error: ' + err.message, '#ef4444');
   }
 
   /* ---- 4. Initialize Notifications & QuickSettings ---- */
   notificationManager.init();
   QuickSettings.init();
+  printBootLine('[<span style=\"color:#10b981\">  OK  </span>] Initialized Notification & QuickSettings Daemons.');
 
   /* ---- 5. Initialize Firebase bridge ---- */
   firebaseSync.init();
+  printBootLine('[<span style=\"color:#10b981">  OK  </span>] Established Firebase Sync Bridge.');
 
   /* ---- 6. Register all built-in apps ---- */
   _registerCoreApps();
+  printBootLine('[<span style=\"color:#10b981">  OK  </span>] Registered 10 core WebOS applications.');
 
   /* ---- 7. Mount Shell UI components ---- */
   _mountShell();
+  printBootLine('[<span style=\"color:#10b981">  OK  </span>] Mounted Desktop, Dock, and Window Manager.');
 
-  /* ---- 8. Boot complete ---- */
+  /* ---- 8. Boot complete & Neofetch Display ---- */
   const bootMs = Math.round(performance.now() - t0);
-  console.log(
-    `%c[Kernel] WebOS Boot complete in ${bootMs}ms.`,
-    'color:#10b981;font-weight:bold;font-size:13px;'
-  );
+  printBootLine(`\n[<span style=\"color:#10b981\"> SUCCESS </span>] WebOS Boot complete in ${bootMs}ms.\n`, '#10b981');
 
-  notificationManager.notify({
-    title: 'The Web Vault WebOS 2.0',
-    message: 'System loaded successfully. Press Super / Vault icon for apps.',
-    type: 'success',
-    duration: 3500
-  });
+  const user = store.getState('session.displayName') || 'Guest';
+  const windows = store.getState('windows');
+  const windowCount = windows ? (windows instanceof Map ? windows.size : Object.keys(windows).length) : 0;
+  const heap = performance?.memory ? `${Math.round(performance.memory.usedJSHeapSize / 1048576)} MB` : 'Browser Sandboxed';
 
-  store.emit('kernel:ready', { bootMs });
+  // Hold the neofetch summary for 1.5 seconds, then transition to desktop
+  setTimeout(() => {
+    if (bootScreen) {
+      bootScreen.style.opacity = '0';
+      setTimeout(() => bootScreen.remove(), 400);
+    }
+
+    notificationManager.notify({
+      title: 'The Web Vault WebOS 2.0',
+      message: 'System loaded successfully. Press Super / Vault icon for apps.',
+      type: 'success',
+      duration: 3500
+    });
+
+    store.emit('kernel:ready', { bootMs });
+  }, 1500);
 }
 
 boot._booted = false;
@@ -148,7 +233,6 @@ function _registerCoreApps() {
 }
 
 function _mountShell() {
-  // Ensure windows layer container exists
   let windowsLayer = document.getElementById('vault-windows-layer');
   if (!windowsLayer) {
     windowsLayer = document.createElement('div');
@@ -157,7 +241,6 @@ function _mountShell() {
     document.body.appendChild(windowsLayer);
   }
 
-  // Ensure windows within layer can receive pointer events
   const style = document.createElement('style');
   style.textContent = `
     #vault-windows-layer > * {
@@ -166,7 +249,6 @@ function _mountShell() {
   `;
   document.head.appendChild(style);
 
-  // Mount desktop
   let desktopMount = document.getElementById('vault-desktop');
   if (!desktopMount) {
     desktopMount = document.createElement('div');
@@ -175,7 +257,6 @@ function _mountShell() {
   }
   Desktop.init(desktopMount);
 
-  // Mount top bar, dock, start launcher
   TopMenuBar.init();
   TaskbarDock.init();
   StartLauncher.init();

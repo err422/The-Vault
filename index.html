@@ -18,6 +18,25 @@
     <link rel="stylesheet" href="os/styles/apps.css">
 </head>
 <body>
+
+    <!-- Boot Overlay -->
+    <div id="retro-boot-screen" style="position:fixed; inset:0; background:#07040d; color:#c4b5fd; font-family:monospace, monospace; z-index:999999; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box; transition:opacity 0.4s ease-in-out;">
+    <div id="boot-terminal-output" style="white-space:pre-wrap; font-size:12px; line-height:1.4; overflow: visible; flex:1;"></div>
+    <div id="boot-prompt-bar" style="font-size:12px; color:#a855f7; border-top:1px solid rgba(139,92,246,0.2); padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
+        <span>THE WEB VAULT KERNEL v2.0 — WAITING FOR USER INPUT...</span>
+        <span id="boot-action-text" style="background:#8b5cf6; color:#fff; padding:4px 10px; border-radius:4px; font-weight:bold; animation: pulse 1.5s infinite;">PRESS [ENTER] TO BOOT</span>
+    </div>
+    </div>
+
+    <style>
+    @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+    }
+    </style>
+
+
     <nav class="nav-bar">
         <div class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

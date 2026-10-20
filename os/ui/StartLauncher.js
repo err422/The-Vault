@@ -381,7 +381,7 @@ export function init() {
   // Global keyboard
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && _open) { close(); e.preventDefault(); }
-    if (e.key === 'Meta' || e.key === 'OS') toggle();
+    if (e.key === 'Alt' || e.key === 'OS') toggle();
   });
 
   // Store toggle event (from TopMenuBar logo click)
