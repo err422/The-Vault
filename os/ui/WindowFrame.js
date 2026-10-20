@@ -292,21 +292,23 @@ const RESIZE_HANDLES = ['n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se'];
  * Returns the usable work area (excluding taskbar, etc.).
  * The taskbar height is read from the CSS custom property if available.
  */
-function getWorkArea() {
-  const root = document.documentElement;
-  const taskbarH = parseInt(
-    getComputedStyle(root).getPropertyValue('--vault-taskbar-height') || '48',
-    10,
+function getWorkArea(ignoreDock = false) {
+  const topBar = document.querySelector(
+    '.vault-menubar, #vault-top-bar, #top-menu-bar, .vault-top-menu, .top-menu-bar',
   );
-  // Maximized windows use the full viewport while shell chrome is hidden.
-  if (document.body.classList.contains('os-window-maximized')) {
-    return { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
-  }
+  const topOffset = topBar && topBar.getClientRects().length
+    ? topBar.getBoundingClientRect().height
+    : 0;
+  const root = document.documentElement;
+  const taskbarValue = getComputedStyle(root).getPropertyValue('--vault-taskbar-height').trim();
+  const taskbarH = Number.parseFloat(taskbarValue) || 48;
+  const reserveDock = !ignoreDock && !document.body.classList.contains('os-window-maximized');
+
   return {
     x: 0,
-    y: 0,
+    y: topOffset,
     width: window.innerWidth,
-    height: window.innerHeight - taskbarH,
+    height: Math.max(0, window.innerHeight - topOffset - (reserveDock ? taskbarH : 0)),
   };
 }
 
@@ -807,10 +809,11 @@ export default class WindowFrame {
   maximize() {
     if (this.#state === 'maximized') return;
     this.#restoreBounds = { ...this.#bounds };
-    const wa = getWorkArea();
+    // Maximized windows use the full viewport below the visible top menu bar.
+    document.body.classList.add('os-window-maximized');
+    const wa = getWorkArea(true);
     this.#bounds = { x: wa.x, y: wa.y, width: wa.width, height: wa.height };
     this.#state = 'maximized';
-    document.body.classList.add('os-window-maximized');
     this.#el.classList.add('state-maximized');
     this.#animateToBounds();
     this.#commitToStore();
