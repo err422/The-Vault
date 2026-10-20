@@ -95,12 +95,20 @@ class WindowManager {
    *
    * @returns {WindowBounds}
    */
-  getWorkArea() {
+  getWorkArea(ignoreDock = false) {
+    const topBar = document.querySelector(
+      '.vault-menubar, #vault-top-bar, #top-menu-bar, .vault-top-menu, .top-menu-bar',
+    );
+    const topOffset = topBar && topBar.getClientRects().length
+      ? topBar.getBoundingClientRect().height
+      : 0;
+    const reserveDock = !ignoreDock && !this._isDockAutoHideEnabled();
+
     return {
       x: 0,
-      y: MENUBAR_HEIGHT,
+      y: topOffset,
       width: window.innerWidth,
-      height: window.innerHeight - MENUBAR_HEIGHT - DOCK_HEIGHT,
+      height: Math.max(0, window.innerHeight - topOffset - (reserveDock ? DOCK_HEIGHT : 0)),
     };
   }
 
@@ -322,27 +330,32 @@ class WindowManager {
       return;
     }
 
-    const workArea = this.getWorkArea();
+    // Maximized windows must not reserve dock space, even when auto-hide is enabled.
+    const workArea = this.getWorkArea(true);
+    const maxBounds = {
+      x: workArea.x,
+      y: workArea.y,
+      width: workArea.width,
+      height: workArea.height,
+    };
 
     this._unfocusAll();
 
     store.setState(`windows.${instanceId}`, {
       ...win,
-      restoreBounds: { ...win.bounds },
-      bounds: {
-        x: workArea.x,
-        y: workArea.y,
-        width: workArea.width,
-        height: workArea.height,
-      },
+      restoreBounds: win.restoreBounds ?? { ...win.bounds },
+      bounds: maxBounds,
       state: 'maximized',
       snapZone: null,
       isFocused: true,
       zIndex: this._assignZ(),
     });
 
+    document.body.classList.add('os-window-maximized');
+
     const frame = this._frames.get(instanceId);
     if (frame) {
+      frame.updateBounds(maxBounds, true);
       frame.updateState('maximized');
     }
 
