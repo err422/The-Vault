@@ -828,3 +828,21 @@
   font-weight: var(--vault-weight-medium);
   color: var(--vault-text-primary);
 }
+
+
+/* --- Maximized app chrome suppression ------------------------------------- */
+/* Prevent system bars from covering app content while a window is maximized. */
+body.os-window-maximized .vault-topbar,
+body.os-window-maximized .os-menubar {
+  transform: translateY(-110%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.os-window-maximized .vault-dock,
+body.os-window-maximized .os-dock,
+body.os-window-maximized .os-taskbar {
+  transform: translate(-50%, 160%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
