@@ -102,7 +102,7 @@ class WindowManager {
     const topOffset = topBar && topBar.getClientRects().length
       ? topBar.getBoundingClientRect().height
       : 0;
-    const reserveDock = !ignoreDock && !this._isDockAutoHideEnabled();
+    const reserveDock = !ignoreDock;
 
     return {
       x: 0,
