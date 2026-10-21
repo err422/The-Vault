@@ -394,7 +394,7 @@ class MultiplayerService {
   }
 
   _cleanStatus(value) {
-    return String(value || '').replace(/[<>\\u0000-\\u001f]/g, '').trim().slice(0, 60);
+    return String(value || '').replace(/[<>\u0000-\u001f]/g, '').trim().slice(0, 60);
   }
 
   _httpUrl(value) {
