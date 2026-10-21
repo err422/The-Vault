@@ -105,38 +105,17 @@ export const AppManifest = {
 
         <!-- Browser View Area: home screen + one iframe per tab -->
         <div id="browser-viewport" style="flex:1; position:relative; overflow:hidden; background:#07050c;">
-          <div id="browser-home" style="position:absolute; inset:0; display:none; flex-direction:column; align-items:center; text-align:center; padding:clamp(18px, 4vw, 42px) 20px 18px; background:radial-gradient(ellipse at 50% 0%, rgba(91,33,182,.28), transparent 55%),linear-gradient(145deg,#0d0918,#07050c 68%); overflow:auto; box-sizing:border-box;">
-            <div style="width:min(100%,760px); margin:auto; display:flex; flex-direction:column; align-items:center; gap:0;">
-              <div style="display:flex; align-items:center; gap:10px; margin:0 0 8px; color:#c4b5fd; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase;"><span style="width:7px;height:7px;border-radius:50%;background:#a78bfa;box-shadow:0 0 14px #8b5cf6;"></span> THE WEB VAULT</div>
-              <h2 style="margin:0; font-size:clamp(27px,4vw,38px); font-weight:750; letter-spacing:-.04em; color:#fff;">Where to next?</h2>
-              <p id="browser-home-desc" style="margin:10px 0 22px; color:#b9add6; font-size:13px; line-height:1.6; max-width:460px;">Search the web, jump back into a favorite, or enter a website in the address bar above.</p>
-              <form id="browser-home-search-form" style="display:flex; align-items:center; gap:8px; width:min(100%,580px); padding:7px; box-sizing:border-box; border:1px solid rgba(167,139,250,.42); border-radius:16px; background:rgba(20,14,34,.94); box-shadow:0 12px 36px rgba(0,0,0,.24),0 0 24px rgba(139,92,246,.08);">
-                <span aria-hidden="true" style="padding-left:8px;color:#a78bfa;font-size:17px;">⌕</span>
-                <input id="browser-home-search-input" type="text" aria-label="Search the web" placeholder="Search the web or enter a URL..." style="flex:1;min-width:0;height:38px;border:0;outline:0;background:transparent;color:#f5f3ff;font-size:13px;">
-                <button type="submit" style="flex:0 0 auto;border:0;border-radius:10px;padding:10px 15px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">Search</button>
-              </form>
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:min(100%,580px);margin:27px 0 12px;text-align:left;">
-                <span style="font-size:12px;font-weight:700;color:#e9ddff;">Quick access</span>
-                <span style="font-size:10px;color:#8f83aa;">YOUR FAVORITES</span>
-              </div>
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px;width:min(100%,580px);">
-                ${BOOKMARKS.map(bm => `
-                  <button type="button" class="home-bm-card" data-url="${bm.url}" style="display:flex; flex-direction:column; align-items:flex-start; gap:13px; min-height:92px; padding:15px; background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025)); border:1px solid rgba(168,85,247,.18); border-radius:13px; cursor:pointer; text-align:left; transition:border-color .15s,transform .15s;">
-                    <span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:10px;background:rgba(139,92,246,.16);font-size:18px;">${bm.icon}</span>
-                    <span style="font-size:12px;font-weight:600;color:#e8e0f0;">${bm.name}</span>
-                  </button>
-                `).join('')}
-              </div>
-              <section id="browser-recent-section" style="display:none;width:min(100%,580px);margin-top:23px;text-align:left;">
-                <div style="font-size:12px;font-weight:700;color:#e9ddff;margin-bottom:9px;">Recently visited</div>
-                <div id="browser-recent-list" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
-              </section>
-              <section aria-label="Advertisement" style="width:min(100%,728px);margin:26px auto 0;">
-                <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#716584;margin-bottom:6px;">Advertisement</div>
-                <div id="browser-home-ad" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:90px;max-height:90px;overflow:hidden;border:1px solid rgba(168,85,247,.12);border-radius:8px;background:rgba(255,255,255,.015);box-sizing:border-box;">
-                  <span id="browser-home-ad-fallback" style="font-size:10px;color:#716584;">Sponsored space</span>
+          <div id="browser-home" style="position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; background:radial-gradient(ellipse at 50% 40%, #1a0b33, #07050c); overflow:auto;">
+            <div style="font-size:48px; margin-bottom:12px;">🌐</div>
+            <h2 style="margin:0 0 8px 0; font-size:22px; font-weight:700; color:#fff;">Vault Browser</h2>
+            <p id="browser-home-desc" style="margin:0 0 24px 0; color:#c4b5fd; font-size:13px; max-width:420px;">Type an address or a search above. Use the toggle in the toolbar to switch between Proxy and Direct modes.</p>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:12px; max-width:600px; width:100%;">
+              ${BOOKMARKS.map(bm => `
+                <div class="home-bm-card" data-url="${bm.url}" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px; background:rgba(255,255,255,0.04); border:1px solid rgba(168,85,247,0.18); border-radius:12px; cursor:pointer;">
+                  <span style="font-size:26px;">${bm.icon}</span>
+                  <span style="font-size:12px; font-weight:500; color:#e8e0f0;">${bm.name}</span>
                 </div>
-              </section>
+              `).join('')}
             </div>
           </div>
         </div>
@@ -154,74 +133,6 @@ export const AppManifest = {
     const pinBtn = containerEl.querySelector('#browser-pin-btn');
     const helpBtn = containerEl.querySelector('#browser-help-btn');
     const addTabBtn = containerEl.querySelector('#browser-add-tab-btn');
-    const homeSearchForm = containerEl.querySelector('#browser-home-search-form');
-    const homeSearchInput = containerEl.querySelector('#browser-home-search-input');
-    const recentSection = containerEl.querySelector('#browser-recent-section');
-    const recentList = containerEl.querySelector('#browser-recent-list');
-    const homeAd = containerEl.querySelector('#browser-home-ad');
-
-    // Reuse the existing 728x90 Adsterra banner unit already configured in index.html.
-    // The ad is only mounted on the browser homepage and never overlays website content.
-    const HOME_BANNER_KEY = '2538a0c3ae2e147d36a4f67898ddf861';
-    let homeAdMounted = false;
-    const mountHomeBanner = () => {
-      if (!homeAd || homeAdMounted || !containerEl.isConnected) return;
-      homeAdMounted = true;
-      const fallback = homeAd.querySelector('#browser-home-ad-fallback');
-      if (fallback) fallback.remove();
-      const frame = document.createElement('iframe');
-      frame.title = 'Advertisement';
-      frame.width = '728';
-      frame.height = '90';
-      frame.loading = 'lazy';
-      frame.referrerPolicy = 'no-referrer-when-downgrade';
-      frame.scrolling = 'no';
-      frame.style.cssText = 'display:block;width:100%;max-width:728px;height:90px;border:0;background:transparent;';
-      const closeScript = '</scr' + 'ipt>';
-      frame.srcdoc = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;overflow:hidden"><script>atOptions={key:"' + HOME_BANNER_KEY + '",format:"iframe",height:90,width:728,params:{}};' + closeScript + '<script src="https://bauval.org/22/' + HOME_BANNER_KEY + '">' + closeScript + '</body></html>';
-      homeAd.appendChild(frame);
-    };
-
-    const getRecentSites = () => {
-      try {
-        const items = JSON.parse(localStorage.getItem('vault_browser_recent_sites_v1') || '[]');
-        return Array.isArray(items) ? items.filter(item => item && typeof item.url === 'string' && /^https?:\/\//i.test(item.url)).slice(0, 5) : [];
-      } catch { return []; }
-    };
-
-    const rememberRecentSite = (url, title) => {
-      if (!/^https?:\/\//i.test(url)) return;
-      try {
-        const next = [{ url, title: String(title || hostOf(url)).slice(0, 60) }, ...getRecentSites().filter(item => item.url !== url)].slice(0, 5);
-        localStorage.setItem('vault_browser_recent_sites_v1', JSON.stringify(next));
-      } catch {}
-      renderRecentSites();
-    };
-
-    const renderRecentSites = () => {
-      if (!recentSection || !recentList) return;
-      const items = getRecentSites();
-      recentList.replaceChildren();
-      recentSection.style.display = items.length ? 'block' : 'none';
-      items.forEach(item => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = item.title || hostOf(item.url);
-        button.title = item.url;
-        button.style.cssText = 'max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px;border:1px solid rgba(168,85,247,.18);border-radius:8px;background:rgba(255,255,255,.035);color:#bdb0d8;font-size:11px;cursor:pointer;';
-        button.addEventListener('click', () => navigate(item.url));
-        recentList.appendChild(button);
-      });
-    };
-
-    // Keep the ad slot quiet on small windows where a 728x90 unit would be cramped.
-    const updateHomeBannerVisibility = () => {
-      if (!homeAd) return;
-      const width = viewport?.clientWidth || 0;
-      const isHomepageVisible = isHomeUrl(getActiveTab()?.url);
-      homeAd.parentElement.style.display = width >= 500 && isHomepageVisible ? 'block' : 'none';
-      if (width >= 500 && isHomepageVisible) mountHomeBanner();
-    };
 
     const getActiveTab = () => tabs.find(t => t.id === activeTabId) || tabs[0];
     const isHomeUrl = (url) => url === 'about:home' || url === 'vault:hub';
@@ -409,10 +320,6 @@ export const AppManifest = {
       renderModeToggle(active);
 
       homeEl.style.display = home ? 'flex' : 'none';
-      if (home) {
-        renderRecentSites();
-        updateHomeBannerVisibility();
-      }
       for (const tab of tabs) {
         if (tab.frameEl) {
           tab.frameEl.style.display = (tab === active && !home) ? 'block' : 'none';
@@ -442,10 +349,7 @@ export const AppManifest = {
       active.history.push(url);
       active.histIdx = active.history.length - 1;
 
-      if (!isHomeUrl(url)) {
-        loadInTab(active, url);
-        rememberRecentSite(url, active.title);
-      }
+      if (!isHomeUrl(url)) loadInTab(active, url);
       renderTabs();
       renderViewport();
       publishBrowserActivity(active);
@@ -496,18 +400,6 @@ export const AppManifest = {
       switchTab(newId);
       if (!isHomeUrl(url)) loadInTab(getActiveTab(), url);
     };
-
-    // Homepage search uses the same navigation path as the address bar.
-    homeSearchForm?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const query = homeSearchInput?.value || '';
-      if (query.trim()) navigate(query);
-    });
-
-    homeEl.querySelectorAll('.home-bm-card').forEach(card => {
-      card.addEventListener('mouseenter', () => { card.style.borderColor = 'rgba(167,139,250,.55)'; card.style.transform = 'translateY(-2px)'; });
-      card.addEventListener('mouseleave', () => { card.style.borderColor = 'rgba(168,85,247,.18)'; card.style.transform = 'translateY(0)'; });
-    });
 
     // Omnibox submit
     urlInput.addEventListener('keydown', (e) => {
@@ -606,16 +498,13 @@ export const AppManifest = {
     containerEl.querySelectorAll('.browser-bm-btn').forEach(btn => {
       btn.addEventListener('click', () => navigate(btn.dataset.url));
     });
-
+    homeEl.querySelectorAll('.home-bm-card').forEach(card => {
+      card.addEventListener('click', () => navigate(card.dataset.url));
+    });
 
     // ---- Start ---------------------------------------------------------------
     renderTabs();
-    renderRecentSites();
     renderViewport();
-    if (typeof ResizeObserver === 'function' && viewport) {
-      const homeAdObserver = new ResizeObserver(() => updateHomeBannerVisibility());
-      homeAdObserver.observe(viewport);
-    }
     publishBrowserActivity(getActiveTab());
     if (!isHomeUrl(initialUrl)) loadInTab(getActiveTab(), initialUrl);
     renderViewport();
