@@ -74,21 +74,21 @@ export const AppManifest = {
         </div>
 
         <!-- Navigation Bar -->
-        <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(26,18,44,0.95); border-bottom:1px solid rgba(168,85,247,0.18);">
-          <div style="display:flex; gap:4px;">
+        <div class="browser-navigation-bar" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 12px; background:rgba(26,18,44,0.95); border-bottom:1px solid rgba(168,85,247,0.18); box-sizing:border-box;">
+          <div style="display:flex; gap:4px; flex:0 0 auto;">
             <button id="browser-back-btn" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">←</button>
             <button id="browser-fwd-btn" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">→</button>
             <button id="browser-reload-btn" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">↻</button>
           </div>
 
           <!-- URL / Search Omnibox -->
-          <div style="position:relative; flex:1;">
-            <input type="text" id="browser-url-input" style="width:100%; height:32px; padding:0 12px 0 32px; border-radius:16px; border:1px solid rgba(168,85,247,0.25); background:rgba(15,11,26,0.85); color:#f5f3ff; font-size:12.5px; outline:none;" placeholder="Enter web address or search term...">
+          <div style="position:relative; flex:1 1 220px; min-width:0;">
+            <input type="text" id="browser-url-input" style="box-sizing:border-box; display:block; width:100%; min-width:0; height:32px; padding:0 12px 0 32px; border-radius:16px; border:1px solid rgba(168,85,247,0.25); background:rgba(15,11,26,0.85); color:#f5f3ff; font-size:12.5px; outline:none;" placeholder="Enter web address or search term...">
             <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; opacity:0.6;">🔒</span>
           </div>
 
           <!-- Channel Toggle Button (Proxy vs Direct) -->
-          <button id="browser-mode-btn" title="Toggle between Vault Proxy and Direct iframe loading" style="height:30px; padding:0 12px; border-radius:8px; font-size:11.5px; font-weight:500; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; transition:all 0.15s ease;"></button>
+          <button id="browser-mode-btn" type="button" role="switch" aria-checked="true" title="Proxy is ON. Click to switch to Direct mode." style="height:34px; min-width:118px; flex:0 0 auto; padding:0 10px; border-radius:999px; border:1px solid rgba(168,85,247,.45); background:rgba(139,92,246,.18); color:#e9d5ff; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; display:flex; align-items:center; justify-content:space-between; gap:8px; transition:all .18s ease;"><span class="browser-mode-label">Proxy</span><span class="browser-switch-track" aria-hidden="true" style="position:relative; width:34px; height:18px; border-radius:999px; background:#8b5cf6; flex:0 0 auto; transition:background .18s ease;"><span class="browser-switch-thumb" style="position:absolute; top:2px; left:18px; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0005; transition:left .18s ease;"></span></span><span class="browser-mode-state">ON</span></button>
           <button id="browser-pin-btn" title="Pin this website to your WebOS desktop" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(168,85,247,.3);background:rgba(168,85,247,.1);color:#d8b4fe;font-size:12px;cursor:pointer;white-space:nowrap;">📌 Pin</button>
           <button id="browser-help-btn" title="Explain how the browser and proxy work" style="height:30px; padding:0 10px; border-radius:8px; border:1px solid rgba(168,85,247,0.3); background:rgba(168,85,247,0.1); color:#d8b4fe; font-size:12px; cursor:pointer; white-space:nowrap;">? Help</button>
         </div>
@@ -240,18 +240,29 @@ export const AppManifest = {
     // ---- Rendering -----------------------------------------------------------
 
     const renderModeToggle = (active) => {
+      const label = modeBtn.querySelector('.browser-mode-label');
+      const state = modeBtn.querySelector('.browser-mode-state');
+      const track = modeBtn.querySelector('.browser-switch-track');
+      const thumb = modeBtn.querySelector('.browser-switch-thumb');
+      modeBtn.setAttribute('aria-checked', String(active.useProxy));
       if (active.useProxy) {
-        modeBtn.innerHTML = '<span>🛡️</span><span>Proxy</span>';
+        label.textContent = 'Proxy';
+        state.textContent = 'ON';
         modeBtn.style.background = 'rgba(139, 92, 246, 0.2)';
-        modeBtn.style.border = '1px solid rgba(168, 85, 247, 0.45)';
-        modeBtn.style.color = '#d8b4fe';
-        modeBtn.title = 'Channel: Vault Proxy (Click to switch to Direct iframe)';
+        modeBtn.style.borderColor = 'rgba(168, 85, 247, 0.55)';
+        modeBtn.style.color = '#e9d5ff';
+        track.style.background = '#8b5cf6';
+        thumb.style.left = '18px';
+        modeBtn.title = 'Proxy is ON. Click to switch to Direct mode.';
       } else {
-        modeBtn.innerHTML = '<span>⚡</span><span>Direct</span>';
-        modeBtn.style.background = 'rgba(245, 158, 11, 0.15)';
-        modeBtn.style.border = '1px solid rgba(245, 158, 11, 0.4)';
-        modeBtn.style.color = '#fcd34d';
-        modeBtn.title = 'Channel: Direct Iframe (Click to switch to Vault Proxy)';
+        label.textContent = 'Proxy';
+        state.textContent = 'OFF';
+        modeBtn.style.background = 'rgba(255, 255, 255, 0.045)';
+        modeBtn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        modeBtn.style.color = '#c4b5fd';
+        track.style.background = 'rgba(148, 163, 184, 0.45)';
+        thumb.style.left = '2px';
+        modeBtn.title = 'Proxy is OFF (Direct mode). Click to turn Proxy on.';
       }
     };
 
