@@ -526,7 +526,15 @@ export const AppManifest = {
     }
     if (!hasSeenBrowserGuide) {
       window.setTimeout(() => {
-        if (containerEl.isConnected) showBrowserGuide();
+        if (!containerEl.isConnected) return;
+        // Persist the first-launch state before opening the guide so closing and
+        // reopening the Browser app does not trigger the walkthrough again.
+        try {
+          localStorage.setItem('vault_browser_guide_seen_v1', 'true');
+        } catch (error) {
+          console.warn('[BrowserApp] Could not save browser guide flag:', error);
+        }
+        showBrowserGuide();
       }, 350);
     }
   }
