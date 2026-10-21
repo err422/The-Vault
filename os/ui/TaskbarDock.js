@@ -130,17 +130,30 @@ function _createDockIcon(appId, isPinned) {
   // Update running state
   _refreshRunningState(el, appId);
 
-  // Click → focus or launch
+  // Click → restore a minimized window, minimize the focused window, or focus another.
   el.addEventListener('click', () => {
     const wins = WindowManager.getWindowsByApp(appId);
     if (wins.length > 0) {
-      WindowManager.focusWindow(wins[0].id);
+      // Prefer a minimized window; otherwise use the most recently listed instance.
+      const targetWin = [...wins].reverse().find(w =>
+        w.state === 'minimized' || w.minimized
+      ) || wins[wins.length - 1];
+      const winId = targetWin.instanceId || targetWin.id;
+      if (!winId) return;
+
+      if (targetWin.state === 'minimized' || targetWin.minimized) {
+        WindowManager.restoreWindow(winId);
+      } else if (targetWin.isFocused) {
+        WindowManager.minimizeWindow(winId);
+      } else {
+        WindowManager.focusWindow(winId);
+      }
     } else {
       AppRegistry.launch(appId);
     }
   });
 
-  // Right-click
+  // Right-click context menu
   el.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -150,12 +163,35 @@ function _createDockIcon(appId, isPinned) {
     } else {
       items.push({ label: 'Unpin from Dock', icon: '📌', action: () => _unpinApp(appId) });
     }
+
     const wins = WindowManager.getWindowsByApp(appId);
     if (wins.length) {
       items.push({ type: 'separator' });
-      items.push({ label: 'Close All Windows', icon: '✕', action: () => {
-        for (const w of wins) WindowManager.closeWindow(w.id);
-      }});
+      const minimizedWins = wins.filter(w => w.state === 'minimized' || w.minimized);
+      if (minimizedWins.length) {
+        items.push({
+          label: 'Restore Window',
+          icon: '🗖',
+          action: () => {
+            for (const w of minimizedWins) {
+              const winId = w.instanceId || w.id;
+              if (winId) WindowManager.restoreWindow(winId);
+            }
+            _render();
+          },
+        });
+      }
+      items.push({
+        label: wins.length > 1 ? `Close All (${wins.length}) Windows` : 'Close Window',
+        icon: '✕',
+        action: () => {
+          for (const w of [...wins]) {
+            const winId = w.instanceId || w.id;
+            if (winId) WindowManager.closeWindow(winId);
+          }
+          _render();
+        },
+      });
     }
     showContextMenu(e.clientX, e.clientY, items);
   });
@@ -235,6 +271,7 @@ export function init() {
   _unsubs.push(Store.on('window:created', refresh));
   _unsubs.push(Store.on('window:closed', refresh));
   _unsubs.push(Store.on('window:focused', refresh));
+  _unsubs.push(Store.on('window:stateChanged', refresh));
 }
 
 export function destroy() {
