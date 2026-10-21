@@ -17,6 +17,8 @@ class MultiplayerService {
     this.peers = new Map();
     this.messages = [];
     this.notifiedMessageIds = new Set();
+    this.audioContext = null;
+    this.audioUnlocked = false;
     this.listeners = new Set();
     this.cleanups = [];
     this.db = null;
@@ -230,6 +232,39 @@ class MultiplayerService {
     }
   }
 
+  unlockChime() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    try {
+      if (!this.audioContext) this.audioContext = new AudioContextClass();
+      if (this.audioContext.state === 'suspended') this.audioContext.resume();
+      this.audioUnlocked = true;
+    } catch (error) {
+      console.warn('[VaultNet] Audio chime unavailable:', error);
+    }
+  }
+
+  _playChime() {
+    if (!this.audioUnlocked || !this.audioContext || this.audioContext.state !== 'running') return;
+    try {
+      const context = this.audioContext;
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, context.currentTime);
+      oscillator.frequency.setValueAtTime(1174.66, context.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.24);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.25);
+    } catch (error) {
+      console.warn('[VaultNet] Could not play chat chime:', error);
+    }
+  }
+
   _notifyPublicMessage(message) {
     if (!message || !message.text) return;
     // Firebase replays recent child_added events on subscribe. Ignore older
@@ -247,12 +282,7 @@ class MultiplayerService {
         this.notifiedMessageIds.delete(this.notifiedMessageIds.values().next().value);
       }
     }
-    notificationManager.notify({
-      title: 'VaultNet · Public chat',
-      message: this._cleanName(message.username) + ': ' + String(message.text).slice(0, 120),
-      type: 'info',
-      duration: 4500
-    });
+    this._playChime();
   }
 
   _addMessage(message) {
