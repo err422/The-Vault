@@ -21,7 +21,13 @@ export const AppManifest = {
       <div style="height:100%;display:flex;flex-direction:column;background:linear-gradient(145deg,#10051d,#08050f);color:#f5f3ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;">
         <header style="padding:18px 20px;border-bottom:1px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div><div style="font-size:19px;font-weight:750;">VaultNet</div><div style="font-size:12px;color:#a78bfa;margin-top:3px;">The Web Vault social lounge</div></div>
-          <div id="vn-count" style="font-size:12px;color:#c4b5fd;background:#8b5cf622;border:1px solid #8b5cf644;padding:7px 10px;border-radius:999px;">Checking presence…</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+            <form id="vn-name-form" style="display:flex;gap:5px;align-items:center;">
+              <input id="vn-name-input" maxlength="20" aria-label="Display name" placeholder="Display name" style="width:112px;min-width:0;background:#ffffff0a;border:1px solid #ffffff1b;border-radius:9px;padding:7px 9px;color:#fff;font-size:11px;">
+              <button type="submit" style="border:1px solid #8b5cf655;border-radius:9px;background:#8b5cf622;color:#ddd6fe;padding:7px 9px;font-size:11px;cursor:pointer;">Set name</button>
+            </form>
+            <div id="vn-count" style="font-size:12px;color:#c4b5fd;background:#8b5cf622;border:1px solid #8b5cf644;padding:7px 10px;border-radius:999px;">Checking presence…</div>
+          </div>
         </header>
         <div style="display:grid;grid-template-columns:minmax(150px, .8fr) minmax(0, 1.6fr);gap:0;flex:1;min-height:0;">
           <aside style="padding:16px;border-right:1px solid rgba(168,85,247,.16);overflow:auto;">
@@ -46,6 +52,15 @@ export const AppManifest = {
     const countEl = containerEl.querySelector('#vn-count');
     const form = containerEl.querySelector('#vn-form');
     const input = containerEl.querySelector('#vn-input');
+    const nameForm = containerEl.querySelector('#vn-name-form');
+    const nameInput = containerEl.querySelector('#vn-name-input');
+    nameInput.value = (multiplayerService.getPeers().find(peer => peer.isSelf)?.username) || 'Vault Guest';
+    nameForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const name = multiplayerService.setUsername(nameInput.value);
+      nameInput.value = name;
+      render();
+    });
     let lastRenderedIds = '';
 
     const addText = (parent, text, style = {}) => {
