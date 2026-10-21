@@ -226,8 +226,8 @@ export async function boot() {
     });
 
     store.emit('kernel:ready', { bootMs });
-    // Show onboarding after the boot overlay starts transitioning away.
-    OnboardingTour.init();
+    // Wait until the BIOS overlay has been removed before showing onboarding.
+    window.setTimeout(() => OnboardingTour.init(), 450);
   }, 1500);
 }
 
