@@ -177,7 +177,8 @@ export const AppManifest = {
       frame.referrerPolicy = 'no-referrer-when-downgrade';
       frame.scrolling = 'no';
       frame.style.cssText = 'display:block;width:100%;max-width:728px;height:90px;border:0;background:transparent;';
-      frame.srcdoc = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;overflow:hidden"><script>atOptions={key:"' + HOME_BANNER_KEY + '",format:"iframe",height:90,width:728,params:{}};<\/script><script src="https://bauval.org/22/' + HOME_BANNER_KEY + '"><\/script></body></html>';
+      const closeScript = '</scr' + 'ipt>';
+      frame.srcdoc = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;overflow:hidden"><script>atOptions={key:"' + HOME_BANNER_KEY + '",format:"iframe",height:90,width:728,params:{}};' + closeScript + '<script src="https://bauval.org/22/' + HOME_BANNER_KEY + '">' + closeScript + '</body></html>';
       homeAd.appendChild(frame);
     };
 
