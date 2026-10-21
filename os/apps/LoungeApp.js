@@ -79,7 +79,17 @@ export const AppManifest = {
 
     const render = () => {
       const peers = multiplayerService.getPeers();
-      countEl.textContent = peers.length + ' here';
+      const presenceStatus = multiplayerService.getPresenceStatus();
+      countEl.textContent = peers.length + ' here · ' + (
+        presenceStatus === 'connected' ? 'cloud online' :
+        presenceStatus === 'denied' ? 'cloud blocked' :
+        presenceStatus === 'local-only' ? 'local only' : 'connecting…'
+      );
+      countEl.title = presenceStatus === 'denied'
+        ? 'Firebase rejected VaultNet presence. The VaultNet presence rules may not be enabled in the live database.'
+        : presenceStatus === 'local-only'
+          ? 'Sign in with Firebase to use cloud presence. Local tab presence is only a fallback.'
+          : 'VaultNet presence connection status';
       peersEl.textContent = '';
       peers.forEach(peer => {
         const card = document.createElement('button');
