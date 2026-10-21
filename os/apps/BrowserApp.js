@@ -182,20 +182,14 @@ export const AppManifest = {
       ensureFrameElement(tab);
 
       if (tab.useProxy) {
-        // Switch iframe to Scramjet embed if it wasn't already in proxy mode
-        if (tab.frameMode !== 'proxy') {
-          tab.frameMode = 'proxy';
-          tab.ready = false;
-          tab.queued = url;
-          tab.frameEl.src = EMBED_URL;
-          return;
-        }
-
-        if (tab.ready) {
-          sendToFrame(tab, { type: 'go', url });
-        } else {
-          tab.queued = url;
-        }
+        // SPLASH does not provide the old /embed.html postMessage endpoint.
+        // Its supported embed flow is the hash injection route: /#inject=<url>.
+        // Reload that route for each navigation so the proxy receives the target
+        // URL directly instead of waiting forever for a "ready" message.
+        tab.frameMode = 'proxy';
+        tab.ready = false;
+        tab.queued = null;
+        tab.frameEl.src = `${PROXY_ORIGIN}/#inject=${encodeURIComponent(url)}`;
       } else {
         // Direct mode: bypass proxy and load URL straight into the iframe
         tab.frameMode = 'direct';
