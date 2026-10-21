@@ -26,6 +26,8 @@ class MultiplayerService {
     this.presenceRef = null;
     this.uid = null;
     this.username = 'Vault Guest';
+    this.avatar = '🧑‍💻';
+    this.status = '';
     this.activity = { app: 'Desktop', gameTitle: null, gameUrl: null };
     this.browserActivity = 'Vault Browser';
     this.presenceStatus = 'connecting';
@@ -100,6 +102,7 @@ class MultiplayerService {
     this._prune();
     return [{
       clientId: this.clientId, uid: this.uid, username: this.username,
+      avatar: this.avatar, status: this.status,
       activity: { ...this.activity }, isSelf: true, lastSeen: Date.now()
     }, ...this.peers.values()];
   }
@@ -114,6 +117,17 @@ class MultiplayerService {
     this._publishPresence();
     this._changed();
     return name;
+  }
+
+  setProfile({ avatar = this.avatar, status = this.status } = {}) {
+    this.avatar = this._cleanAvatar(avatar);
+    this.status = this._cleanStatus(status);
+    try {
+      window.localStorage?.setItem('vaultnet_avatar', this.avatar);
+      window.localStorage?.setItem('vaultnet_status', this.status);
+    } catch {}
+    this._publishPresence();
+    this._changed();
   }
 
   _syncActivityFromWindows() {
@@ -183,7 +197,14 @@ class MultiplayerService {
     this.username = this._cleanName(
       this._storageGet('vaultnet_username') || session.displayName || session.username || 'Vault Guest'
     );
-    if (nextUid === this.uid) return;
+    const savedAvatar = this._storageGet('vaultnet_avatar');
+    this.avatar = this._cleanAvatar(savedAvatar);
+    this.status = this._cleanStatus(this._storageGet('vaultnet_status'));
+    if (nextUid === this.uid) {
+      this._publishPresence();
+      this._changed();
+      return;
+    }
     if (this.presenceRef) this.presenceRef.remove().catch(() => {});
     this._detachFirebase();
     this.uid = nextUid;
@@ -205,6 +226,8 @@ class MultiplayerService {
         next.set(String(peer.clientId), {
           clientId: String(peer.clientId), uid: String(peer.uid),
           username: this._cleanName(peer.username),
+          avatar: this._cleanAvatar(peer.avatar),
+          status: this._cleanStatus(peer.status),
           activity: this._cleanActivity(peer.activity),
           isSelf: false, lastSeen: Number(peer.lastSeen) || Date.now()
         });
@@ -247,6 +270,7 @@ class MultiplayerService {
   _publishPresence() {
     const peer = {
       clientId: this.clientId, uid: this.uid, username: this.username,
+      avatar: this.avatar, status: this.status,
       activity: { ...this.activity }, lastSeen: Date.now()
     };
     this._broadcast({ type: 'presence', payload: peer });
@@ -273,7 +297,8 @@ class MultiplayerService {
       const peer = packet.payload;
       if (!peer || peer.clientId === this.clientId || Date.now() - Number(peer.lastSeen || 0) > STALE_MS) return;
       this.peers.set(peer.clientId, {
-        ...peer, username: this._cleanName(peer.username), isSelf: false
+        ...peer, username: this._cleanName(peer.username),
+        avatar: this._cleanAvatar(peer.avatar), status: this._cleanStatus(peer.status), isSelf: false
       });
       this._changed();
     } else if (packet.type === 'leave') {
@@ -361,6 +386,15 @@ class MultiplayerService {
 
   _cleanName(value) {
     return String(value || 'Vault Guest').replace(/[<>\u0000-\u001f]/g, '').trim().slice(0, 20) || 'Vault Guest';
+  }
+
+  _cleanAvatar(value) {
+    const allowed = ['🧑‍💻', '👾', '🦊', '🐱', '🐸', '🐼', '🚀', '🌙'];
+    return allowed.includes(value) ? value : '🧑‍💻';
+  }
+
+  _cleanStatus(value) {
+    return String(value || '').replace(/[<>\\u0000-\\u001f]/g, '').trim().slice(0, 60);
   }
 
   _httpUrl(value) {
