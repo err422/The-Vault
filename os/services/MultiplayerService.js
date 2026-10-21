@@ -16,6 +16,7 @@ class MultiplayerService {
     this.clientId = this._id();
     this.peers = new Map();
     this.messages = [];
+    this.notifiedMessageIds = new Set();
     this.listeners = new Set();
     this.cleanups = [];
     this.db = null;
@@ -235,8 +236,17 @@ class MultiplayerService {
     // history and messages sent by this same signed-in account.
     const timestamp = Number(message.timestamp) || 0;
     if (Date.now() - timestamp > 60000 || timestamp > Date.now() + 5000) return;
-    if (this.uid && message.uid && String(message.uid) === String(this.uid)) return;
+    // Suppress only this exact client session. Other tabs/devices may share
+    // an account but should still receive notifications for incoming messages.
     if (message.clientId && message.clientId === this.clientId) return;
+    const notificationId = String(message.id || '');
+    if (notificationId && this.notifiedMessageIds.has(notificationId)) return;
+    if (notificationId) {
+      this.notifiedMessageIds.add(notificationId);
+      if (this.notifiedMessageIds.size > 200) {
+        this.notifiedMessageIds.delete(this.notifiedMessageIds.values().next().value);
+      }
+    }
     notificationManager.notify({
       title: 'VaultNet · Public chat',
       message: this._cleanName(message.username) + ': ' + String(message.text).slice(0, 120),
