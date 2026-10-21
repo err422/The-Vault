@@ -4,13 +4,14 @@
  */
 export function showBrowserGuide() {
   document.getElementById('vault-browser-guide')?.remove();
-  try { localStorage.setItem('vault_browser_guide_seen_v1', 'true'); } catch (error) { console.warn('[BrowserGuide] Could not save first-visit flag:', error); }
+  try { localStorage.setItem('vault_browser_guide_seen_v2', 'true'); } catch (error) { console.warn('[BrowserGuide] Could not save first-visit flag:', error); }
   const steps = [
-    ['Using the address bar', 'Click the long rounded box near the top, type a website address (like wikipedia.org) or a search (like cats), then press Enter. The + button opens a new tab.'],
-    ['Proxy ON (purple)', 'If the toolbar button is purple and says Proxy, this tab uses the Vault proxy service to request and display the page. Click the mode button until it says Proxy to turn it on. It will not work for every website and does not guarantee anonymity or safety.'],
-    ['Proxy OFF (yellow)', 'Click the mode button when it says Proxy. It changes to yellow and says Direct. The tab now tries to load the page directly without the Vault proxy. To turn proxy back on, click Direct once and check that it changes to purple Proxy.'],
-    ['Tabs and navigation', 'Each tab is a separate page. Click a tab at the top to switch pages; + opens a tab and × closes one. ← goes back, → goes forward, and ↻ reloads. New tabs inherit the current tab’s Proxy/Direct setting.'],
-    ['If a page does not work', 'Try switching Proxy ↔ Direct, then press ↻ to reload. Check the address spelling. Some websites refuse to load inside another page, and either mode can fail. Do not enter passwords or personal information on websites you do not trust.']
+    ['Address bar, search & bookmarks', 'Type a website address (like wikipedia.org) or a search (like cats) into the rounded address bar and press Enter. Use the bookmark buttons or home-screen cards for quick access to Vault Hub, Google, DuckDuckGo, and Wikipedia.'],
+    ['Tabs & navigation', 'Each tab is its own page. Click a tab to switch, + opens a new tab, and × closes a tab. ← goes back, → goes forward, and ↻ reloads. New tabs inherit the current tab’s Proxy/Direct preference.'],
+    ['Proxy mode (purple)', 'Proxy mode loads pages through the Vault proxy service. It can help with some sites, but it will not work everywhere and does not guarantee anonymity, privacy, or safety. The mode button should be purple and say Proxy when enabled.'],
+    ['Direct mode (yellow)', 'Click the mode button to switch to Direct. Direct mode tries to load the website straight inside the browser frame without the Vault proxy. Click it again to return to Proxy. Either mode may fail on some websites.'],
+    ['Pin a website to your desktop', 'Open the website you want, then click 📌 Pin in the toolbar. The browser saves a desktop shortcut using the page title when available, or the website name as a fallback. If it is already pinned, you will see a notice instead of a duplicate.'],
+    ['When a page will not load', 'Check the address, try switching Proxy ↔ Direct, and press ↻ to reload. Some sites block embedded frames, so neither mode is guaranteed to work. Do not enter passwords or personal information on websites you do not trust.']
   ];
   const make = (tag, cls, value) => {
     const node = document.createElement(tag);
