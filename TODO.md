@@ -4,7 +4,7 @@ A simple, editable task list for The Web Vault / WebOS. Add new ideas under **Ba
 
 ## Current focus
 
-- [ ] **VaultNet profiles:** add selectable avatars and a short profile status; show them in the Lounge and to other users.
+- [x] **VaultNet profiles:** add selectable avatars and a short profile status; show them in the Lounge and to other users.
 - [ ] Test VaultNet with two separate accounts and confirm cloud presence works.
 - [ ] Check that profile changes sync correctly and don’t break existing chat or presence.
 
