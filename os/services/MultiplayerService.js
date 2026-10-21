@@ -27,6 +27,7 @@ class MultiplayerService {
     this.uid = null;
     this.username = 'Vault Guest';
     this.activity = { app: 'Desktop', gameTitle: null, gameUrl: null };
+    this.presenceStatus = 'connecting';
   }
 
   init() {
@@ -96,6 +97,7 @@ class MultiplayerService {
   }
 
   getMessages() { return this.messages.slice(); }
+  getPresenceStatus() { return this.presenceStatus; }
 
   setUsername(value) {
     const name = this._cleanName(value);
@@ -179,6 +181,7 @@ class MultiplayerService {
     this.uid = nextUid;
     this.presenceRef = null;
     if (this.uid && this.db) this._attachFirebase();
+    this.presenceStatus = this.uid && this.db ? 'connecting' : 'local-only';
     this._publishPresence();
     this._changed();
   }
@@ -239,8 +242,16 @@ class MultiplayerService {
       activity: { ...this.activity }, lastSeen: Date.now()
     };
     this._broadcast({ type: 'presence', payload: peer });
+    if (!this.uid || !this.db) this.presenceStatus = 'local-only';
     if (this.uid && this.presenceRef) {
-      this.presenceRef.set(peer).catch(error => console.warn('[VaultNet] Presence denied:', error));
+      this.presenceRef.set(peer).then(() => {
+        this.presenceStatus = 'connected';
+        this._changed();
+      }).catch(error => {
+        this.presenceStatus = 'denied';
+        console.warn('[VaultNet] Presence denied:', error);
+        this._changed();
+      });
     }
   }
 
