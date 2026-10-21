@@ -4,6 +4,7 @@
  */
 export function showBrowserGuide() {
   document.getElementById('vault-browser-guide')?.remove();
+  try { localStorage.setItem('vault_browser_guide_seen_v1', 'true'); } catch (error) { console.warn('[BrowserGuide] Could not save first-visit flag:', error); }
   const steps = [
     ['Using the address bar', 'Click the long rounded box near the top, type a website address (like wikipedia.org) or a search (like cats), then press Enter. The + button opens a new tab.'],
     ['Proxy ON (purple)', 'If the toolbar button is purple and says Proxy, this tab uses the Vault proxy service to request and display the page. Click the mode button until it says Proxy to turn it on. It will not work for every website and does not guarantee anonymity or safety.'],
@@ -19,7 +20,7 @@ export function showBrowserGuide() {
   };
   const overlay = make('div');
   overlay.id = 'vault-browser-guide';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:999995;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(7,4,13,.82);backdrop-filter:blur(10px);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:#f5f3ff;';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(7,4,13,.82);backdrop-filter:blur(10px);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:#f5f3ff;';
   const style = make('style');
   style.textContent = '#vault-browser-guide *{box-sizing:border-box}#vault-browser-guide .card{width:100%;max-width:520px;background:linear-gradient(155deg,#211735,#0d0818);border:1px solid #a855f766;border-radius:18px;box-shadow:0 24px 70px #000b;overflow:auto;max-height:calc(100vh - 32px)}#vault-browser-guide header,#vault-browser-guide footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px}#vault-browser-guide header,#vault-browser-guide footer{border-bottom:1px solid #ffffff12}#vault-browser-guide footer{border:0;border-top:1px solid #ffffff12}#vault-browser-guide .body{padding:22px 20px}#vault-browser-guide h2{margin:0 0 12px;font-size:21px;color:#fff}#vault-browser-guide p{font-size:14px;line-height:1.65;color:#d6c8f4;margin:0}#vault-browser-guide .label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#d8b4fe}#vault-browser-guide .progress{font-size:12px;color:#a79bc8}#vault-browser-guide button{font:inherit;cursor:pointer;border-radius:9px;padding:9px 13px;color:#e9d5ff;background:#ffffff0a;border:1px solid #ffffff22}#vault-browser-guide .primary{color:white;background:linear-gradient(135deg,#9333ea,#6d28d9);border-color:#d8b4fe55}#vault-browser-guide .actions{display:flex;gap:8px}';
   const card = make('section', 'card');
