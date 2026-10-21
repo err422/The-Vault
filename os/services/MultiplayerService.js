@@ -82,6 +82,15 @@ class MultiplayerService {
 
   getMessages() { return this.messages.slice(); }
 
+  setUsername(value) {
+    const name = this._cleanName(value);
+    this.username = name;
+    try { window.localStorage?.setItem('vaultnet_username', name); } catch {}
+    this._publishPresence();
+    this._changed();
+    return name;
+  }
+
   setActivity({ app = 'Desktop', gameTitle = null, gameUrl = null } = {}) {
     this.activity = {
       app: String(app).slice(0, 40),
@@ -160,9 +169,11 @@ class MultiplayerService {
     const offPresence = () => presence.off('value', onPresence); offPresence.firebaseListener = true; this.cleanups.push(offPresence);
 
     const chat = this.db.ref('vaultnet/chat').limitToLast(40);
+    // Firebase push() stores messages under generated child keys. Listen to
+    // each child, not the entire object, so incoming messages have an id.
     const onChat = snap => {
       const value = snap.val();
-      if (value) this._addMessage(value);
+      if (value) this._addMessage({ ...value, id: value.id || snap.key });
     };
     chat.on('child_added', onChat);
     const offChat = () => chat.off('child_added', onChat); offChat.firebaseListener = true; this.cleanups.push(offChat);
