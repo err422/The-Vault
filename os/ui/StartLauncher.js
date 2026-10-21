@@ -13,7 +13,7 @@ let _allAppsList = null;
 let _open = false;
 let _unsubs = [];
 
-const PINNED_IDS = ['file-explorer', 'browser', 'terminal', 'notes', 'settings', 'vault-hub'];
+const PINNED_IDS = ['file-explorer', 'browser', 'terminal', 'notes', 'settings', 'vault-hub', 'lounge'];
 
 // ── Styles ─────────────────────────────────────────────────────────
 function _injectStyles() {
