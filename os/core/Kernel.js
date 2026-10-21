@@ -27,6 +27,7 @@ import TopMenuBar from '../ui/TopMenuBar.js';
 import TaskbarDock from '../ui/TaskbarDock.js';
 import StartLauncher from '../ui/StartLauncher.js';
 import QuickSettings from '../ui/QuickSettings.js';
+import OnboardingTour from '../ui/OnboardingTour.js';
 
 // Import all 10 core applications
 import VaultHubApp from '../apps/VaultHubApp.js';
@@ -225,6 +226,8 @@ export async function boot() {
     });
 
     store.emit('kernel:ready', { bootMs });
+    // Show onboarding after the boot overlay starts transitioning away.
+    OnboardingTour.init();
   }, 1500);
 }
 
