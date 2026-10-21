@@ -1,6 +1,6 @@
 // os/ui/Desktop.js — Main desktop surface
-// Full-viewport container with wallpaper layer, icon grid, and
-// right-click context menu integration.
+// Draggable, grid-snapped desktop shortcuts with per-browser localStorage persistence.
+// Desktop layout is intentionally local-only; this module does not write to Firebase.
 
 import Store from '../core/Store.js';
 import AppRegistry from '../core/AppRegistry.js';
@@ -12,18 +12,28 @@ const DEFAULT_ICONS = [
   { appId: 'file-explorer', label: 'File Explorer', icon: '📁' },
   { appId: 'browser',       label: 'Browser',       icon: '🌐' },
   { appId: 'games',         label: 'Games',         icon: '🎮' },
-  { appId: 'terminal',      label: 'Terminal',       icon: '💻' },
-  { appId: 'notes',         label: 'Notes',          icon: '📝' },
-  { appId: 'settings',      label: 'Settings',       icon: '⚙️' },
-  { appId: 'vault-hub',     label: 'Vault Hub',      icon: '🏠' },
+  { appId: 'terminal',      label: 'Terminal',      icon: '💻' },
+  { appId: 'notes',         label: 'Notes',         icon: '📝' },
+  { appId: 'settings',      label: 'Settings',      icon: '⚙️' },
+  { appId: 'vault-hub',     label: 'Vault Hub',     icon: '🏠' },
 ];
 
-const CELL = 88;   // grid cell size px (icon 72 + padding)
+const LAYOUT_STORAGE_KEY = 'vaultos_desktop_layout_v1';
+const CELL_W = 92;
+const CELL_H = 108;
+const ICON_W = 88;
+const ICON_H = 104;
 const ICON_SIZE = 72;
+const GRID_PAD_X = 8;
+const GRID_PAD_Y = 8;
+const DRAG_THRESHOLD = 5;
 
 let _root = null;
 let _iconGrid = null;
 let _selectedIcon = null;
+let _iconPositions = Object.create(null);
+let _resizeObserver = null;
+let _resizeHandler = null;
 
 // ── Styles ─────────────────────────────────────────────────────────
 function _injectStyles() {
@@ -33,44 +43,52 @@ function _injectStyles() {
   s.textContent = `
     .vault-desktop {
       position: fixed;
-      inset: 32px 0 0 0;          /* below TopMenuBar */
+      inset: 32px 0 0 0;
       overflow: hidden;
       z-index: 0;
-      /* Default vault gradient wallpaper */
       background: var(--vault-wallpaper, linear-gradient(to top, #1a0033, #0d001a, #000000));
       background-size: cover;
       background-position: center;
     }
     .vault-desktop-icons {
       position: absolute;
-      inset: 12px 12px 72px 12px;  /* margin from edges; bottom for dock */
-      display: grid;
-      grid-template-columns: repeat(auto-fill, ${CELL}px);
-      grid-auto-rows: ${CELL + 24}px;
-      gap: 4px;
-      align-content: start;
-      padding: 8px;
+      inset: 0 0 72px 0;
+      overflow: hidden;
     }
     .vault-desktop-icon {
+      position: absolute;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 4px;
-      width: ${CELL}px;
-      height: ${CELL + 20}px;
+      width: ${ICON_W}px;
+      height: ${ICON_H}px;
+      box-sizing: border-box;
       border-radius: 10px;
       border: 2px solid transparent;
-      cursor: default;
+      cursor: grab;
       user-select: none;
-      transition: background 0.15s, border-color 0.15s;
+      -webkit-user-select: none;
+      touch-action: none;
+      transition: left 0.16s cubic-bezier(0.2, 1, 0.3, 1),
+                  top 0.16s cubic-bezier(0.2, 1, 0.3, 1),
+                  background 0.15s, border-color 0.15s, box-shadow 0.15s;
     }
-    .vault-desktop-icon:hover {
-      background: rgba(143, 104, 255, 0.1);
-    }
+    .vault-desktop-icon:hover { background: rgba(143, 104, 255, 0.1); }
     .vault-desktop-icon.selected {
       background: rgba(143, 104, 255, 0.18);
       border-color: rgba(143, 104, 255, 0.5);
+    }
+    .vault-desktop-icon.dragging {
+      cursor: grabbing;
+      z-index: 50;
+      opacity: 0.94;
+      transform: scale(1.04);
+      background: rgba(143, 104, 255, 0.24);
+      border-color: rgba(168, 85, 247, 0.7);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
     }
     .vault-desktop-icon__glyph {
       font-size: 42px;
@@ -81,28 +99,168 @@ function _injectStyles() {
       align-items: center;
       justify-content: center;
       border-radius: 14px;
-      background: rgba(255,255,255,0.04);
-      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      background: rgba(255, 255, 255, 0.04);
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      pointer-events: none;
     }
     .vault-desktop-icon__label {
       font-size: 11px;
       color: #e8e0f0;
       text-align: center;
-      max-width: ${CELL - 8}px;
+      max-width: 80px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+      pointer-events: none;
     }
   `;
   document.head.appendChild(s);
 }
 
-// ── Icon creation ──────────────────────────────────────────────────
+// ── Layout persistence and grid helpers ────────────────────────────
+function _getMaxCols() {
+  const width = _iconGrid?.clientWidth || window.innerWidth;
+  return Math.max(1, Math.floor(Math.max(0, width - GRID_PAD_X * 2 - ICON_W) / CELL_W) + 1);
+}
+
+function _getMaxRows() {
+  const height = _iconGrid?.clientHeight || Math.max(1, window.innerHeight - 104);
+  return Math.max(1, Math.floor(Math.max(0, height - GRID_PAD_Y * 2 - ICON_H) / CELL_H) + 1);
+}
+
+function _clampCell(col, row) {
+  return {
+    col: Math.max(0, Math.min(_getMaxCols() - 1, Math.round(col))),
+    row: Math.max(0, Math.min(_getMaxRows() - 1, Math.round(row))),
+  };
+}
+
+function _isCellOccupied(col, row, ignoreAppId = null) {
+  return Object.entries(_iconPositions).some(
+    ([id, pos]) => id !== ignoreAppId && pos.col === col && pos.row === row
+  );
+}
+
+function _findNearestFreeCell(targetCol, targetRow, ignoreAppId = null) {
+  const target = _clampCell(targetCol, targetRow);
+  if (!_isCellOccupied(target.col, target.row, ignoreAppId)) return target;
+
+  const maxCols = _getMaxCols();
+  const maxRows = _getMaxRows();
+  const maxRadius = Math.max(maxCols, maxRows);
+
+  for (let radius = 1; radius <= maxRadius; radius++) {
+    const candidates = [];
+    for (let dc = -radius; dc <= radius; dc++) {
+      for (let dr = -radius; dr <= radius; dr++) {
+        if (Math.max(Math.abs(dc), Math.abs(dr)) !== radius) continue;
+        const col = target.col + dc;
+        const row = target.row + dr;
+        if (col < 0 || col >= maxCols || row < 0 || row >= maxRows) continue;
+        candidates.push({ col, row, distance: (col - target.col) ** 2 + (row - target.row) ** 2 });
+      }
+    }
+    candidates.sort((a, b) => a.distance - b.distance || a.row - b.row || a.col - b.col);
+    const free = candidates.find(({ col, row }) => !_isCellOccupied(col, row, ignoreAppId));
+    if (free) return { col: free.col, row: free.row };
+  }
+
+  // Extremely small viewports may not have enough visible cells for every shortcut.
+  // Keep the position bounded; normal desktop sizes always have enough cells.
+  return target;
+}
+
+function _gridToPixels(col, row) {
+  return { x: GRID_PAD_X + col * CELL_W, y: GRID_PAD_Y + row * CELL_H };
+}
+
+function _saveLayout() {
+  try {
+    localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(_iconPositions));
+  } catch (err) {
+    console.warn('[Desktop] Failed to save icon layout to localStorage:', err);
+  }
+}
+
+function _loadLayout() {
+  let saved = {};
+  try {
+    const raw = localStorage.getItem(LAYOUT_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) saved = parsed;
+    }
+  } catch (err) {
+    console.warn('[Desktop] Failed to read icon layout from localStorage:', err);
+  }
+
+  _iconPositions = Object.create(null);
+  const maxRows = _getMaxRows();
+
+  DEFAULT_ICONS.forEach((def, index) => {
+    const existing = saved[def.appId];
+    if (
+      existing &&
+      Number.isFinite(existing.col) &&
+      Number.isFinite(existing.row) &&
+      existing.col >= 0 &&
+      existing.row >= 0
+    ) {
+      const cell = _clampCell(existing.col, existing.row);
+      if (!_isCellOccupied(cell.col, cell.row)) {
+        _iconPositions[def.appId] = cell;
+        return;
+      }
+    }
+
+    // Keep the existing top-to-bottom, left-to-right default ordering.
+    const defaultCol = Math.floor(index / maxRows);
+    const defaultRow = index % maxRows;
+    _iconPositions[def.appId] = _findNearestFreeCell(defaultCol, defaultRow);
+  });
+}
+
+function _reflowLayout() {
+  if (!_iconGrid) return;
+  const previous = _iconPositions;
+  _iconPositions = Object.create(null);
+
+  // Preserve each icon's position where possible; clamp and resolve collisions
+  // after the available viewport changes.
+  for (const def of DEFAULT_ICONS) {
+    const pos = previous[def.appId] || { col: 0, row: 0 };
+    const cell = _findNearestFreeCell(pos.col, pos.row);
+    _iconPositions[def.appId] = cell;
+  }
+
+  _renderIcons();
+  _saveLayout();
+}
+
+function _resetLayout() {
+  try {
+    localStorage.removeItem(LAYOUT_STORAGE_KEY);
+  } catch (err) {
+    console.warn('[Desktop] Failed to clear saved icon layout:', err);
+  }
+  _loadLayout();
+  _renderIcons();
+}
+
+// ── Icon creation and drag logic ───────────────────────────────────
 function _createIcon(def) {
   const el = document.createElement('div');
   el.className = 'vault-desktop-icon';
   el.dataset.appId = def.appId;
+  el.setAttribute('role', 'button');
+  el.setAttribute('aria-label', def.label);
+  el.tabIndex = 0;
+
+  const pos = _iconPositions[def.appId] || { col: 0, row: 0 };
+  const pixel = _gridToPixels(pos.col, pos.row);
+  el.style.left = `${pixel.x}px`;
+  el.style.top = `${pixel.y}px`;
 
   const glyph = document.createElement('div');
   glyph.className = 'vault-desktop-icon__glyph';
@@ -111,27 +269,103 @@ function _createIcon(def) {
   const label = document.createElement('div');
   label.className = 'vault-desktop-icon__label';
   label.textContent = def.label;
+  el.append(glyph, label);
 
-  el.appendChild(glyph);
-  el.appendChild(label);
+  let pointerActive = false;
+  let hasMoved = false;
+  let pointerId = null;
+  let startPointerX = 0;
+  let startPointerY = 0;
+  let startIconX = pixel.x;
+  let startIconY = pixel.y;
 
-  // Single click — select
   el.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
     e.stopPropagation();
     _selectIcon(el);
+
+    pointerActive = true;
+    hasMoved = false;
+    pointerId = e.pointerId;
+    startPointerX = e.clientX;
+    startPointerY = e.clientY;
+    startIconX = parseFloat(el.style.left) || 0;
+    startIconY = parseFloat(el.style.top) || 0;
+
+    try { el.setPointerCapture(e.pointerId); } catch {}
   });
 
-  // Double click — launch
+  el.addEventListener('pointermove', (e) => {
+    if (!pointerActive || e.pointerId !== pointerId) return;
+    const dx = e.clientX - startPointerX;
+    const dy = e.clientY - startPointerY;
+
+    if (!hasMoved && Math.hypot(dx, dy) >= DRAG_THRESHOLD) {
+      hasMoved = true;
+      el.classList.add('dragging');
+    }
+    if (!hasMoved) return;
+
+    const maxX = Math.max(0, (_iconGrid?.clientWidth || window.innerWidth) - ICON_W);
+    const maxY = Math.max(0, (_iconGrid?.clientHeight || window.innerHeight - 104) - ICON_H);
+    el.style.left = `${Math.max(0, Math.min(maxX, startIconX + dx))}px`;
+    el.style.top = `${Math.max(0, Math.min(maxY, startIconY + dy))}px`;
+  });
+
+  const finishPointer = (e, cancelled = false) => {
+    if (!pointerActive || e.pointerId !== pointerId) return;
+    pointerActive = false;
+    const activePointerId = pointerId;
+    pointerId = null;
+    try {
+      if (el.hasPointerCapture(activePointerId)) el.releasePointerCapture(activePointerId);
+    } catch {}
+
+    el.classList.remove('dragging');
+    if (!hasMoved || cancelled) {
+      // A cancelled pointer interaction restores the last committed position.
+      const committed = _gridToPixels(
+        _iconPositions[def.appId]?.col ?? pos.col,
+        _iconPositions[def.appId]?.row ?? pos.row
+      );
+      el.style.left = `${committed.x}px`;
+      el.style.top = `${committed.y}px`;
+      return;
+    }
+
+    const currentX = parseFloat(el.style.left) || 0;
+    const currentY = parseFloat(el.style.top) || 0;
+    const rawCol = Math.round((currentX - GRID_PAD_X) / CELL_W);
+    const rawRow = Math.round((currentY - GRID_PAD_Y) / CELL_H);
+    const snapped = _findNearestFreeCell(rawCol, rawRow, def.appId);
+    _iconPositions[def.appId] = snapped;
+
+    const finalPixel = _gridToPixels(snapped.col, snapped.row);
+    el.style.left = `${finalPixel.x}px`;
+    el.style.top = `${finalPixel.y}px`;
+    _saveLayout();
+  };
+
+  el.addEventListener('pointerup', (e) => finishPointer(e, false));
+  el.addEventListener('pointercancel', (e) => finishPointer(e, true));
+
   el.addEventListener('dblclick', (e) => {
     e.stopPropagation();
-    AppRegistry.launch(def.appId);
+    if (!hasMoved) AppRegistry.launch(def.appId);
+  });
+
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      AppRegistry.launch(def.appId);
+    }
   });
 
   return el;
 }
 
 function _selectIcon(el) {
-  if (_selectedIcon) _selectedIcon.classList.remove('selected');
+  if (_selectedIcon && _selectedIcon !== el) _selectedIcon.classList.remove('selected');
   _selectedIcon = el;
   el.classList.add('selected');
 }
@@ -164,69 +398,76 @@ function _onContextMenu(e) {
       action: async () => {
         const name = prompt('File name:', 'Untitled.md');
         if (name) {
-          await virtualFS.writeFile(`/Desktop/${name}`, '# Note\n\n', 'text/markdown');
+          await virtualFS.writeFile(`/Desktop/${name}`, '# Note\\n\\n', 'text/markdown');
           _renderIcons();
         }
       }
     },
     { type: 'separator' },
-    { label: 'Change Wallpaper',  icon: '🖼️', action: () => AppRegistry.launch('settings') },
-    { label: 'Display Settings',  icon: '🖥️', action: () => AppRegistry.launch('settings') },
+    { label: 'Reset Icon Layout', icon: '📐', action: _resetLayout },
+    { label: 'Change Wallpaper', icon: '🖼️', action: () => AppRegistry.launch('settings') },
+    { label: 'Display Settings', icon: '🖥️', action: () => AppRegistry.launch('settings') },
     { type: 'separator' },
-    { label: 'Refresh',           icon: '🔄', action: () => _renderIcons() },
-    { label: 'About This WebOS',  icon: 'ℹ️', action: () => AppRegistry.launch('about') },
+    { label: 'Refresh', icon: '🔄', action: _renderIcons },
+    { label: 'About This WebOS', icon: 'ℹ️', action: () => AppRegistry.launch('about') },
   ]);
 }
 
 // ── Render ──────────────────────────────────────────────────────────
 function _renderIcons() {
   if (!_iconGrid) return;
-  _iconGrid.textContent = ''; // clear
-  for (const def of DEFAULT_ICONS) {
-    _iconGrid.appendChild(_createIcon(def));
-  }
+  _iconGrid.textContent = '';
+  for (const def of DEFAULT_ICONS) _iconGrid.appendChild(_createIcon(def));
+  _selectedIcon = null;
 }
 
 // ── Public init ─────────────────────────────────────────────────────
 export function init(mountTarget) {
-  _injectStyles();
+  // Avoid duplicate desktop roots if init is called more than once.
+  if (_root?.isConnected) return _root;
 
+  _injectStyles();
   const mount = mountTarget || document.getElementById('vault-desktop');
   if (!mount) {
     console.warn('[Desktop] mount target not found');
-    return;
+    return null;
   }
 
   _root = document.createElement('div');
   _root.className = 'vault-desktop';
-
   _iconGrid = document.createElement('div');
   _iconGrid.className = 'vault-desktop-icons';
   _root.appendChild(_iconGrid);
-
-  _renderIcons();
-
-  // Click on blank space — deselect
-  _root.addEventListener('pointerdown', () => _deselectAll());
-
-  // Right-click
-  _root.addEventListener('contextmenu', _onContextMenu);
-
   mount.appendChild(_root);
 
-  // Listen for wallpaper changes
+  // Load only after mounting so grid dimensions are available.
+  _loadLayout();
+  _renderIcons();
+
+  _root.addEventListener('pointerdown', (e) => {
+    if (e.target === _root || e.target === _iconGrid) _deselectAll();
+  });
+  _root.addEventListener('contextmenu', _onContextMenu);
+
+  if (typeof ResizeObserver !== 'undefined') {
+    _resizeObserver = new ResizeObserver(() => _reflowLayout());
+    _resizeObserver.observe(_iconGrid);
+  } else {
+    _resizeHandler = () => _reflowLayout();
+    window.addEventListener('resize', _resizeHandler);
+  }
+
   Store.on('wallpaper:changed', (url) => {
-    if (url) {
-      _root.style.setProperty('--vault-wallpaper', `url(${url})`);
-    } else {
-      _root.style.removeProperty('--vault-wallpaper');
-    }
+    if (!_root) return;
+    if (url) _root.style.setProperty('--vault-wallpaper', `url(${url})`);
+    else _root.style.removeProperty('--vault-wallpaper');
   });
 
-  // Listen for theme changes
   Store.on('theme:changed', () => {
-    // Placeholder for future theme integration
+    // Placeholder for future theme integration.
   });
+
+  return _root;
 }
 
 export function getElement() { return _root; }
