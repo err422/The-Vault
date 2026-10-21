@@ -21,7 +21,6 @@ class MultiplayerService {
     this.db = null;
     this.channel = null;
     this.presenceRef = null;
-    this.pingsRef = null;
     this.uid = null;
     this.username = 'Vault Guest';
     this.activity = { app: 'Desktop', gameTitle: null, gameUrl: null };
@@ -101,41 +100,6 @@ class MultiplayerService {
     this._publishPresence();
   }
 
-  async sendPing(peer) {
-    if (!peer?.uid || peer.isSelf) return false;
-    if (!this.uid || !this.db) {
-      notificationManager.notify({
-        title: 'Sign in required',
-        message: 'Sign in to ping another VaultNet user.',
-        type: 'warning'
-      });
-      return false;
-    }
-    try {
-      await this.db.ref('vaultnet/pings/' + String(peer.uid)).push({
-        fromUid: this.uid,
-        targetUid: String(peer.uid),
-        fromName: this.username,
-        message: 'sent you a ping',
-        timestamp: Date.now()
-      });
-      notificationManager.notify({
-        title: 'Ping sent',
-        message: 'Your ping was sent to ' + this._cleanName(peer.username) + '.',
-        type: 'success'
-      });
-      return true;
-    } catch (error) {
-      console.warn('[VaultNet] Ping write failed:', error);
-      notificationManager.notify({
-        title: 'VaultNet unavailable',
-        message: 'The ping could not be delivered. Check Firebase rules.',
-        type: 'warning'
-      });
-      return false;
-    }
-  }
-
   async sendChat(text) {
     const body = String(text || '').trim().slice(0, MAX_CHAT);
     if (!body) return false;
@@ -176,7 +140,6 @@ class MultiplayerService {
     if (nextUid === this.uid) return;
     if (this.presenceRef) this.presenceRef.remove().catch(() => {});
     this._detachFirebase();
-    this.pingsRef = null;
     this.uid = nextUid;
     this.presenceRef = null;
     if (this.uid && this.db) this._attachFirebase();
@@ -210,7 +173,11 @@ class MultiplayerService {
     // each child, not the entire object, so incoming messages have an id.
     const onChat = snap => {
       const value = snap.val();
-      if (value) this._addMessage({ ...value, id: value.id || snap.key });
+      if (value) {
+        const message = { ...value, id: value.id || snap.key };
+        this._notifyPublicMessage(message);
+        this._addMessage(message);
+      }
     };
     chat.on('child_added', onChat);
     const offChat = () => chat.off('child_added', onChat); offChat.firebaseListener = true; this.cleanups.push(offChat);
@@ -219,21 +186,6 @@ class MultiplayerService {
     this.presenceRef.onDisconnect().remove().catch(() => {});
 
     // Each signed-in user listens only to their own inbox.
-    this.pingsRef = this.db.ref('vaultnet/pings/' + this.uid);
-    const onPing = snap => {
-      const ping = snap.val();
-      if (!ping || ping.fromUid === this.uid) return;
-      notificationManager.notify({
-        title: 'VaultNet ping',
-        message: this._cleanName(ping.fromName) + ' ' + String(ping.message || 'pinged you').slice(0, 100) + '.',
-        type: 'info'
-      });
-      // Mark this ping as seen locally; do not mutate shared data or require extra write permissions.
-    };
-    this.pingsRef.on('child_added', onPing);
-    const offPings = () => this.pingsRef?.off('child_added', onPing);
-    offPings.firebaseListener = true;
-    this.cleanups.push(offPings);
   }
 
   _detachFirebase() {
@@ -272,8 +224,25 @@ class MultiplayerService {
     } else if (packet.type === 'leave') {
       if (this.peers.delete(packet.clientId)) this._changed();
     } else if (packet.type === 'chat') {
+      this._notifyPublicMessage(packet.payload);
       this._addMessage(packet.payload);
     }
+  }
+
+  _notifyPublicMessage(message) {
+    if (!message || !message.text) return;
+    // Firebase replays recent child_added events on subscribe. Ignore older
+    // history and messages sent by this same signed-in account.
+    const timestamp = Number(message.timestamp) || 0;
+    if (Date.now() - timestamp > 60000 || timestamp > Date.now() + 5000) return;
+    if (this.uid && message.uid && String(message.uid) === String(this.uid)) return;
+    if (message.clientId && message.clientId === this.clientId) return;
+    notificationManager.notify({
+      title: 'VaultNet · Public chat',
+      message: this._cleanName(message.username) + ': ' + String(message.text).slice(0, 120),
+      type: 'info',
+      duration: 4500
+    });
   }
 
   _addMessage(message) {
