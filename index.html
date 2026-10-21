@@ -216,35 +216,55 @@
 
     <!-- WebOS Boot Script -->
     <script type="module">
-        import { boot } from './os/core/Kernel.js';
+        // Load WebOS dynamically so import/startup failures are shown on the boot screen
+        // instead of leaving users with an unresponsive black overlay.
+        import('./os/core/Kernel.js?bootdiag=20261021')
+          .then(async ({ boot }) => {
+            const params = new URLSearchParams(window.location.search);
+            const modeParam = params.get('mode');
+            const savedMode = localStorage.getItem('vault_view_mode');
+            const isClassic = modeParam === 'classic' || (savedMode === 'classic' && modeParam !== 'webos');
 
-        // Check view mode: defaults to WebOS unless user specifically chose classic
-        const params = new URLSearchParams(window.location.search);
-        const modeParam = params.get('mode');
-        const savedMode = localStorage.getItem('vault_view_mode');
-        const isClassic = modeParam === 'classic' || (savedMode === 'classic' && modeParam !== 'webos');
-
-        if (!isClassic) {
-            document.body.classList.add('vault-os-active');
-            if (document.readyState === 'loading') {
+            if (!isClassic) {
+              document.body.classList.add('vault-os-active');
+              if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', () => boot());
+              } else {
+                await boot();
+              }
             } else {
-                boot();
+              document.body.classList.add('vault-classic-active');
             }
-        } else {
-            document.body.classList.add('vault-classic-active');
-        }
 
-        // Handle WebOS toggle from classic nav bar
-        const webosBtn = document.getElementById('webos-toggle-btn');
-        if (webosBtn) {
-            webosBtn.addEventListener('click', (e) => {
+            const webosBtn = document.getElementById('webos-toggle-btn');
+            if (webosBtn) {
+              webosBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 localStorage.setItem('vault_view_mode', 'webos');
                 window.location.href = 'index.html?mode=webos';
-            });
-        }
+              });
+            }
+          })
+          .catch((error) => {
+            console.error('[WebOS] Startup failed:', error);
+            const terminal = document.getElementById('boot-terminal-output');
+            const prompt = document.getElementById('boot-prompt-bar');
+            if (terminal) {
+              terminal.innerHTML = '';
+              const heading = document.createElement('div');
+              heading.textContent = 'WEBOS STARTUP FAILED';
+              heading.style.cssText = 'color:#f87171;font-weight:bold;font-size:16px;margin-bottom:12px;';
+              const detail = document.createElement('pre');
+              detail.textContent = error?.stack || error?.message || String(error);
+              detail.style.cssText = 'color:#fecaca;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;';
+              terminal.append(heading, detail);
+            }
+            if (prompt) {
+              prompt.textContent = 'Startup error shown above — reload after the fix is deployed.';
+              prompt.style.color = '#f87171';
+            }
+          });
     </script>
 </body>
 </html>
