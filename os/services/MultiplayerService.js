@@ -27,6 +27,7 @@ class MultiplayerService {
     this.uid = null;
     this.username = 'Vault Guest';
     this.activity = { app: 'Desktop', gameTitle: null, gameUrl: null };
+    this.browserActivity = 'Vault Browser';
     this.presenceStatus = 'connecting';
   }
 
@@ -47,6 +48,12 @@ class MultiplayerService {
       this.setActivity({ app: 'Games', gameTitle: title, gameUrl: url });
     };
     window.addEventListener('zengs:select', this._onGameSelected);
+    this._onBrowserActivity = event => {
+      const title = String(event.detail?.title || '').trim().slice(0, 80);
+      this.browserActivity = title ? ('Browser: ' + title).slice(0, 40) : 'Vault Browser';
+      this.setActivity({ app: this.browserActivity });
+    };
+    window.addEventListener('vaultnet:browser-activity', this._onBrowserActivity);
     window.addEventListener('authProfileReady', this._authChanged);
     window.addEventListener('beforeunload', this._leave);
     if ('BroadcastChannel' in window) {
@@ -74,6 +81,7 @@ class MultiplayerService {
     window.clearInterval(this.timer);
     window.removeEventListener('authProfileReady', this._authChanged);
     window.removeEventListener('zengs:select', this._onGameSelected);
+    window.removeEventListener('vaultnet:browser-activity', this._onBrowserActivity);
     window.removeEventListener('beforeunload', this._leave);
     this.cleanups.forEach(fn => { try { fn(); } catch {} });
     this.cleanups = [];
@@ -122,7 +130,7 @@ class MultiplayerService {
     }
     const appId = String(focused.appId || focused.title || 'Desktop');
     const labels = {
-      browser: 'Vault Browser', games: 'Games', lounge: 'VaultNet Lounge',
+      browser: this.browserActivity || 'Vault Browser', games: 'Games', lounge: 'VaultNet Lounge',
       files: 'File Explorer', terminal: 'Terminal', settings: 'Settings',
       notes: 'Notes', calculator: 'Calculator'
     };
