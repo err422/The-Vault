@@ -835,7 +835,12 @@ export default class WindowFrame {
     const onEnd = () => {
       this.#el.removeEventListener('transitionend', onEnd);
       this.#el.classList.remove('animating');
-      this.#el.style.display = 'none';
+      // A quick dock restore may happen before the minimize transition ends.
+      // Never let the stale transition hide a window that has already restored.
+      if (this.#state === 'minimized') {
+        this.#el.style.display = 'none';
+        this.#el.style.pointerEvents = 'none';
+      }
     };
     this.#el.addEventListener('transitionend', onEnd, { once: true });
 
@@ -854,9 +859,12 @@ export default class WindowFrame {
     const wasMinimized = this.#state === 'minimized';
     this.#state = 'normal';
     document.body.classList.remove('os-window-maximized');
-    this.#el.classList.remove('state-maximized', 'state-minimized');
+    this.#el.classList.remove('state-maximized', 'state-minimized', 'minimized', 'vault-window--minimized');
+    // Minimize uses inline styles for performance; always clear them on restore.
     this.#el.style.display = '';
+    this.#el.style.visibility = 'visible';
     this.#el.style.opacity = '1';
+    this.#el.style.pointerEvents = 'auto';
 
     if (this.#restoreBounds) {
       this.#bounds = { ...this.#restoreBounds };
