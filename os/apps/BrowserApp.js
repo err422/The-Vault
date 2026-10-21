@@ -8,6 +8,8 @@
  * @module os/apps/BrowserApp
  */
 
+import { showBrowserGuide } from '../ui/BrowserGuide.js';
+
 export const AppManifest = {
   id: 'browser',
   name: 'Vault Browser',
@@ -87,6 +89,7 @@ export const AppManifest = {
 
           <!-- Channel Toggle Button (Proxy vs Direct) -->
           <button id="browser-mode-btn" title="Toggle between Vault Proxy and Direct iframe loading" style="height:30px; padding:0 12px; border-radius:8px; font-size:11.5px; font-weight:500; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; transition:all 0.15s ease;"></button>
+          <button id="browser-help-btn" title="Explain how the browser and proxy work" style="height:30px; padding:0 10px; border-radius:8px; border:1px solid rgba(168,85,247,0.3); background:rgba(168,85,247,0.1); color:#d8b4fe; font-size:12px; cursor:pointer; white-space:nowrap;">? Help</button>
         </div>
 
         <!-- Bookmarks Bar -->
@@ -126,6 +129,7 @@ export const AppManifest = {
     const fwdBtn = containerEl.querySelector('#browser-fwd-btn');
     const reloadBtn = containerEl.querySelector('#browser-reload-btn');
     const modeBtn = containerEl.querySelector('#browser-mode-btn');
+    const helpBtn = containerEl.querySelector('#browser-help-btn');
     const addTabBtn = containerEl.querySelector('#browser-add-tab-btn');
 
     const getActiveTab = () => tabs.find(t => t.id === activeTabId) || tabs[0];
@@ -397,6 +401,9 @@ export const AppManifest = {
       const active = getActiveTab();
       if (!isHomeUrl(active.url)) loadInTab(active, active.url);
     });
+
+    // Open the beginner-friendly browser and proxy walkthrough.
+    helpBtn.addEventListener('click', () => showBrowserGuide());
 
     // Toggle between Proxy and Direct channels
     modeBtn.addEventListener('click', () => {
