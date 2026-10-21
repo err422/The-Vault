@@ -69,21 +69,6 @@
           "$other": { ".validate": false }
         },
         ".indexOn": ["timestamp"]
-      },
-      "pings": {
-        "$targetUid": {
-          ".read": "auth != null && $targetUid === auth.uid",
-          "$pingId": {
-            ".write": "auth != null && ((!newData.exists() && $targetUid === auth.uid) || (newData.exists() && newData.child('fromUid').val() === auth.uid && newData.child('targetUid').val() === $targetUid))",
-            ".validate": "!newData.exists() || newData.hasChildren(['fromUid', 'targetUid', 'fromName', 'message', 'timestamp'])",
-            "fromUid": { ".validate": "newData.isString() && newData.val() === auth.uid" },
-            "targetUid": { ".validate": "newData.isString() && newData.val() === $targetUid" },
-            "fromName": { ".validate": "newData.isString() && newData.val().length <= 20" },
-            "message": { ".validate": "newData.isString() && newData.val().length <= 100" },
-            "timestamp": { ".validate": "newData.isNumber()" },
-            "$other": { ".validate": false }
-          }
-        }
       }
     }
   }
