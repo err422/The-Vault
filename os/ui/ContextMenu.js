@@ -212,6 +212,11 @@ export function showContextMenu(x, y, items) {
   // Close on outside click or Escape
   const _onClose = (e) => {
     if (e.type === 'keydown' && e.key !== 'Escape') return;
+
+    // Pointer events inside the menu must not remove the clicked item before
+    // its click handler fires. Only outside clicks should dismiss the menu.
+    if (e.type === 'pointerdown' && _activeMenu?.contains(e.target)) return;
+
     hideContextMenu();
     document.removeEventListener('pointerdown', _onClose, true);
     document.removeEventListener('keydown', _onClose, true);
