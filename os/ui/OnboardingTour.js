@@ -46,7 +46,7 @@ const TOUR_STEPS = [
     description: 'Explore built-in tools and entertainment designed for vaultOS.',
     tips: [
       'Vault Games lets you search the arcade and launch games',
-      'Vault Browser supports multiple tabs and the configured proxy service',
+      'Vault Browser has a ? Help button that explains the address bar, tabs, and how to switch Proxy and Direct modes',
       'Terminal includes commands such as help, ls, and neofetch'
     ]
   }
