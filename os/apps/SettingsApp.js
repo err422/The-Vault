@@ -13,6 +13,7 @@
 import settingsManager, { WALLPAPERS, ACCENTS } from '../core/SettingsManager.js';
 import store from '../core/Store.js';
 import firebaseSync from '../services/FirebaseSync.js';
+import OnboardingTour from '../ui/OnboardingTour.js';
 
 export const AppManifest = {
   id: 'settings',
@@ -238,9 +239,16 @@ export const AppManifest = {
           </div>
 
           <!-- Storage -->
-          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:16px;">
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:16px; margin-bottom:16px;">
             <div style="font-size:13px; font-weight:600; color:#fff;">Virtual Storage Usage</div>
             <div style="font-size:12px; color:#c4b5fd; margin-top:4px;">${quotaEstimate}</div>
+          </div>
+
+          <!-- Onboarding Tour -->
+          <div style="background:rgba(139,92,246,0.08); border:1px solid rgba(168,85,247,0.22); border-radius:12px; padding:16px;">
+            <div style="font-size:13px; font-weight:600; color:#fff;">Navigation Tour</div>
+            <div style="font-size:11.5px; color:#a79bc8; margin:4px 0 12px;">Replay the quick guide to the launcher, dock, windows, browser, and core apps.</div>
+            <button id="set-replay-tour-btn" type="button" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(216,180,254,0.3); background:linear-gradient(135deg,#9333ea,#7e22ce); color:#fff; font-size:12px; font-weight:600; cursor:pointer;">Replay Navigation Tour</button>
           </div>
         `;
 
@@ -250,6 +258,10 @@ export const AppManifest = {
 
         contentEl.querySelector('#chk-snap').addEventListener('change', (e) => {
           settingsManager.set('windowSnapping', e.target.checked);
+        });
+
+        contentEl.querySelector('#set-replay-tour-btn').addEventListener('click', () => {
+          OnboardingTour.init(true);
         });
       } else if (activeSection === 'account') {
         const session = store.getState('session');
