@@ -157,7 +157,7 @@ class MultiplayerService {
       this._changed();
     };
     presence.on('value', onPresence);
-    this.cleanups.push(() => presence.off('value', onPresence));
+    const offPresence = () => presence.off('value', onPresence); offPresence.firebaseListener = true; this.cleanups.push(offPresence);
 
     const chat = this.db.ref('vaultnet/chat').limitToLast(40);
     const onChat = snap => {
@@ -165,7 +165,7 @@ class MultiplayerService {
       if (value) this._addMessage(value);
     };
     chat.on('child_added', onChat);
-    this.cleanups.push(() => chat.off('child_added', onChat));
+    const offChat = () => chat.off('child_added', onChat); offChat.firebaseListener = true; this.cleanups.push(offChat);
 
     this.presenceRef = this.db.ref('vaultnet/presence/' + this.clientId);
     this.presenceRef.onDisconnect().remove().catch(() => {});
