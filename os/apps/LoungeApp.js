@@ -44,7 +44,7 @@ export const AppManifest = {
             </form>
           </section>
         </div>
-        <footer style="padding:9px 14px;color:#7f7199;font-size:11px;border-top:1px solid rgba(168,85,247,.12);">Early access · Multiplayer games and direct pings are still in development.</footer>
+        <footer style="padding:9px 14px;color:#7f7199;font-size:11px;border-top:1px solid rgba(168,85,247,.12);">Early access · Public chat notifications are enabled.</footer>
       </div>`;
 
     const peersEl = containerEl.querySelector('#vn-peers');
@@ -85,21 +85,6 @@ export const AppManifest = {
         addText(info, (peer.isSelf ? 'You · ' : '') + peer.username, { fontSize:'12px', fontWeight:'650', overflowWrap:'anywhere' });
         addText(info, peer.activity?.gameTitle || peer.activity?.app || 'Desktop', { fontSize:'10px', color:'#9b8bb9', marginTop:'2px' });
         card.append(dot, info);
-        if (!peer.isSelf && peer.uid) {
-          const ping = document.createElement('button');
-          ping.type = 'button';
-          ping.textContent = 'Ping';
-          ping.title = 'Send a notification to ' + peer.username;
-          ping.style.cssText = 'margin-left:auto;flex-shrink:0;border:1px solid #8b5cf655;border-radius:8px;background:#8b5cf622;color:#ddd6fe;padding:5px 7px;font-size:10px;cursor:pointer;';
-          ping.addEventListener('click', async () => {
-            ping.disabled = true;
-            ping.textContent = '…';
-            const sent = await multiplayerService.sendPing(peer);
-            ping.textContent = sent ? 'Sent' : 'Retry';
-            if (!sent) ping.disabled = false;
-          });
-          card.appendChild(ping);
-        }
         peersEl.appendChild(card);
       });
 
