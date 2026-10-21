@@ -35,6 +35,17 @@ class MultiplayerService {
     this.db = window.database && typeof window.database.ref === 'function' ? window.database : null;
     this._syncSession();
     this.cleanups.push(store.on('user:changed', () => this._syncSession()));
+    const refreshActivity = () => this._syncActivityFromWindows();
+    this.cleanups.push(store.on('window:created', refreshActivity));
+    this.cleanups.push(store.on('window:focused', refreshActivity));
+    this.cleanups.push(store.on('window:closed', refreshActivity));
+    this.cleanups.push(store.on('window:stateChanged', refreshActivity));
+    this._onGameSelected = event => {
+      const title = String(event.detail?.title || 'Game').slice(0, 80);
+      const url = event.detail?.url || event.detail?.gameUrl || null;
+      this.setActivity({ app: 'Games', gameTitle: title, gameUrl: url });
+    };
+    window.addEventListener('zengs:select', this._onGameSelected);
     window.addEventListener('authProfileReady', this._authChanged);
     window.addEventListener('beforeunload', this._leave);
     if ('BroadcastChannel' in window) {
@@ -61,6 +72,7 @@ class MultiplayerService {
     this._leave();
     window.clearInterval(this.timer);
     window.removeEventListener('authProfileReady', this._authChanged);
+    window.removeEventListener('zengs:select', this._onGameSelected);
     window.removeEventListener('beforeunload', this._leave);
     this.cleanups.forEach(fn => { try { fn(); } catch {} });
     this.cleanups = [];
@@ -92,6 +104,27 @@ class MultiplayerService {
     this._publishPresence();
     this._changed();
     return name;
+  }
+
+  _syncActivityFromWindows() {
+    const windows = store.getState('windows');
+    let focused = null;
+    if (windows instanceof Map) {
+      for (const win of windows.values()) {
+        if (win?.isFocused && win.state !== 'minimized') focused = win;
+      }
+    }
+    if (!focused) {
+      this.setActivity({ app: 'Desktop' });
+      return;
+    }
+    const appId = String(focused.appId || focused.title || 'Desktop');
+    const labels = {
+      browser: 'Vault Browser', games: 'Games', lounge: 'VaultNet Lounge',
+      files: 'File Explorer', terminal: 'Terminal', settings: 'Settings',
+      notes: 'Notes', calculator: 'Calculator'
+    };
+    this.setActivity({ app: labels[appId] || String(focused.title || appId).slice(0, 40) });
   }
 
   setActivity({ app = 'Desktop', gameTitle = null, gameUrl = null } = {}) {
