@@ -105,24 +105,17 @@ export const AppManifest = {
 
         <!-- Browser View Area: home screen + one iframe per tab -->
         <div id="browser-viewport" style="flex:1; position:relative; overflow:hidden; background:#07050c;">
-          <div id="browser-home" style="position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:clamp(22px, 4vw, 42px); box-sizing:border-box; background:radial-gradient(ellipse at 50% 18%, rgba(109,40,217,.28), transparent 52%), linear-gradient(145deg, #100a1c 0%, #090611 58%, #07050c 100%); overflow:auto;">
-            <div style="width:min(100%, 720px); margin:auto; display:flex; flex-direction:column; align-items:center;">
-              <div style="display:flex; align-items:center; gap:9px; margin-bottom:13px; color:#c4b5fd; font-size:10px; font-weight:800; letter-spacing:.2em; text-transform:uppercase;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#a78bfa;box-shadow:0 0 12px #8b5cf6;"></span> THE WEB VAULT</div>
-              <div style="font-size:42px; line-height:1; margin-bottom:13px; filter:drop-shadow(0 5px 20px rgba(139,92,246,.25));">🌐</div>
-              <h2 style="margin:0; font-size:clamp(25px, 4vw, 34px); line-height:1.15; letter-spacing:-.035em; font-weight:800; color:#fff;">Your browser, your way.</h2>
-              <p id="browser-home-desc" style="margin:12px 0 28px; color:#b9add6; font-size:13px; line-height:1.7; max-width:430px;">Pick up where you left off, or choose a favorite site to get started.</p>
-              <div style="width:100%; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; text-align:left;">
-                <span style="font-size:12px; font-weight:750; color:#eee7ff;">Quick access</span>
-                <span style="font-size:10px; font-weight:600; letter-spacing:.12em; color:#827493;">YOUR FAVORITES</span>
-              </div>
-              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(125px, 1fr)); gap:11px; max-width:620px; width:100%;">
-                ${BOOKMARKS.map(bm => `
-                  <div class="home-bm-card" data-url="${bm.url}" style="display:flex; flex-direction:column; align-items:flex-start; gap:15px; min-height:94px; padding:16px; box-sizing:border-box; background:linear-gradient(145deg, rgba(255,255,255,.065), rgba(255,255,255,.025)); border:1px solid rgba(168,85,247,.22); border-radius:15px; cursor:pointer; text-align:left; box-shadow:0 8px 22px rgba(0,0,0,.12); transition:background .15s, border-color .15s, transform .15s;">
-                    <span style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:11px; background:rgba(139,92,246,.17); border:1px solid rgba(167,139,250,.16); font-size:20px;">${bm.icon}</span>
-                    <span style="font-size:12px; font-weight:650; color:#eee7ff;">${bm.name}</span>
-                  </div>
-                `).join('')}
-              </div>
+          <div id="browser-home" style="position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; background:radial-gradient(ellipse at 50% 40%, #1a0b33, #07050c); overflow:auto;">
+            <div style="font-size:48px; margin-bottom:12px;">🌐</div>
+            <h2 style="margin:0 0 8px 0; font-size:22px; font-weight:700; color:#fff;">Vault Browser</h2>
+            <p id="browser-home-desc" style="margin:0 0 24px 0; color:#c4b5fd; font-size:13px; max-width:420px;">Type an address or a search above. Use the toggle in the toolbar to switch between Proxy and Direct modes.</p>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:12px; max-width:600px; width:100%;">
+              ${BOOKMARKS.map(bm => `
+                <div class="home-bm-card" data-url="${bm.url}" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px; background:rgba(255,255,255,0.04); border:1px solid rgba(168,85,247,0.18); border-radius:12px; cursor:pointer;">
+                  <span style="font-size:26px;">${bm.icon}</span>
+                  <span style="font-size:12px; font-weight:500; color:#e8e0f0;">${bm.name}</span>
+                </div>
+              `).join('')}
             </div>
           </div>
         </div>
@@ -182,14 +175,20 @@ export const AppManifest = {
       ensureFrameElement(tab);
 
       if (tab.useProxy) {
-        // SPLASH does not provide the old /embed.html postMessage endpoint.
-        // Its supported embed flow is the hash injection route: /#inject=<url>.
-        // Reload that route for each navigation so the proxy receives the target
-        // URL directly instead of waiting forever for a "ready" message.
-        tab.frameMode = 'proxy';
-        tab.ready = false;
-        tab.queued = null;
-        tab.frameEl.src = `${PROXY_ORIGIN}/#inject=${encodeURIComponent(url)}`;
+        // Switch iframe to Scramjet embed if it wasn't already in proxy mode
+        if (tab.frameMode !== 'proxy') {
+          tab.frameMode = 'proxy';
+          tab.ready = false;
+          tab.queued = url;
+          tab.frameEl.src = EMBED_URL;
+          return;
+        }
+
+        if (tab.ready) {
+          sendToFrame(tab, { type: 'go', url });
+        } else {
+          tab.queued = url;
+        }
       } else {
         // Direct mode: bypass proxy and load URL straight into the iframe
         tab.frameMode = 'direct';
@@ -520,15 +519,7 @@ export const AppManifest = {
     }
     if (!hasSeenBrowserGuide) {
       window.setTimeout(() => {
-        if (!containerEl.isConnected) return;
-        // Persist the first-launch state before opening the guide so closing and
-        // reopening the Browser app does not trigger the walkthrough again.
-        try {
-          localStorage.setItem('vault_browser_guide_seen_v1', 'true');
-        } catch (error) {
-          console.warn('[BrowserApp] Could not save browser guide flag:', error);
-        }
-        showBrowserGuide();
+        if (containerEl.isConnected) showBrowserGuide();
       }, 350);
     }
   }
