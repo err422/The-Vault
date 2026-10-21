@@ -33,6 +33,7 @@ export const AppManifest = {
           <aside style="padding:16px;border-right:1px solid rgba(168,85,247,.16);overflow:auto;">
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#8b7aa8;font-weight:700;margin-bottom:10px;">Online</div>
             <div id="vn-peers" style="display:flex;flex-direction:column;gap:8px;"></div>
+            <div id="vn-profile" style="display:none;margin-top:14px;padding:12px;border:1px solid #8b5cf644;border-radius:12px;background:#8b5cf610;"></div>
             <div style="font-size:11px;line-height:1.5;color:#78698f;margin-top:16px;">Presence is shared with signed-in users when cloud rules allow it. Guest mode only sees other tabs on this browser.</div>
           </aside>
           <section style="display:flex;flex-direction:column;min-width:0;min-height:0;">
@@ -50,6 +51,8 @@ export const AppManifest = {
     const peersEl = containerEl.querySelector('#vn-peers');
     const chatEl = containerEl.querySelector('#vn-chat');
     const countEl = containerEl.querySelector('#vn-count');
+    const profileEl = containerEl.querySelector('#vn-profile');
+    let selectedPeerId = null;
     const form = containerEl.querySelector('#vn-form');
     const input = containerEl.querySelector('#vn-input');
     const nameForm = containerEl.querySelector('#vn-name-form');
@@ -79,8 +82,19 @@ export const AppManifest = {
       countEl.textContent = peers.length + ' here';
       peersEl.textContent = '';
       peers.forEach(peer => {
-        const card = document.createElement('div');
-        card.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;background:#ffffff08;';
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.style.cssText = 'width:100%;text-align:left;display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;background:' + (selectedPeerId === peer.clientId ? '#8b5cf622' : '#ffffff08') + ';border:1px solid ' + (selectedPeerId === peer.clientId ? '#8b5cf666' : 'transparent') + ';color:inherit;cursor:pointer;';
+        card.addEventListener('click', () => {
+          selectedPeerId = peer.clientId;
+          const selected = multiplayerService.getPeers().find(item => item.clientId === selectedPeerId);
+          if (!selected) { profileEl.style.display = 'none'; return; }
+          profileEl.style.display = 'block';
+          profileEl.textContent = '';
+          addText(profileEl, selected.username, { fontSize:'13px', fontWeight:'750', color:'#e9d5ff' });
+          addText(profileEl, selected.isSelf ? 'Your session' : 'Online now', { fontSize:'10px', color:'#34d399', marginTop:'5px' });
+          addText(profileEl, 'Using ' + (selected.activity?.gameTitle || selected.activity?.app || 'Desktop'), { fontSize:'11px', color:'#c4b5fd', marginTop:'8px', overflowWrap:'anywhere' });
+        });
         const dot = document.createElement('span');
         dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:#34d399;flex-shrink:0;';
         const info = document.createElement('div');
@@ -90,6 +104,10 @@ export const AppManifest = {
         card.append(dot, info);
         peersEl.appendChild(card);
       });
+      if (selectedPeerId && !peers.some(peer => peer.clientId === selectedPeerId)) {
+        selectedPeerId = null;
+        profileEl.style.display = 'none';
+      }
 
       const messages = multiplayerService.getMessages();
       const ids = messages.map(m => m.id).join('|');
