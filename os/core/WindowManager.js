@@ -395,7 +395,9 @@ class WindowManager {
     store.setState(`windows.${instanceId}`, {
       ...win,
       bounds: { ...bounds },
-      restoreBounds: targetState === 'normal' ? null : win.restoreBounds,
+      restoreBounds: targetState === 'maximized'
+        ? (win.restoreBounds ?? win.bounds)
+        : targetState === 'normal' ? null : win.restoreBounds,
       prevState: null,
       state: targetState,
       snapZone: targetState === 'snapped' ? win.snapZone : null,
@@ -415,8 +417,11 @@ class WindowManager {
       frame.setFocused?.(true);
       frame.setZIndex(z);
       if (targetState === 'maximized') {
+        // Rebuild the frame's saved normal bounds before maximizing it again.
+        // Otherwise a later unmaximize would incorrectly restore to full-screen.
+        const normalBounds = win.restoreBounds ?? win.bounds;
         frame.updateState('normal');
-        frame.updateBounds(bounds, false);
+        frame.updateBounds(normalBounds, false);
         frame.updateState('maximized');
         frame.updateBounds(bounds, false);
       } else {
