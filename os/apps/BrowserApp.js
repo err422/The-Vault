@@ -89,6 +89,7 @@ export const AppManifest = {
 
           <!-- Channel Toggle Button (Proxy vs Direct) -->
           <button id="browser-mode-btn" title="Toggle between Vault Proxy and Direct iframe loading" style="height:30px; padding:0 12px; border-radius:8px; font-size:11.5px; font-weight:500; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; transition:all 0.15s ease;"></button>
+          <button id="browser-pin-btn" title="Pin this website to your WebOS desktop" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(168,85,247,.3);background:rgba(168,85,247,.1);color:#d8b4fe;font-size:12px;cursor:pointer;white-space:nowrap;">📌 Pin</button>
           <button id="browser-help-btn" title="Explain how the browser and proxy work" style="height:30px; padding:0 10px; border-radius:8px; border:1px solid rgba(168,85,247,0.3); background:rgba(168,85,247,0.1); color:#d8b4fe; font-size:12px; cursor:pointer; white-space:nowrap;">? Help</button>
         </div>
 
@@ -129,6 +130,7 @@ export const AppManifest = {
     const fwdBtn = containerEl.querySelector('#browser-fwd-btn');
     const reloadBtn = containerEl.querySelector('#browser-reload-btn');
     const modeBtn = containerEl.querySelector('#browser-mode-btn');
+    const pinBtn = containerEl.querySelector('#browser-pin-btn');
     const helpBtn = containerEl.querySelector('#browser-help-btn');
     const addTabBtn = containerEl.querySelector('#browser-add-tab-btn');
 
@@ -401,6 +403,48 @@ export const AppManifest = {
       const active = getActiveTab();
       if (!isHomeUrl(active.url)) loadInTab(active, active.url);
     });
+
+    // Pin the current page without leaving the browser or using native dialogs.
+    pinBtn.addEventListener('click', () => {
+      const active = getActiveTab();
+      let parsed;
+      try { parsed = new URL(active.url); } catch { parsed = null; }
+      if (!parsed || !['http:', 'https:'].includes(parsed.protocol)) {
+        showBrowserNotice('Open a website first, then pin it to your desktop.');
+        return;
+      }
+      let shortcuts = [];
+      try {
+        const saved = JSON.parse(localStorage.getItem('vaultos_custom_shortcuts') || '[]');
+        if (Array.isArray(saved)) shortcuts = saved;
+      } catch {}
+      const title = (active.title && active.title !== 'Home' ? active.title : parsed.hostname).trim().slice(0, 60);
+      if (shortcuts.some(item => item && item.url === parsed.href && String(item.label).toLowerCase() === title.toLowerCase())) {
+        showBrowserNotice('This website is already pinned to your desktop.');
+        return;
+      }
+      const id = 'shortcut-' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
+      shortcuts.push({ id, appId: 'browser', label: title, icon: '🔗', url: parsed.href });
+      try {
+        localStorage.setItem('vaultos_custom_shortcuts', JSON.stringify(shortcuts));
+        window.dispatchEvent(new CustomEvent('vaultos:shortcuts-changed'));
+        showBrowserNotice('Pinned "' + title + '" to your desktop.');
+      } catch {
+        showBrowserNotice('Could not save the shortcut. Browser storage may be unavailable or full.');
+      }
+    });
+
+    function showBrowserNotice(message) {
+      containerEl.querySelector('.browser-inline-notice')?.remove();
+      const notice = document.createElement('div');
+      notice.className = 'browser-inline-notice';
+      notice.textContent = message;
+      notice.style.cssText = 'position:absolute;z-index:20;top:12px;left:50%;transform:translateX(-50%);max-width:90%;padding:11px 16px;border:1px solid rgba(168,85,247,.5);border-radius:10px;background:#201533;color:#f5f3ff;box-shadow:0 10px 30px #0008;font-size:12px;text-align:center;';
+      const root = containerEl.querySelector('.browser-app-root');
+      root.style.position = 'relative';
+      root.appendChild(notice);
+      window.setTimeout(() => notice.remove(), 2600);
+    }
 
     // Open the beginner-friendly browser and proxy walkthrough.
     helpBtn.addEventListener('click', () => showBrowserGuide());
