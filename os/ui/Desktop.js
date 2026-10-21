@@ -40,10 +40,10 @@ let customShortcuts = _loadCustomShortcuts();
 function _saveCustomShortcuts() {
   try {
     localStorage.setItem(SHORTCUT_STORAGE_KEY, JSON.stringify(customShortcuts));
+    window.dispatchEvent(new CustomEvent('vaultos:shortcuts-changed'));
     return true;
   } catch (err) {
     console.warn('[Desktop] Failed to save website shortcuts:', err);
-    alert('Could not save this shortcut. Browser storage may be unavailable or full.');
     return false;
   }
 }
@@ -53,13 +53,11 @@ function _addCustomShortcut(label, url) {
   let parsed;
   try { parsed = new URL(url); } catch { parsed = null; }
   if (!cleanLabel || !parsed || !['http:', 'https:'].includes(parsed.protocol)) {
-    alert('Enter a name and a valid HTTP or HTTPS website URL.');
-    return;
+    return 'Enter a name and a valid HTTP or HTTPS website URL.';
   }
   const normalizedUrl = parsed.href;
   if (customShortcuts.some((item) => item.url === normalizedUrl && item.label.toLowerCase() === cleanLabel.toLowerCase())) {
-    alert('That shortcut already exists on your desktop.');
-    return;
+    return 'That shortcut already exists on your desktop.';
   }
   const shortcut = {
     id: 'shortcut-' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)),
@@ -71,11 +69,12 @@ function _addCustomShortcut(label, url) {
   customShortcuts.push(shortcut);
   if (!_saveCustomShortcuts()) {
     customShortcuts.pop();
-    return;
+    return 'Could not save the shortcut. Browser storage may be unavailable or full.';
   }
   _iconPositions[_iconKey(shortcut)] = _findNearestFreeCell(0, 0);
   _renderIcons();
   _saveLayout();
+  return '';
 }
 
 function _removeCustomShortcut(id) {
@@ -437,7 +436,7 @@ function _createIcon(def) {
   el.addEventListener('dblclick', (e) => {
     e.stopPropagation();
     if (hasMoved) return;
-    if (def.url) AppRegistry.launch(def.appId, { launchOptions: { url: def.url, title: def.label } });
+    if (def.url) AppRegistry.launch(def.appId, { url: def.url, title: def.label });
     else AppRegistry.launch(def.appId);
   });
 
@@ -450,15 +449,13 @@ function _createIcon(def) {
         {
           label: 'Open Website',
           icon: '🌐',
-          action: () => AppRegistry.launch(def.appId, { launchOptions: { url: def.url, title: def.label } })
+          action: () => AppRegistry.launch(def.appId, { url: def.url, title: def.label })
         },
         { type: 'separator' },
         {
           label: 'Remove Shortcut',
           icon: '🗑️',
-          action: () => {
-            if (confirm(`Remove "${def.label}" from your desktop?`)) _removeCustomShortcut(def.id);
-          }
+          action: () => _removeCustomShortcut(def.id)
         }
       ]);
     });
@@ -467,7 +464,7 @@ function _createIcon(def) {
   el.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      if (def.url) AppRegistry.launch(def.appId, { launchOptions: { url: def.url, title: def.label } });
+      if (def.url) AppRegistry.launch(def.appId, { url: def.url, title: def.label });
       else AppRegistry.launch(def.appId);
     }
   });
@@ -488,6 +485,33 @@ function _deselectAll() {
   }
 }
 
+// ── In-WebOS shortcut dialog (no native prompt/alert dialogs) ───────
+function _showShortcutDialog(initial = {}) {
+  if (!_root) return;
+  _root.querySelector('.vault-shortcut-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'vault-shortcut-modal';
+  overlay.style.cssText = 'position:absolute;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(5,3,12,.72);backdrop-filter:blur(8px);';
+  const panel = document.createElement('form');
+  panel.style.cssText = 'width:min(420px,100%);padding:22px;border:1px solid rgba(168,85,247,.45);border-radius:16px;background:#171124;color:#f5f3ff;box-shadow:0 24px 70px #0009;font:13px -apple-system,BlinkMacSystemFont,sans-serif;';
+  panel.innerHTML = '<h2 style="margin:0 0 6px;font-size:18px">Pin website to desktop</h2><p style="margin:0 0 18px;color:#b8a9d8">Save a website as a desktop shortcut. Everything stays inside WebOS.</p><label style="display:block;margin:10px 0 5px">Shortcut name</label><input name="label" maxlength="60" required placeholder="Website name" style="box-sizing:border-box;width:100%;padding:10px;border-radius:8px;border:1px solid #594477;background:#0d0916;color:#fff"><label style="display:block;margin:12px 0 5px">Website URL</label><input name="url" type="url" required placeholder="https://example.com" style="box-sizing:border-box;width:100%;padding:10px;border-radius:8px;border:1px solid #594477;background:#0d0916;color:#fff"><p data-error style="min-height:16px;color:#fca5a5;margin:8px 0"></p><div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" data-cancel style="padding:9px 13px;border:1px solid #594477;border-radius:8px;background:transparent;color:#ddd">Cancel</button><button type="submit" style="padding:9px 13px;border:0;border-radius:8px;background:#7c3aed;color:white;font-weight:600">Pin to desktop</button></div>';
+  overlay.appendChild(panel);
+  _root.appendChild(overlay);
+  panel.elements.label.value = initial.label || '';
+  panel.elements.url.value = initial.url || '';
+  panel.querySelector('[data-cancel]').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('pointerdown', (event) => { if (event.target === overlay) overlay.remove(); });
+  panel.addEventListener('submit', (event) => {
+    event.preventDefault();
+    let url = panel.elements.url.value.trim();
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    const error = _addCustomShortcut(panel.elements.label.value, url);
+    if (error) { panel.querySelector('[data-error]').textContent = error; return; }
+    overlay.remove();
+  });
+  panel.elements.label.focus();
+}
+
 // ── Desktop context menu ───────────────────────────────────────────
 function _onContextMenu(e) {
   e.preventDefault();
@@ -495,15 +519,8 @@ function _onContextMenu(e) {
     {
       label: 'Add Website Shortcut',
       icon: '🔗',
-      action: () => {
-        const name = prompt('Shortcut name:', 'My Website');
-        if (!name || !name.trim()) return;
-        let url = prompt('Website URL:', 'https://');
-        if (!url || !url.trim()) return;
-        url = url.trim();
-        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-        _addCustomShortcut(name, url);
-      }
+      action: () => _showShortcutDialog()
+
     },
     { type: 'separator' },
     {
@@ -573,6 +590,11 @@ export function init(mountTarget) {
     if (e.target === _root || e.target === _iconGrid) _deselectAll();
   });
   _root.addEventListener('contextmenu', _onContextMenu);
+  window.addEventListener('vaultos:shortcuts-changed', () => {
+    customShortcuts = _loadCustomShortcuts();
+    _loadLayout();
+    _renderIcons();
+  });
 
   if (typeof ResizeObserver !== 'undefined') {
     _resizeObserver = new ResizeObserver(() => _reflowLayout());
