@@ -53,6 +53,7 @@ export const AppManifest = {
     const countEl = containerEl.querySelector('#vn-count');
     const profileEl = containerEl.querySelector('#vn-profile');
     let selectedPeerId = null;
+    const AVATARS = ['🧑‍💻', '👾', '🦊', '🐱', '🐸', '🐼', '🚀', '🌙'];
     const form = containerEl.querySelector('#vn-form');
     const input = containerEl.querySelector('#vn-input');
     const nameForm = containerEl.querySelector('#vn-name-form');
@@ -75,6 +76,58 @@ export const AppManifest = {
       Object.assign(el.style, style);
       parent.appendChild(el);
       return el;
+    };
+
+    const renderProfile = selected => {
+      profileEl.style.display = 'block';
+      profileEl.textContent = '';
+      const avatar = document.createElement('div');
+      avatar.textContent = selected.avatar || '🧑‍💻';
+      avatar.style.cssText = 'font-size:28px;margin-bottom:7px;';
+      profileEl.appendChild(avatar);
+      addText(profileEl, selected.username, { fontSize:'13px', fontWeight:'750', color:'#e9d5ff' });
+      addText(profileEl, selected.status || (selected.isSelf ? 'Set a short status so people know what you’re up to.' : 'No status set yet.'), { fontSize:'11px', color:'#c4b5fd', marginTop:'5px', lineHeight:'1.4', overflowWrap:'anywhere' });
+      addText(profileEl, selected.isSelf ? 'Your profile' : 'Online now', { fontSize:'10px', color:'#34d399', marginTop:'7px' });
+      addText(profileEl, 'Using ' + (selected.activity?.gameTitle || selected.activity?.app || 'Desktop'), { fontSize:'11px', color:'#c4b5fd', marginTop:'8px', overflowWrap:'anywhere' });
+
+      if (!selected.isSelf) return;
+
+      const editor = document.createElement('form');
+      editor.style.cssText = 'display:flex;flex-direction:column;gap:7px;margin-top:12px;padding-top:11px;border-top:1px solid #8b5cf633;';
+      const avatarLabel = document.createElement('label');
+      avatarLabel.textContent = 'Avatar';
+      avatarLabel.style.cssText = 'font-size:10px;color:#a99abc;';
+      const avatarSelect = document.createElement('select');
+      avatarSelect.setAttribute('aria-label', 'Choose avatar');
+      avatarSelect.style.cssText = 'width:100%;background:#160b24;border:1px solid #ffffff22;border-radius:8px;padding:7px;color:#fff;font-size:12px;';
+      AVATARS.forEach(choice => {
+        const option = document.createElement('option');
+        option.value = choice;
+        option.textContent = choice + (choice === selected.avatar ? '  (current)' : '');
+        option.selected = choice === selected.avatar;
+        avatarSelect.appendChild(option);
+      });
+      const statusLabel = document.createElement('label');
+      statusLabel.textContent = 'Status';
+      statusLabel.style.cssText = 'font-size:10px;color:#a99abc;';
+      const statusInput = document.createElement('input');
+      statusInput.maxLength = 60;
+      statusInput.placeholder = 'What are you up to?';
+      statusInput.value = selected.status || '';
+      statusInput.setAttribute('aria-label', 'Profile status');
+      statusInput.style.cssText = 'width:100%;box-sizing:border-box;background:#ffffff0a;border:1px solid #ffffff22;border-radius:8px;padding:8px;color:#fff;font-size:11px;';
+      const save = document.createElement('button');
+      save.type = 'submit';
+      save.textContent = 'Save profile';
+      save.style.cssText = 'border:1px solid #8b5cf655;border-radius:8px;background:#8b5cf622;color:#ddd6fe;padding:8px;font-size:11px;cursor:pointer;';
+      editor.append(avatarLabel, avatarSelect, statusLabel, statusInput, save);
+      editor.addEventListener('submit', event => {
+        event.preventDefault();
+        multiplayerService.setProfile({ avatar: avatarSelect.value, status: statusInput.value });
+        const current = multiplayerService.getPeers().find(peer => peer.isSelf);
+        if (current) renderProfile(current);
+      });
+      profileEl.appendChild(editor);
     };
 
     const render = () => {
@@ -105,19 +158,19 @@ export const AppManifest = {
           selectedPeerId = peer.clientId;
           const selected = multiplayerService.getPeers().find(item => item.clientId === selectedPeerId);
           if (!selected) { profileEl.style.display = 'none'; return; }
-          profileEl.style.display = 'block';
-          profileEl.textContent = '';
-          addText(profileEl, selected.username, { fontSize:'13px', fontWeight:'750', color:'#e9d5ff' });
-          addText(profileEl, selected.isSelf ? 'Your session' : 'Online now', { fontSize:'10px', color:'#34d399', marginTop:'5px' });
-          addText(profileEl, 'Using ' + (selected.activity?.gameTitle || selected.activity?.app || 'Desktop'), { fontSize:'11px', color:'#c4b5fd', marginTop:'8px', overflowWrap:'anywhere' });
+          renderProfile(selected);
         });
+        const avatar = document.createElement('span');
+        avatar.textContent = peer.avatar || '🧑‍💻';
+        avatar.style.cssText = 'font-size:18px;flex-shrink:0;';
         const dot = document.createElement('span');
-        dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:#34d399;flex-shrink:0;';
+        dot.style.cssText = 'width:7px;height:7px;border-radius:50%;background:#34d399;flex-shrink:0;margin-left:-5px;align-self:flex-start;margin-top:3px;';
         const info = document.createElement('div');
         info.style.cssText = 'min-width:0;';
         addText(info, (peer.isSelf ? 'You · ' : '') + peer.username, { fontSize:'12px', fontWeight:'650', overflowWrap:'anywhere' });
+        if (peer.status) addText(info, peer.status, { fontSize:'10px', color:'#b6a6c9', marginTop:'2px', overflowWrap:'anywhere' });
         addText(info, peer.activity?.gameTitle || peer.activity?.app || 'Desktop', { fontSize:'10px', color:'#9b8bb9', marginTop:'2px' });
-        card.append(dot, info);
+        card.append(avatar, dot, info);
         peersEl.appendChild(card);
       });
       if (selectedPeerId && !peers.some(peer => peer.clientId === selectedPeerId)) {
