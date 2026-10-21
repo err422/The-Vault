@@ -50,7 +50,7 @@
           "clientId": { ".validate": "newData.isString() && newData.val() === $clientId" },
           "uid": { ".validate": "newData.isString() && newData.val() === auth.uid" },
           "username": { ".validate": "newData.isString() && newData.val().length <= 20" },
-          "activity": { ".validate": "newData.hasChildren(['app', 'gameTitle', 'gameUrl'])" },
+          "activity": { ".validate": "newData.hasChildren(['app'])" },
           "lastSeen": { ".validate": "newData.isNumber()" },
           "$other": { ".validate": false }
         }
