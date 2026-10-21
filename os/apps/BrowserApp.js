@@ -184,12 +184,12 @@ export const AppManifest = {
     const getRecentSites = () => {
       try {
         const items = JSON.parse(localStorage.getItem('vault_browser_recent_sites_v1') || '[]');
-        return Array.isArray(items) ? items.filter(item => item && typeof item.url === 'string' && /^https?:\\/\\//i.test(item.url)).slice(0, 5) : [];
+        return Array.isArray(items) ? items.filter(item => item && typeof item.url === 'string' && /^https?:\/\//i.test(item.url)).slice(0, 5) : [];
       } catch { return []; }
     };
 
     const rememberRecentSite = (url, title) => {
-      if (!/^https?:\\/\\//i.test(url)) return;
+      if (!/^https?:\/\//i.test(url)) return;
       try {
         const next = [{ url, title: String(title || hostOf(url)).slice(0, 60) }, ...getRecentSites().filter(item => item.url !== url)].slice(0, 5);
         localStorage.setItem('vault_browser_recent_sites_v1', JSON.stringify(next));
