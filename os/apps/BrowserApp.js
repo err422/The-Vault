@@ -431,6 +431,20 @@ export const AppManifest = {
     renderViewport();
     if (!isHomeUrl(initialUrl)) loadInTab(getActiveTab(), initialUrl);
     renderViewport();
+
+    // Show the browser walkthrough once, the first time this app is opened.
+    // The toolbar Help button can reopen it at any time.
+    let hasSeenBrowserGuide = false;
+    try {
+      hasSeenBrowserGuide = localStorage.getItem('vault_browser_guide_seen_v1') === 'true';
+    } catch (error) {
+      console.warn('[BrowserApp] Could not read browser guide flag:', error);
+    }
+    if (!hasSeenBrowserGuide) {
+      window.setTimeout(() => {
+        if (containerEl.isConnected) showBrowserGuide();
+      }, 350);
+    }
   }
 };
 
