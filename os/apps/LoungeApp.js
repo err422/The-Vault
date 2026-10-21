@@ -86,6 +86,12 @@ export const AppManifest = {
         card.type = 'button';
         card.style.cssText = 'width:100%;text-align:left;display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;background:' + (selectedPeerId === peer.clientId ? '#8b5cf622' : '#ffffff08') + ';border:1px solid ' + (selectedPeerId === peer.clientId ? '#8b5cf666' : 'transparent') + ';color:inherit;cursor:pointer;';
         card.addEventListener('click', () => {
+          if (selectedPeerId === peer.clientId) {
+            selectedPeerId = null;
+            profileEl.style.display = 'none';
+            render();
+            return;
+          }
           selectedPeerId = peer.clientId;
           const selected = multiplayerService.getPeers().find(item => item.clientId === selectedPeerId);
           if (!selected) { profileEl.style.display = 'none'; return; }
