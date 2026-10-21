@@ -44,7 +44,7 @@ export const AppManifest = {
             </form>
           </section>
         </div>
-        <footer style="padding:9px 14px;color:#7f7199;font-size:11px;border-top:1px solid rgba(168,85,247,.12);">Early access · Public chat notifications are enabled.</footer>
+        <footer style="padding:9px 14px;color:#7f7199;font-size:11px;border-top:1px solid rgba(168,85,247,.12);">Early access · A subtle chime plays for new public chat messages.</footer>
       </div>`;
 
     const peersEl = containerEl.querySelector('#vn-peers');
@@ -55,6 +55,9 @@ export const AppManifest = {
     const nameForm = containerEl.querySelector('#vn-name-form');
     const nameInput = containerEl.querySelector('#vn-name-input');
     nameInput.value = (multiplayerService.getPeers().find(peer => peer.isSelf)?.username) || 'Vault Guest';
+    // Browsers require a user gesture before playing audio. Any Lounge interaction unlocks the chime.
+    containerEl.addEventListener('pointerdown', () => multiplayerService.unlockChime(), { once: true });
+    containerEl.addEventListener('keydown', () => multiplayerService.unlockChime(), { once: true });
     nameForm.addEventListener('submit', event => {
       event.preventDefault();
       const name = multiplayerService.setUsername(nameInput.value);
