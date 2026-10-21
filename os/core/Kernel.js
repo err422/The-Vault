@@ -41,6 +41,7 @@ import CalculatorApp from '../apps/CalculatorApp.js';
 import SystemMonitorApp from '../apps/SystemMonitorApp.js';
 import AppStoreApp from '../apps/AppStoreApp.js';
 import AboutApp from '../apps/AboutApp.js';
+import LoungeApp from '../apps/LoungeApp.js';
 
 export async function boot() {
   if (boot._booted) {
@@ -262,7 +263,8 @@ function _registerCoreApps() {
     CalculatorApp,
     SystemMonitorApp,
     AppStoreApp,
-    AboutApp
+    AboutApp,
+    LoungeApp
   ];
 
   for (const manifest of apps) {
