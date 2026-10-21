@@ -18,6 +18,88 @@ const DEFAULT_ICONS = [
   { appId: 'vault-hub',     label: 'Vault Hub',     icon: '🏠' },
 ];
 
+// Website shortcuts are stored locally per browser profile; Firebase is untouched.
+const SHORTCUT_STORAGE_KEY = 'vaultos_custom_shortcuts';
+function _loadCustomShortcuts() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(SHORTCUT_STORAGE_KEY) || '[]');
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item) =>
+      item && typeof item.id === 'string' &&
+      typeof item.label === 'string' && item.label.trim() &&
+      typeof item.url === 'string' && /^https?:\/\//i.test(item.url) &&
+      item.appId === 'browser'
+    );
+  } catch (err) {
+    console.warn('[Desktop] Failed to read website shortcuts:', err);
+    return [];
+  }
+}
+let customShortcuts = _loadCustomShortcuts();
+
+function _saveCustomShortcuts() {
+  try {
+    localStorage.setItem(SHORTCUT_STORAGE_KEY, JSON.stringify(customShortcuts));
+    return true;
+  } catch (err) {
+    console.warn('[Desktop] Failed to save website shortcuts:', err);
+    alert('Could not save this shortcut. Browser storage may be unavailable or full.');
+    return false;
+  }
+}
+
+function _addCustomShortcut(label, url) {
+  const cleanLabel = label.trim().slice(0, 60);
+  let parsed;
+  try { parsed = new URL(url); } catch { parsed = null; }
+  if (!cleanLabel || !parsed || !['http:', 'https:'].includes(parsed.protocol)) {
+    alert('Enter a name and a valid HTTP or HTTPS website URL.');
+    return;
+  }
+  const normalizedUrl = parsed.href;
+  if (customShortcuts.some((item) => item.url === normalizedUrl && item.label.toLowerCase() === cleanLabel.toLowerCase())) {
+    alert('That shortcut already exists on your desktop.');
+    return;
+  }
+  const shortcut = {
+    id: 'shortcut-' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)),
+    appId: 'browser',
+    label: cleanLabel,
+    icon: '🔗',
+    url: normalizedUrl,
+  };
+  customShortcuts.push(shortcut);
+  if (!_saveCustomShortcuts()) {
+    customShortcuts.pop();
+    return;
+  }
+  _iconPositions[_iconKey(shortcut)] = _findNearestFreeCell(0, 0);
+  _renderIcons();
+  _saveLayout();
+}
+
+function _removeCustomShortcut(id) {
+  const index = customShortcuts.findIndex((item) => item.id === id);
+  if (index < 0) return;
+  const removed = customShortcuts.splice(index, 1)[0];
+  try {
+    if (!_saveCustomShortcuts()) {
+      customShortcuts.splice(index, 0, removed);
+      return;
+    }
+  } catch {
+    customShortcuts.splice(index, 0, removed);
+    return;
+  }
+  delete _iconPositions[_iconKey(removed)];
+  _renderIcons();
+  _saveLayout();
+}
+
+function _iconKey(def) {
+  return def.id || def.appId;
+}
+
 const LAYOUT_STORAGE_KEY = 'vaultos_desktop_layout_v1';
 const CELL_W = 92;
 const CELL_H = 108;
@@ -198,8 +280,9 @@ function _loadLayout() {
   _iconPositions = Object.create(null);
   const maxRows = _getMaxRows();
 
-  DEFAULT_ICONS.forEach((def, index) => {
-    const existing = saved[def.appId];
+  [...DEFAULT_ICONS, ...customShortcuts].forEach((def, index) => {
+    const key = _iconKey(def);
+    const existing = saved[key];
     if (
       existing &&
       Number.isFinite(existing.col) &&
@@ -209,7 +292,7 @@ function _loadLayout() {
     ) {
       const cell = _clampCell(existing.col, existing.row);
       if (!_isCellOccupied(cell.col, cell.row)) {
-        _iconPositions[def.appId] = cell;
+        _iconPositions[key] = cell;
         return;
       }
     }
@@ -217,7 +300,7 @@ function _loadLayout() {
     // Keep the existing top-to-bottom, left-to-right default ordering.
     const defaultCol = Math.floor(index / maxRows);
     const defaultRow = index % maxRows;
-    _iconPositions[def.appId] = _findNearestFreeCell(defaultCol, defaultRow);
+    _iconPositions[key] = _findNearestFreeCell(defaultCol, defaultRow);
   });
 }
 
@@ -228,10 +311,11 @@ function _reflowLayout() {
 
   // Preserve each icon's position where possible; clamp and resolve collisions
   // after the available viewport changes.
-  for (const def of DEFAULT_ICONS) {
-    const pos = previous[def.appId] || { col: 0, row: 0 };
+  for (const def of [...DEFAULT_ICONS, ...customShortcuts]) {
+    const key = _iconKey(def);
+    const pos = previous[key] || { col: 0, row: 0 };
     const cell = _findNearestFreeCell(pos.col, pos.row);
-    _iconPositions[def.appId] = cell;
+    _iconPositions[key] = cell;
   }
 
   _renderIcons();
@@ -257,7 +341,8 @@ function _createIcon(def) {
   el.setAttribute('aria-label', def.label);
   el.tabIndex = 0;
 
-  const pos = _iconPositions[def.appId] || { col: 0, row: 0 };
+  const key = _iconKey(def);
+  const pos = _iconPositions[key] || { col: 0, row: 0 };
   const pixel = _gridToPixels(pos.col, pos.row);
   el.style.left = `${pixel.x}px`;
   el.style.top = `${pixel.y}px`;
@@ -325,8 +410,8 @@ function _createIcon(def) {
     if (!hasMoved || cancelled) {
       // A cancelled pointer interaction restores the last committed position.
       const committed = _gridToPixels(
-        _iconPositions[def.appId]?.col ?? pos.col,
-        _iconPositions[def.appId]?.row ?? pos.row
+        _iconPositions[key]?.col ?? pos.col,
+        _iconPositions[key]?.row ?? pos.row
       );
       el.style.left = `${committed.x}px`;
       el.style.top = `${committed.y}px`;
@@ -337,8 +422,8 @@ function _createIcon(def) {
     const currentY = parseFloat(el.style.top) || 0;
     const rawCol = Math.round((currentX - GRID_PAD_X) / CELL_W);
     const rawRow = Math.round((currentY - GRID_PAD_Y) / CELL_H);
-    const snapped = _findNearestFreeCell(rawCol, rawRow, def.appId);
-    _iconPositions[def.appId] = snapped;
+    const snapped = _findNearestFreeCell(rawCol, rawRow, key);
+    _iconPositions[key] = snapped;
 
     const finalPixel = _gridToPixels(snapped.col, snapped.row);
     el.style.left = `${finalPixel.x}px`;
@@ -351,13 +436,39 @@ function _createIcon(def) {
 
   el.addEventListener('dblclick', (e) => {
     e.stopPropagation();
-    if (!hasMoved) AppRegistry.launch(def.appId);
+    if (hasMoved) return;
+    if (def.url) AppRegistry.launch(def.appId, { launchOptions: { url: def.url, title: def.label } });
+    else AppRegistry.launch(def.appId);
   });
+
+  // Custom shortcuts can be removed from their own right-click menu.
+  if (def.id && def.url) {
+    el.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showContextMenu(e.clientX, e.clientY, [
+        {
+          label: 'Open Website',
+          icon: '🌐',
+          action: () => AppRegistry.launch(def.appId, { launchOptions: { url: def.url, title: def.label } })
+        },
+        { type: 'separator' },
+        {
+          label: 'Remove Shortcut',
+          icon: '🗑️',
+          action: () => {
+            if (confirm(`Remove "${def.label}" from your desktop?`)) _removeCustomShortcut(def.id);
+          }
+        }
+      ]);
+    });
+  }
 
   el.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      AppRegistry.launch(def.appId);
+      if (def.url) AppRegistry.launch(def.appId, { launchOptions: { url: def.url, title: def.label } });
+      else AppRegistry.launch(def.appId);
     }
   });
 
@@ -381,6 +492,20 @@ function _deselectAll() {
 function _onContextMenu(e) {
   e.preventDefault();
   showContextMenu(e.clientX, e.clientY, [
+    {
+      label: 'Add Website Shortcut',
+      icon: '🔗',
+      action: () => {
+        const name = prompt('Shortcut name:', 'My Website');
+        if (!name || !name.trim()) return;
+        let url = prompt('Website URL:', 'https://');
+        if (!url || !url.trim()) return;
+        url = url.trim();
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        _addCustomShortcut(name, url);
+      }
+    },
+    { type: 'separator' },
     {
       label: 'New Folder',
       icon: '📁',
@@ -417,7 +542,7 @@ function _onContextMenu(e) {
 function _renderIcons() {
   if (!_iconGrid) return;
   _iconGrid.textContent = '';
-  for (const def of DEFAULT_ICONS) _iconGrid.appendChild(_createIcon(def));
+  for (const def of [...DEFAULT_ICONS, ...customShortcuts]) _iconGrid.appendChild(_createIcon(def));
   _selectedIcon = null;
 }
 
