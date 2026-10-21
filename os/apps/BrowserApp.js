@@ -207,11 +207,15 @@ export const AppManifest = {
       } else if (data.type === 'urlchange' && typeof data.url === 'string') {
         if (data.url !== tab.url) {
           tab.url = data.url;
-          tab.title = hostOf(data.url);
           tab.history = tab.history.slice(0, tab.histIdx + 1);
           tab.history.push(data.url);
           tab.histIdx = tab.history.length - 1;
         }
+        // Use the actual document title when the Scramjet embed supplies it.
+        // Some pages/proxy configurations only send the URL, so keep a hostname fallback.
+        tab.title = typeof data.title === 'string' && data.title.trim()
+          ? data.title.trim().slice(0, 120)
+          : hostOf(data.url);
         renderTabs();
         if (tab.id === activeTabId) renderViewport();
       }
