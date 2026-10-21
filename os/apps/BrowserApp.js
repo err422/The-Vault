@@ -140,6 +140,18 @@ export const AppManifest = {
       try { return new URL(url).hostname || url; } catch { return url; }
     };
 
+    // Share only the active page's title/hostname with VaultNet, never its full URL.
+    const publishBrowserActivity = (tab = getActiveTab()) => {
+      if (!tab) return;
+      let pageLabel = '';
+      if (!isHomeUrl(tab.url)) {
+        pageLabel = String(tab.title || hostOf(tab.url) || 'Website').trim().slice(0, 80);
+      }
+      window.dispatchEvent(new CustomEvent('vaultnet:browser-activity', {
+        detail: { title: pageLabel || null, url: null }
+      }));
+    };
+
     // ---- Iframes (Proxy & Direct) --------------------------------------------
 
     const ensureFrameElement = (tab) => {
@@ -217,7 +229,10 @@ export const AppManifest = {
           ? data.title.trim().slice(0, 120)
           : hostOf(data.url);
         renderTabs();
-        if (tab.id === activeTabId) renderViewport();
+        if (tab.id === activeTabId) {
+          renderViewport();
+          publishBrowserActivity(tab);
+        }
       }
     };
     window.addEventListener('message', onMessage);
@@ -326,12 +341,14 @@ export const AppManifest = {
       if (!isHomeUrl(url)) loadInTab(active, url);
       renderTabs();
       renderViewport();
+      publishBrowserActivity(active);
     };
 
     const switchTab = (id) => {
       activeTabId = id;
       renderTabs();
       renderViewport();
+      publishBrowserActivity(getActiveTab());
     };
 
     const closeTab = (id) => {
@@ -477,6 +494,7 @@ export const AppManifest = {
     // ---- Start ---------------------------------------------------------------
     renderTabs();
     renderViewport();
+    publishBrowserActivity(getActiveTab());
     if (!isHomeUrl(initialUrl)) loadInTab(getActiveTab(), initialUrl);
     renderViewport();
 
