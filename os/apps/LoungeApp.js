@@ -33,16 +33,18 @@ export const AppManifest = {
           <aside style="padding:16px;border-right:1px solid rgba(168,85,247,.16);overflow:auto;">
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#8b7aa8;font-weight:700;margin-bottom:10px;">Online</div>
             <div id="vn-peers" style="display:flex;flex-direction:column;gap:8px;"></div>
-            <div id="vn-profile" style="display:none;margin-top:14px;padding:12px;border:1px solid #8b5cf644;border-radius:12px;background:#8b5cf610;"></div>
             <div style="font-size:11px;line-height:1.5;color:#78698f;margin-top:16px;">Presence is shared with signed-in users when cloud rules allow it. Guest mode only sees other tabs on this browser.</div>
           </aside>
-          <section style="display:flex;flex-direction:column;min-width:0;min-height:0;">
-            <div style="padding:14px 16px;border-bottom:1px solid rgba(168,85,247,.14);font-size:13px;font-weight:650;">Lobby chat</div>
-            <div id="vn-chat" aria-live="polite" style="flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;"></div>
-            <form id="vn-form" style="display:flex;gap:8px;padding:12px;border-top:1px solid rgba(168,85,247,.16);">
-              <input id="vn-input" maxlength="280" autocomplete="off" placeholder="Say something…" style="min-width:0;flex:1;background:#ffffff0a;border:1px solid #ffffff1b;border-radius:10px;padding:10px 12px;color:#fff;outline:none;">
-              <button type="submit" style="border:0;border-radius:10px;background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;font-weight:700;padding:0 16px;cursor:pointer;">Send</button>
-            </form>
+          <section style="display:flex;flex-direction:column;min-width:0;min-height:0;position:relative;">
+            <div id="vn-chat-view" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+              <div style="padding:14px 16px;border-bottom:1px solid rgba(168,85,247,.14);font-size:13px;font-weight:650;">Lobby chat</div>
+              <div id="vn-chat" aria-live="polite" style="flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;"></div>
+              <form id="vn-form" style="display:flex;gap:8px;padding:12px;border-top:1px solid rgba(168,85,247,.16);">
+                <input id="vn-input" maxlength="280" autocomplete="off" placeholder="Say something…" style="min-width:0;flex:1;background:#ffffff0a;border:1px solid #ffffff1b;border-radius:10px;padding:10px 12px;color:#fff;outline:none;">
+                <button type="submit" style="border:0;border-radius:10px;background:linear-gradient(135deg,#9333ea,#6d28d9);color:#fff;font-weight:700;padding:0 16px;cursor:pointer;">Send</button>
+              </form>
+            </div>
+            <div id="vn-profile" style="display:none;flex:1;min-height:0;overflow:auto;padding:18px;background:linear-gradient(160deg,#140922,#0b0712);"></div>
           </section>
         </div>
         <footer style="padding:9px 14px;color:#7f7199;font-size:11px;border-top:1px solid rgba(168,85,247,.12);">Early access · A subtle chime plays for new public chat messages.</footer>
@@ -50,6 +52,7 @@ export const AppManifest = {
 
     const peersEl = containerEl.querySelector('#vn-peers');
     const chatEl = containerEl.querySelector('#vn-chat');
+    const chatViewEl = containerEl.querySelector('#vn-chat-view');
     const countEl = containerEl.querySelector('#vn-count');
     const profileEl = containerEl.querySelector('#vn-profile');
     let selectedPeerId = null;
@@ -79,8 +82,27 @@ export const AppManifest = {
     };
 
     const renderProfile = selected => {
-      profileEl.style.display = 'block';
+      chatViewEl.style.display = 'none';
+      profileEl.style.display = 'flex';
+      profileEl.style.flexDirection = 'column';
       profileEl.textContent = '';
+      const profileHeader = document.createElement('div');
+      profileHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid #8b5cf633;';
+      addText(profileHeader, selected.isSelf ? 'Your profile' : 'User profile', { fontSize:'14px', fontWeight:'750', color:'#e9d5ff' });
+      const closeButton = document.createElement('button');
+      closeButton.type = 'button';
+      closeButton.textContent = '✕';
+      closeButton.setAttribute('aria-label', 'Close profile and return to chat');
+      closeButton.title = 'Back to chat';
+      closeButton.style.cssText = 'width:30px;height:30px;border:1px solid #ffffff22;border-radius:9px;background:#ffffff0a;color:#ddd6fe;font-size:14px;cursor:pointer;';
+      closeButton.addEventListener('click', () => {
+        selectedPeerId = null;
+        profileEl.style.display = 'none';
+        chatViewEl.style.display = 'flex';
+        render();
+      });
+      profileHeader.appendChild(closeButton);
+      profileEl.appendChild(profileHeader);
       const avatar = document.createElement('div');
       avatar.textContent = selected.avatar || '🧑‍💻';
       avatar.style.cssText = 'font-size:28px;margin-bottom:7px;';
@@ -152,12 +174,13 @@ export const AppManifest = {
           if (selectedPeerId === peer.clientId) {
             selectedPeerId = null;
             profileEl.style.display = 'none';
+            chatViewEl.style.display = 'flex';
             render();
             return;
           }
           selectedPeerId = peer.clientId;
           const selected = multiplayerService.getPeers().find(item => item.clientId === selectedPeerId);
-          if (!selected) { profileEl.style.display = 'none'; return; }
+          if (!selected) { profileEl.style.display = 'none'; chatViewEl.style.display = 'flex'; return; }
           renderProfile(selected);
         });
         const avatar = document.createElement('span');
@@ -176,6 +199,7 @@ export const AppManifest = {
       if (selectedPeerId && !peers.some(peer => peer.clientId === selectedPeerId)) {
         selectedPeerId = null;
         profileEl.style.display = 'none';
+        chatViewEl.style.display = 'flex';
       }
 
       const messages = multiplayerService.getMessages();
