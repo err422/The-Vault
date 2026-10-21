@@ -3,51 +3,73 @@
  * All user-facing content is rendered with DOM APIs (no HTML-string injection).
  */
 
-const STORAGE_KEY = 'vaultos_onboarded_v2';
+const STORAGE_KEY = 'vaultos_onboarded_v3';
 
 const TOUR_STEPS = [
   {
     icon: '🛡️',
     title: 'Welcome to vaultOS 2.0',
     badge: 'Getting Started',
-    description: 'The Web Vault has evolved into a desktop environment inside your browser. Run apps, play games, and browse the web from one workspace.',
+    description: 'The Web Vault is now a desktop environment inside your browser. Launch apps, open websites, play games, and connect with other Vault users from one workspace.',
     tips: [
-      'Everything runs in movable, resizable windows',
-      'Your notes, files, and settings save automatically',
-      'Customize wallpapers and performance modes in Settings'
+      'Apps open in movable, resizable windows inside the Vault',
+      'Your desktop shortcut layout is saved locally on this device',
+      'Use Settings to customize your experience and replay this tour'
     ]
   },
   {
     icon: '🚀',
-    title: 'Taskbar Dock & Start Launcher',
+    title: 'Desktop, Start & Dock',
     badge: 'Navigation',
-    description: 'Use the bottom dock to switch between apps, or open the Start Launcher to see what is installed.',
+    description: 'The desktop is your home base. Launch apps from desktop icons or the Start launcher, then use the dock to move between open apps.',
     tips: [
-      'Click the Vault icon or press the Super/Windows key to open the launcher',
-      'Hover at the bottom edge to summon the dock when auto-hide is enabled',
-      'Active apps show an indicator beneath their icon'
+      'Double-click a desktop shortcut to launch its app or website',
+      'Drag desktop icons to arrange them; positions snap to a grid and save automatically',
+      'Use the Start launcher to find apps, including VaultNet Lounge'
     ]
   },
   {
     icon: '🪟',
-    title: 'Window Controls & Multitasking',
+    title: 'Windows & Multitasking',
     badge: 'Workspace',
-    description: 'Each app opens in its own window. Arrange windows or maximize an app to focus on it.',
+    description: 'Keep multiple apps open at once and arrange them to fit your workflow.',
     tips: [
-      'Drag a window title bar to move it; drag its edges to resize',
-      'Use the window controls to minimize, maximize, or close apps',
-      'Enable Reduced Motion in Settings for a simpler, lighter experience'
+      'Drag a window title bar to move it and drag its edges to resize',
+      'Use window controls to minimize, maximize, or close apps',
+      'Use the dock to restore minimized windows or switch between running apps'
     ]
   },
   {
     icon: '🌐',
-    title: 'Vault Games, Browser & Terminal',
-    badge: 'Core Apps',
-    description: 'Explore built-in tools and entertainment designed for vaultOS.',
+    title: 'Vault Browser & Shortcuts',
+    badge: 'Web',
+    description: 'The built-in Vault Browser supports multiple tabs, bookmarks, search, and Proxy or Direct loading modes.',
     tips: [
-      'Vault Games lets you search the arcade and launch games',
-      'Vault Browser has a ? Help button that explains the address bar, tabs, and how to switch Proxy and Direct modes',
-      'Terminal includes commands such as help, ls, and neofetch'
+      'Type a web address or search into the address bar, then press Enter',
+      'Use + for a new tab, the navigation buttons to move through history, and ? Help for the browser walkthrough',
+      'Click Pin in the browser to save the current website as a desktop shortcut'
+    ]
+  },
+  {
+    icon: '🎮',
+    title: 'Games, Apps & Terminal',
+    badge: 'Built-in Apps',
+    description: 'The Web Vault includes entertainment and utility apps alongside the browser.',
+    tips: [
+      'Open Vault Games to find and launch games',
+      'Use Terminal commands such as help, ls, and neofetch',
+      'If a site will not load, try the browser Help guide and switch Proxy/Direct modes'
+    ]
+  },
+  {
+    icon: '💬',
+    title: 'VaultNet Lounge',
+    badge: 'Community',
+    description: 'VaultNet Lounge brings online presence and public chat into the desktop experience.',
+    tips: [
+      'Open it from the VaultNet desktop icon or Start launcher',
+      'The sidebar shows online users and the chat area shows public-channel messages',
+      'Browser activity can show the page title or website label, not the full URL'
     ]
   }
 ];
