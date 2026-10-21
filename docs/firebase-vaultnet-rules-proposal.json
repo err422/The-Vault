@@ -50,6 +50,8 @@
           "clientId": { ".validate": "newData.isString() && newData.val() === $clientId" },
           "uid": { ".validate": "newData.isString() && newData.val() === auth.uid" },
           "username": { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "avatar": { ".validate": "newData.isString() && (newData.val() === '🧑‍💻' || newData.val() === '👾' || newData.val() === '🦊' || newData.val() === '🐱' || newData.val() === '🐸' || newData.val() === '🐼' || newData.val() === '🚀' || newData.val() === '🌙')" },
+          "status": { ".validate": "newData.isString() && newData.val().length <= 60" },
           "activity": { ".validate": "newData.hasChildren(['app'])" },
           "lastSeen": { ".validate": "newData.isNumber()" },
           "$other": { ".validate": false }
