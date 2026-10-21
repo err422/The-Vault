@@ -217,8 +217,9 @@ export const AppManifest = {
     const updateHomeBannerVisibility = () => {
       if (!homeAd) return;
       const width = viewport?.clientWidth || 0;
-      homeAd.parentElement.style.display = width >= 500 ? 'block' : 'none';
-      if (width >= 500) mountHomeBanner();
+      const isHomepageVisible = isHomeUrl(getActiveTab()?.url);
+      homeAd.parentElement.style.display = width >= 500 && isHomepageVisible ? 'block' : 'none';
+      if (width >= 500 && isHomepageVisible) mountHomeBanner();
     };
 
     const getActiveTab = () => tabs.find(t => t.id === activeTabId) || tabs[0];
