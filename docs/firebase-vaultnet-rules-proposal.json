@@ -68,7 +68,7 @@
           "timestamp": { ".validate": "newData.isNumber()" },
           "$other": { ".validate": false }
         },
-        " .indexOn": ["timestamp"]
+        ".indexOn": ["timestamp"]
       },
       "pings": {
         "$targetUid": {
