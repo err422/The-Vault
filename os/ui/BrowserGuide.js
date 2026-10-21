@@ -39,7 +39,7 @@ export function showBrowserGuide() {
   const progress = make('span', 'progress');
   const actions = make('div', 'actions');
   const back = make('button', '', 'Back');
-  const next = make('button primary', '', 'Next →');
+  const next = make('button', 'primary', 'Next →');
   actions.append(back, next);
   footer.append(progress, actions);
   card.append(header, body, footer);
