@@ -252,29 +252,26 @@ class WindowManager {
     const win = this._getWindow(instanceId);
     if (!win) return;
 
-    // Already focused and on top? Nothing to do.
+    // A minimized frame may be hidden with inline display:none, so it needs
+    // the full restore path even if the store still says it was focused.
+    if (win.state === 'minimized') {
+      this.restoreWindow(instanceId);
+      return;
+    }
     if (win.isFocused) return;
 
     this._unfocusAll();
-
     const z = this._assignZ();
     store.setState(`windows.${instanceId}`, {
       ...win,
       zIndex: z,
       isFocused: true,
-      // Restore from minimized if needed
-      state: win.state === 'minimized' ? 'normal' : win.state,
     });
 
     for (const [id, frame] of this._frames) {
       const isTarget = id === instanceId;
       frame.setFocused(isTarget);
-      if (isTarget) {
-        frame.setZIndex(z);
-        if (frame.state === 'minimized') {
-          frame.updateState('normal');
-        }
-      }
+      if (isTarget) frame.setZIndex(z);
     }
 
     store.emit('window:focused', { instanceId });
@@ -295,13 +292,20 @@ class WindowManager {
 
     store.setState(`windows.${instanceId}`, {
       ...win,
+      prevState: win.state, // Preserve normal/maximized/snapped state across minimize.
       state: 'minimized',
       isFocused: false,
     });
 
     const frame = this._frames.get(instanceId);
     if (frame) {
+      frame.setFocused?.(false);
       frame.updateState('minimized');
+      // Explicitly hide the element; restoration clears these inline overrides.
+      if (frame.element) {
+        frame.element.style.display = 'none';
+        frame.element.style.pointerEvents = 'none';
+      }
     }
 
     store.emit('window:stateChanged', { instanceId, state: 'minimized' });
@@ -378,25 +382,55 @@ class WindowManager {
 
     this._unfocusAll();
 
-    const bounds = win.restoreBounds ?? win.bounds;
+    const wasMinimized = win.state === 'minimized';
+    const targetState = wasMinimized
+      ? (win.prevState === 'maximized' ? 'maximized'
+        : win.prevState === 'snapped' ? 'snapped' : 'normal')
+      : 'normal';
+    const bounds = targetState === 'maximized'
+      ? this.getWorkArea(true)
+      : (win.restoreBounds ?? win.bounds);
+    const z = this._assignZ();
 
     store.setState(`windows.${instanceId}`, {
       ...win,
       bounds: { ...bounds },
-      restoreBounds: null,
-      state: 'normal',
-      snapZone: null,
+      restoreBounds: targetState === 'normal' ? null : win.restoreBounds,
+      prevState: null,
+      state: targetState,
+      snapZone: targetState === 'snapped' ? win.snapZone : null,
       isFocused: true,
-      zIndex: this._assignZ(),
+      zIndex: z,
     });
 
     const frame = this._frames.get(instanceId);
     if (frame) {
-      frame.updateState('normal');
-      frame.updateBounds(bounds, true);
+      // Clear visibility overrides before asking the frame to restore its state.
+      if (frame.element) {
+        frame.element.style.display = '';
+        frame.element.style.visibility = 'visible';
+        frame.element.style.opacity = '1';
+        frame.element.style.pointerEvents = 'auto';
+      }
+      frame.setFocused?.(true);
+      frame.setZIndex(z);
+      if (targetState === 'maximized') {
+        frame.updateState('normal');
+        frame.updateBounds(bounds, false);
+        frame.updateState('maximized');
+        frame.updateBounds(bounds, false);
+      } else {
+        frame.updateState('normal');
+        frame.updateBounds(bounds, true);
+        if (targetState === 'snapped') frame.updateBounds(bounds, false);
+      }
     }
 
-    store.emit('window:stateChanged', { instanceId, state: 'normal' });
+    if (targetState === 'maximized') document.body.classList.add('os-window-maximized');
+    else document.body.classList.remove('os-window-maximized');
+
+    store.emit('window:stateChanged', { instanceId, state: targetState });
+    store.emit('window:focused', { instanceId });
   }
 
   /* ---------------------------------------------------------------- */
