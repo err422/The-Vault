@@ -181,6 +181,7 @@ export async function boot() {
   /* ---- 3. Initialize Settings ---- */
   try {
     await settingsManager.init();
+    _installAutoFullscreenOnClick();
     printBootLine('[<span style=\"color:#10b981\">  OK  </span>] Loaded Settings & Theme Preferences.');
   } catch (err) {
     printBootLine('[<span style=\"color:#ef4444\">FAILED</span>] SettingsManager init error: ' + err.message, '#ef4444');
@@ -233,6 +234,34 @@ export async function boot() {
 }
 
 boot._booted = false;
+
+
+/**
+ * Enter fullscreen on the first screen click when enabled. Fullscreen APIs
+ * require a user gesture, so this must be triggered directly from the click.
+ */
+function _installAutoFullscreenOnClick() {
+  if (window.__vaultAutoFullscreenHandlerInstalled) return;
+  window.__vaultAutoFullscreenHandlerInstalled = true;
+
+  document.addEventListener('click', () => {
+    if (!settingsManager.get('autoFullscreenOnClick')) return;
+    if (document.fullscreenElement || document.webkitFullscreenElement) return;
+
+    const root = document.documentElement;
+    const request = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (request) {
+      try {
+        const result = request.call(root);
+        if (result && typeof result.catch === 'function') {
+          result.catch((err) => console.debug('[WebOS] Auto-fullscreen was not available:', err));
+        }
+      } catch (err) {
+        console.debug('[WebOS] Auto-fullscreen was not available:', err);
+      }
+    }
+  }, true);
+}
 
 function _installErrorBoundary() {
   window.onerror = (message, source, lineno, colno, error) => {
