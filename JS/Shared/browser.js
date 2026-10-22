@@ -128,7 +128,7 @@
         const fsIframeBtn = createControlButton('⛶', 'Fullscreen (content only)');
         const maximizeBtn = createControlButton('□', 'Fullscreen — Alt+`');
         const closeBrowserBtn = createControlButton('×', 'Close');
-        [minimizeBtn, maximizeBtn, closeBrowserBtn].forEach((btn, index) => {
+        [closeBrowserBtn, minimizeBtn, maximizeBtn].forEach((btn, index) => {
             Object.assign(btn.style, { width: '12px', height: '12px', minWidth: '12px', minHeight: '12px', fontSize: '0', borderRadius: '50%', padding: '0', boxShadow: 'none', background: ['#ff5f57', '#febc2e', '#28c840'][index] });
             btn.style.color = 'transparent';
         });
