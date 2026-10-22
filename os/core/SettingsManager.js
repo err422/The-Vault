@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS = {
   customWallpaperUrl: '',
   reducedMotion: false,
   windowSnapping: true,
+  autoFullscreenOnClick: true,
   dockAutoHide: false,
   desktopIconSize: 'medium', // small, medium, large
   snapToGrid: true
