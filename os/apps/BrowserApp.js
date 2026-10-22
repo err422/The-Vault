@@ -68,9 +68,14 @@ export const AppManifest = {
     containerEl.innerHTML = `
       <div class="browser-app-root" style="display:flex; flex-direction:column; height:100%; background:#1a1625; color:#fff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <!-- Tab Strip -->
-        <div class="browser-tabs-bar" style="display:flex; align-items:flex-end; gap:4px; height:36px; padding:0 8px; background:rgba(15,11,26,0.9); border-bottom:1px solid rgba(255,255,255,0.08); overflow-x:auto;">
-          <div id="tab-headers-container" style="display:flex; align-items:flex-end; gap:4px;"></div>
-          <button id="browser-add-tab-btn" style="width:26px; height:26px; margin-bottom:4px; border:none; border-radius:6px; background:rgba(255,255,255,0.06); color:#c4b5fd; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
+        <div class="browser-tabs-bar os-window-titlebar" style="display:flex; align-items:flex-end; gap:8px; height:42px; min-height:42px; padding:0 8px 0 12px; background:rgba(10,7,18,0.95); border-bottom:1px solid rgba(255,255,255,0.08); overflow:hidden; cursor:grab; box-sizing:border-box;">
+          <div id="browser-mac-controls" style="height:100%; display:flex; align-items:center; gap:8px; padding-right:6px; flex:0 0 auto;">
+            <button id="browser-mac-close" aria-label="Close window" title="Close" style="width:12px;height:12px;min-width:12px;padding:0;border:0;border-radius:50%;background:#ff5f57;cursor:pointer;"></button>
+            <button id="browser-mac-min" aria-label="Minimize window" title="Minimize" style="width:12px;height:12px;min-width:12px;padding:0;border:0;border-radius:50%;background:#febc2e;cursor:pointer;"></button>
+            <button id="browser-mac-max" aria-label="Maximize window" title="Maximize" style="width:12px;height:12px;min-width:12px;padding:0;border:0;border-radius:50%;background:#28c840;cursor:pointer;"></button>
+          </div>
+          <div id="tab-headers-container" style="display:flex; align-items:flex-end; gap:4px; flex:1; min-width:0; overflow-x:auto; scrollbar-width:none; height:100%;"></div>
+          <button id="browser-add-tab-btn" title="New tab" style="width:26px; height:26px; margin-bottom:4px; flex:0 0 auto; border:none; border-radius:6px; background:rgba(255,255,255,0.06); color:#c4b5fd; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
         </div>
 
         <!-- Navigation Bar -->
@@ -121,6 +126,35 @@ export const AppManifest = {
         </div>
       </div>
     `;
+
+    // Integrate this app's tab strip with the WebOS window chrome without changing
+    // WindowManager/WindowFrame. Keep native controls as the source of window actions.
+    window.setTimeout(() => {
+      const osWindow = containerEl.closest('.os-window');
+      if (!osWindow || !containerEl.isConnected) return;
+      const nativeTitlebar = Array.from(osWindow.querySelectorAll('.os-window-titlebar'))
+        .find(el => !el.classList.contains('browser-tabs-bar'));
+      if (!nativeTitlebar) return;
+      const nativeClose = nativeTitlebar.querySelector('.os-ctrl-close');
+      const nativeMin = nativeTitlebar.querySelector('.os-ctrl-min');
+      const nativeMax = nativeTitlebar.querySelector('.os-ctrl-max');
+      if (nativeTitlebar !== containerEl.querySelector('.browser-tabs-bar')) {
+        nativeTitlebar.style.display = 'none';
+      }
+      const controls = [
+        [containerEl.querySelector('#browser-mac-close'), nativeClose],
+        [containerEl.querySelector('#browser-mac-min'), nativeMin],
+        [containerEl.querySelector('#browser-mac-max'), nativeMax]
+      ];
+      controls.forEach(([custom, native]) => {
+        if (!custom) return;
+        custom.addEventListener('mousedown', event => event.stopPropagation());
+        custom.addEventListener('click', event => {
+          event.stopPropagation();
+          native?.click();
+        });
+      });
+    }, 0);
 
     const tabHeadersContainer = containerEl.querySelector('#tab-headers-container');
     const urlInput = containerEl.querySelector('#browser-url-input');
