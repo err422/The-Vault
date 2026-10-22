@@ -513,7 +513,7 @@ export const AppManifest = {
     // The toolbar Help button can reopen it at any time.
     let hasSeenBrowserGuide = false;
     try {
-      hasSeenBrowserGuide = localStorage.getItem('vault_browser_guide_seen_v1') === 'true';
+      hasSeenBrowserGuide = localStorage.getItem('vault_browser_guide_seen_v2') === 'true';
     } catch (error) {
       console.warn('[BrowserApp] Could not read browser guide flag:', error);
     }
