@@ -244,6 +244,15 @@ export const AppManifest = {
             <div style="font-size:12px; color:#c4b5fd; margin-top:4px;">${quotaEstimate}</div>
           </div>
 
+          <!-- Auto Fullscreen -->
+          <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:16px; margin-bottom:16px;">
+            <div>
+              <div style="font-size:13px; font-weight:600; color:#fff;">Auto Fullscreen on Click</div>
+              <div style="font-size:11.5px; color:#7c6f9f;">Enter fullscreen when you click anywhere on the screen. Your browser may restrict this on some devices.</div>
+            </div>
+            <input type="checkbox" id="chk-auto-fullscreen" ${s.autoFullscreenOnClick ? 'checked' : ''} style="width:18px; height:18px; accent-color:#8b5cf6; cursor:pointer;">
+          </div>
+
           <!-- Onboarding Tour -->
           <div style="background:rgba(139,92,246,0.08); border:1px solid rgba(168,85,247,0.22); border-radius:12px; padding:16px;">
             <div style="font-size:13px; font-weight:600; color:#fff;">Navigation Tour</div>
@@ -251,6 +260,10 @@ export const AppManifest = {
             <button id="set-replay-tour-btn" type="button" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(216,180,254,0.3); background:linear-gradient(135deg,#9333ea,#7e22ce); color:#fff; font-size:12px; font-weight:600; cursor:pointer;">Replay Navigation Tour</button>
           </div>
         `;
+
+        contentEl.querySelector('#chk-auto-fullscreen').addEventListener('change', (e) => {
+          settingsManager.set('autoFullscreenOnClick', e.target.checked);
+        });
 
         contentEl.querySelector('#chk-motion').addEventListener('change', (e) => {
           settingsManager.set('reducedMotion', e.target.checked);
