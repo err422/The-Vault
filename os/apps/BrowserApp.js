@@ -127,31 +127,38 @@ export const AppManifest = {
       </div>
     `;
 
-    // Integrate this app's tab strip with the WebOS window chrome without changing
-    // WindowManager/WindowFrame. Keep native controls as the source of window actions.
+    // Integrate with the actual WindowFrame DOM (.vault-window / .window-titlebar).
+    // WindowFrame uses private handlers, so invoke its real buttons instead of
+    // trying to recreate window-management behavior here.
     window.setTimeout(() => {
-      const osWindow = containerEl.closest('.os-window');
+      const osWindow = containerEl.closest('.vault-window');
       if (!osWindow || !containerEl.isConnected) return;
-      const nativeTitlebar = Array.from(osWindow.querySelectorAll('.os-window-titlebar'))
-        .find(el => !el.classList.contains('browser-tabs-bar'));
+
+      const nativeTitlebar = osWindow.querySelector('.window-titlebar');
       if (!nativeTitlebar) return;
-      const nativeClose = nativeTitlebar.querySelector('.os-ctrl-close');
-      const nativeMin = nativeTitlebar.querySelector('.os-ctrl-min');
-      const nativeMax = nativeTitlebar.querySelector('.os-ctrl-max');
-      if (nativeTitlebar !== containerEl.querySelector('.browser-tabs-bar')) {
+
+      const nativeClose = nativeTitlebar.querySelector('.btn-close');
+      const nativeMin = nativeTitlebar.querySelector('.btn-minimize');
+      const nativeMax = nativeTitlebar.querySelector('.btn-maximize');
+
+      // Hide the real titlebar only after confirming its native controls exist.
+      // This avoids leaving a window with no working controls if the DOM changes.
+      if (nativeClose && nativeMin && nativeMax) {
         nativeTitlebar.style.display = 'none';
       }
-      const controls = [
+
+      [
         [containerEl.querySelector('#browser-mac-close'), nativeClose],
         [containerEl.querySelector('#browser-mac-min'), nativeMin],
         [containerEl.querySelector('#browser-mac-max'), nativeMax]
-      ];
-      controls.forEach(([custom, native]) => {
-        if (!custom) return;
+      ].forEach(([custom, native]) => {
+        if (!custom || !native) return;
+        custom.addEventListener('pointerdown', event => event.stopPropagation());
         custom.addEventListener('mousedown', event => event.stopPropagation());
         custom.addEventListener('click', event => {
+          event.preventDefault();
           event.stopPropagation();
-          native?.click();
+          native.click();
         });
       });
     }, 0);
