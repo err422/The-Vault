@@ -74,7 +74,7 @@ export const AppManifest = {
             <button id="browser-mac-min" aria-label="Minimize window" title="Minimize" style="width:12px;height:12px;min-width:12px;padding:0;border:0;border-radius:50%;background:#febc2e;cursor:pointer;"></button>
             <button id="browser-mac-max" aria-label="Maximize window" title="Maximize" style="width:12px;height:12px;min-width:12px;padding:0;border:0;border-radius:50%;background:#28c840;cursor:pointer;"></button>
           </div>
-          <div id="tab-headers-container" style="display:flex; align-items:flex-end; gap:4px; flex:1; min-width:0; overflow-x:auto; scrollbar-width:none; height:100%;"></div>
+          <div id="tab-headers-container" style="display:flex; align-items:flex-end; gap:4px; flex:0 1 auto; min-width:0; max-width:calc(100% - 120px); overflow-x:auto; scrollbar-width:none; height:100%;"></div>
           <button id="browser-add-tab-btn" title="New tab" style="width:26px; height:26px; margin-bottom:4px; flex:0 0 auto; border:none; border-radius:6px; background:rgba(255,255,255,0.06); color:#c4b5fd; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
         </div>
 
