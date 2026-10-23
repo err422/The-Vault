@@ -7,7 +7,7 @@ import AppRegistry from '../core/AppRegistry.js';
 import WindowManager from '../core/WindowManager.js';
 import { showContextMenu } from './ContextMenu.js';
 
-const PINNED_IDS = ['file-explorer', 'browser', 'games', 'terminal', 'notes', 'settings', 'vault-hub'];
+const PINNED_IDS = ['file-explorer', 'browser', 'games', 'terminal', 'notes', 'settings', 'vault-hub', 'bell'];
 
 let _dock = null;
 let _pinnedContainer = null;
