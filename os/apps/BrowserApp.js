@@ -140,11 +140,37 @@ export const AppManifest = {
       const nativeClose = nativeTitlebar.querySelector('.btn-close');
       const nativeMin = nativeTitlebar.querySelector('.btn-minimize');
       const nativeMax = nativeTitlebar.querySelector('.btn-maximize');
+      const nativeDragRegion = nativeTitlebar.querySelector('.window-drag-region');
+      const browserTitlebar = containerEl.querySelector('.browser-tabs-bar');
 
-      // Hide the real titlebar only after confirming its native controls exist.
-      // This avoids leaving a window with no working controls if the DOM changes.
-      if (nativeClose && nativeMin && nativeMax) {
+      // Reuse WindowFrame's actual drag region inside the browser's custom titlebar.
+      // Its pointer handlers are private to WindowFrame, so moving the existing
+      // element preserves native dragging without changing shared window code.
+      if (nativeClose && nativeMin && nativeMax && nativeDragRegion && browserTitlebar) {
+        browserTitlebar.style.position = 'relative';
+        nativeDragRegion.style.position = 'absolute';
+        nativeDragRegion.style.inset = '0';
+        nativeDragRegion.style.zIndex = '0';
+        browserTitlebar.prepend(nativeDragRegion);
+
+        // Keep interactive browser controls above the drag surface.
+        [
+          containerEl.querySelector('#browser-mac-controls'),
+          containerEl.querySelector('#tab-headers-container'),
+          containerEl.querySelector('#browser-add-tab-btn')
+        ].forEach(element => {
+          if (!element) return;
+          element.style.position = 'relative';
+          element.style.zIndex = '1';
+        });
+
         nativeTitlebar.style.display = 'none';
+
+        // Preserve titlebar double-click-to-maximize behavior on the custom bar.
+        browserTitlebar.addEventListener('dblclick', event => {
+          if (event.target.closest('button, #tab-headers-container')) return;
+          nativeMax.click();
+        });
       }
 
       [
