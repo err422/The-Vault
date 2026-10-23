@@ -42,6 +42,7 @@ import SystemMonitorApp from '../apps/SystemMonitorApp.js';
 import AppStoreApp from '../apps/AppStoreApp.js';
 import AboutApp from '../apps/AboutApp.js';
 import LoungeApp from '../apps/LoungeApp.js';
+import BellApp from '../apps/BellApp.js';
 
 export async function boot() {
   if (boot._booted) {
@@ -293,7 +294,8 @@ function _registerCoreApps() {
     SystemMonitorApp,
     AppStoreApp,
     AboutApp,
-    LoungeApp
+    LoungeApp,
+    BellApp
   ];
 
   for (const manifest of apps) {
