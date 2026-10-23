@@ -17,6 +17,7 @@ const DEFAULT_ICONS = [
   { appId: 'settings',      label: 'Settings',      icon: '⚙️' },
   { appId: 'vault-hub',     label: 'Vault Hub',     icon: '🏠' },
   { appId: 'lounge',        label: 'VaultNet',      icon: '💬' },
+  { appId: 'bell',          label: 'Bell',          icon: '🔔' },
 ];
 
 // Website shortcuts are stored locally per browser profile; Firebase is untouched.
