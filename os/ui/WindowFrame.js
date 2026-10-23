@@ -14,6 +14,7 @@
  */
 
 import SnapOverlay from './SnapOverlay.js';
+import settingsManager from '../core/SettingsManager.js';
 
 /* ------------------------------------------------------------------ */
 /*  Style injection (once per document)                                */
@@ -393,6 +394,11 @@ export default class WindowFrame {
 
   /** Store subscription unsub function */
   #unsubStore = null;
+  #iframeCovers = new Map();
+  #iframeCoverObserver = null;
+  #iframeCoverResizeObserver = null;
+  #iframeCoverSettingsUnsubscribe = null;
+  #syncFullscreenIframeCovers = null;
 
   /**
    * @param {string} instanceId - unique window instance id from WindowManager
@@ -427,6 +433,7 @@ export default class WindowFrame {
     this.#buildDOM();
     this.#attachListeners();
     this.#applyBounds();
+    this.#setupFullscreenIframeCovers();
 
     // Try subscribing to the store if available
     this.#trySubscribeStore();
@@ -595,6 +602,88 @@ export default class WindowFrame {
         h.addEventListener('pointerdown', this.#handlers.onResizeStart);
       });
     }
+  }
+
+
+  /**
+   * Cover embedded iframes while click-to-fullscreen is enabled and the
+   * document is not fullscreen. Iframe clicks do not bubble to the parent.
+   */
+  #setupFullscreenIframeCovers() {
+    const isFullscreen = () => Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+    const syncCovers = () => {
+      const shouldCover = settingsManager.get('autoFullscreenOnClick') !== false && !isFullscreen();
+      const frames = [...this.#contentEl.querySelectorAll('iframe')];
+
+      for (const [frame, cover] of this.#iframeCovers) {
+        if (!frame.isConnected || !this.#contentEl.contains(frame) || !shouldCover) {
+          cover.remove();
+          this.#iframeCovers.delete(frame);
+          try { this.#iframeCoverResizeObserver?.unobserve(frame); } catch {}
+        }
+      }
+      if (!shouldCover) return;
+
+      const contentRect = this.#contentEl.getBoundingClientRect();
+      for (const frame of frames) {
+        if (this.#iframeCovers.has(frame)) continue;
+        const cover = document.createElement('button');
+        cover.type = 'button';
+        cover.className = 'vault-iframe-fullscreen-cover';
+        cover.setAttribute('aria-label', 'Click to enter fullscreen');
+        cover.title = 'Click to enter fullscreen';
+        cover.style.cssText = 'position:absolute;z-index:9999;padding:0;margin:0;border:0;background:transparent;cursor:pointer;touch-action:manipulation;';
+        cover.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (isFullscreen()) return;
+          const root = document.documentElement;
+          const request = root.requestFullscreen || root.webkitRequestFullscreen;
+          if (!request) {
+            cover.remove();
+            this.#iframeCovers.delete(frame);
+            return;
+          }
+          try {
+            const result = request.call(root);
+            if (result && typeof result.catch === 'function') {
+              result.catch((error) => console.debug('[WebOS] Fullscreen request from iframe cover was blocked:', error));
+            }
+          } catch (error) {
+            console.debug('[WebOS] Fullscreen request from iframe cover was blocked:', error);
+          }
+        });
+        this.#contentEl.appendChild(cover);
+        this.#iframeCovers.set(frame, cover);
+        try { this.#iframeCoverResizeObserver?.observe(frame); } catch {}
+      }
+
+      for (const [frame, cover] of this.#iframeCovers) {
+        const frameRect = frame.getBoundingClientRect();
+        cover.style.left = `${frameRect.left - contentRect.left + this.#contentEl.scrollLeft}px`;
+        cover.style.top = `${frameRect.top - contentRect.top + this.#contentEl.scrollTop}px`;
+        cover.style.width = `${Math.max(0, frameRect.width)}px`;
+        cover.style.height = `${Math.max(0, frameRect.height)}px`;
+      }
+    };
+
+    this.#syncFullscreenIframeCovers = syncCovers;
+    this.#iframeCoverObserver = new MutationObserver(syncCovers);
+    this.#iframeCoverObserver.observe(this.#contentEl, { childList: true, subtree: true });
+    if (window.ResizeObserver) {
+      this.#iframeCoverResizeObserver = new ResizeObserver(syncCovers);
+      this.#iframeCoverResizeObserver.observe(this.#contentEl);
+    }
+    this.#handlers.onFullscreenCoverChange = syncCovers;
+    document.addEventListener('fullscreenchange', syncCovers);
+    document.addEventListener('webkitfullscreenchange', syncCovers);
+    window.addEventListener('resize', syncCovers);
+
+    // SettingsManager emits this event when the user toggles auto-fullscreen.
+    import('../core/Store.js').then(({ default: store }) => {
+      this.#iframeCoverSettingsUnsubscribe = store.on('settings:changed', syncCovers);
+    }).catch(() => {});
+    syncCovers();
   }
 
   /* ================================================================ */
@@ -1083,6 +1172,16 @@ export default class WindowFrame {
 
     // Clean up any lingering drag/resize state
     document.body.classList.remove('is-dragging-window');
+
+    // Clean up iframe fullscreen covers and observers
+    this.#iframeCoverObserver?.disconnect();
+    this.#iframeCoverResizeObserver?.disconnect();
+    document.removeEventListener('fullscreenchange', this.#handlers.onFullscreenCoverChange);
+    document.removeEventListener('webkitfullscreenchange', this.#handlers.onFullscreenCoverChange);
+    window.removeEventListener('resize', this.#handlers.onFullscreenCoverChange);
+    this.#iframeCoverSettingsUnsubscribe?.();
+    for (const cover of this.#iframeCovers.values()) cover.remove();
+    this.#iframeCovers.clear();
 
     // Unsubscribe from store
     if (this.#unsubStore) {
