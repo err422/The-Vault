@@ -13,6 +13,7 @@
 import virtualFS from '../core/VirtualFS.js';
 import store from '../core/Store.js';
 import appRegistry from '../core/AppRegistry.js';
+import { getChaosChance, setChaosChance, triggerChaos } from '../core/VaultChaos.js';
 
 export const AppManifest = {
   id: 'terminal',
@@ -100,6 +101,28 @@ export const AppManifest = {
       const [cmd, ...args] = trimmed.split(/\s+/);
 
       switch (cmd.toLowerCase()) {
+        case 'chaos': {
+          const subcommand = (args[0] || 'status').toLowerCase();
+          if (subcommand === 'status') {
+            println(`Secret-code chaos chance on this computer: ${getChaosChance()}% per desktop shortcut launch.`, '#c4b5fd');
+          } else if (subcommand === 'chance') {
+            const raw = args[1];
+            const chance = Number(raw);
+            if (raw === undefined || raw.trim() === '' || !Number.isFinite(chance) || chance < 0 || chance > 100) {
+              println('Usage: chaos chance <0-100> (use 0 to disable random triggers)', '#ef4444');
+            } else {
+              setChaosChance(chance);
+              println(`Chaos chance set to ${chance}% on this computer.`, '#10b981');
+            }
+          } else if (subcommand === 'trigger') {
+            triggerChaos();
+            println('Celebration sequence initiated.', '#c084fc');
+          } else {
+            println('Usage: chaos [status | chance <0-100> | trigger]', '#ef4444');
+          }
+          break;
+        }
+
         case 'help':
           println(`
             <div style="display:grid; grid-template-columns:120px 1fr; gap:6px; margin:4px 0;">
@@ -116,6 +139,9 @@ export const AppManifest = {
               <span style="color:#a855f7;">whoami</span><span>Display active user status</span>
               <span style="color:#a855f7;">neofetch</span><span>Display system specs & ASCII logo</span>
               <span style="color:#a855f7;">clear</span><span>Clear the terminal screen</span>
+              <span style="color:#a855f7;">chaos chance &lt;0-100&gt;</span><span>Set this computer's Easter egg trigger chance</span>
+              <span style="color:#a855f7;">chaos status</span><span>Show the current local trigger chance</span>
+              <span style="color:#a855f7;">chaos trigger</span><span>Manually launch the celebration</span>
             </div>
           `);
           break;
