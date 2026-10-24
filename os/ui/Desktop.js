@@ -6,6 +6,7 @@ import Store from '../core/Store.js';
 import AppRegistry from '../core/AppRegistry.js';
 import virtualFS from '../core/VirtualFS.js';
 import { showContextMenu } from './ContextMenu.js';
+import { maybeTriggerChaos, triggerChaos } from '../core/VaultChaos.js';
 
 // ── Default desktop icons ──────────────────────────────────────────
 const DEFAULT_ICONS = [
@@ -95,6 +96,12 @@ function _removeCustomShortcut(id) {
   delete _iconPositions[_iconKey(removed)];
   _renderIcons();
   _saveLayout();
+}
+
+function _launchDesktopShortcut(def) {
+  maybeTriggerChaos();
+  if (def.url) AppRegistry.launch(def.appId, { url: def.url, title: def.label });
+  else AppRegistry.launch(def.appId);
 }
 
 function _iconKey(def) {
@@ -438,8 +445,7 @@ function _createIcon(def) {
   el.addEventListener('dblclick', (e) => {
     e.stopPropagation();
     if (hasMoved) return;
-    if (def.url) AppRegistry.launch(def.appId, { url: def.url, title: def.label });
-    else AppRegistry.launch(def.appId);
+    _launchDesktopShortcut(def);
   });
 
   // Custom shortcuts can be removed from their own right-click menu.
@@ -451,7 +457,7 @@ function _createIcon(def) {
         {
           label: 'Open Website',
           icon: '🌐',
-          action: () => AppRegistry.launch(def.appId, { url: def.url, title: def.label })
+          action: () => _launchDesktopShortcut(def)
         },
         { type: 'separator' },
         {
@@ -466,8 +472,7 @@ function _createIcon(def) {
   el.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      if (def.url) AppRegistry.launch(def.appId, { url: def.url, title: def.label });
-      else AppRegistry.launch(def.appId);
+      _launchDesktopShortcut(def);
     }
   });
 
