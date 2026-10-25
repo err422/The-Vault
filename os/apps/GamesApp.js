@@ -84,6 +84,13 @@ export const AppManifest = {
         </div>
 
         <div id="zg-scroll-area" style="flex:1;min-height:0;overflow-y:auto">
+          <section id="zg-search-results" aria-live="polite" style="display:none;padding:16px 18px 4px;border-bottom:1px solid rgba(168,85,247,.18)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">
+              <strong id="zg-results-heading" style="font-size:13px">Search results</strong>
+              <span id="zg-results-count" style="font-size:11px;color:#b9a7d8"></span>
+            </div>
+            <div id="zg-results-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding-bottom:14px"></div>
+          </section>
           <div id="zg"></div>
         </div>
 
@@ -92,21 +99,83 @@ export const AppManifest = {
     const $ = selector => containerEl.querySelector(selector);
     const searchInput = $('#zg-search-input');
     const wall = $('#zg');
+    const resultsSection = $('#zg-search-results');
+    const resultsHeading = $('#zg-results-heading');
+    const resultsCount = $('#zg-results-count');
+    const resultsGrid = $('#zg-results-grid');
     let disposed = false;
+    let searchDebounce = 0;
 
-    // The Zen GS wall may render cards asynchronously, so filter both now
-    // and whenever its game list changes.
-    const applySearch = () => {
+    // Zen GS builds its wall remotely and does not guarantee a card class.
+    // Build a separate results area from rendered image/title tiles instead
+    // of trying to hide elements inside the third-party wall.
+    const collectGames = () => {
+      const found = [];
+      const seen = new Set();
+      wall.querySelectorAll('img').forEach(img => {
+        let tile = img.closest('a,button,[role="button"]');
+        if (!tile) {
+          let node = img.parentElement;
+          for (let depth = 0; node && node !== wall && depth < 7; depth++, node = node.parentElement) {
+            const title = (node.innerText || node.textContent || '').trim();
+            if (title && title.length <= 140 && node.querySelector('img')) {
+              const rect = node.getBoundingClientRect();
+              if (rect.width >= 70 && rect.height >= 70) { tile = node; break; }
+            }
+          }
+        }
+        if (!tile || seen.has(tile)) return;
+        const title = (tile.innerText || tile.textContent || img.alt || '').trim().replace(/\s+/g, ' ');
+        if (!title || title.length > 140) return;
+        seen.add(tile);
+        found.push({ tile, title, image: img.currentSrc || img.src });
+      });
+      return found;
+    };
+
+    const renderSearchResults = () => {
       const query = searchInput.value.trim().toLocaleLowerCase();
-      wall.querySelectorAll('.zg-card').forEach(card => {
-        const searchableText = (card.innerText || card.textContent || '').toLocaleLowerCase();
-        card.style.display = !query || searchableText.includes(query) ? '' : 'none';
+      resultsGrid.replaceChildren();
+      if (!query) { resultsSection.style.display = 'none'; return; }
+      const matches = collectGames().filter(game => game.title.toLocaleLowerCase().includes(query));
+      resultsSection.style.display = 'block';
+      resultsHeading.textContent = 'Search results';
+      resultsCount.textContent = `${matches.length} found`;
+      if (!matches.length) {
+        const empty = document.createElement('div');
+        empty.textContent = 'No matching games found yet.';
+        empty.style.cssText = 'grid-column:1/-1;padding:12px 0;color:#b9a7d8;font-size:12px';
+        resultsGrid.appendChild(empty);
+        return;
+      }
+      matches.forEach(game => {
+        const result = document.createElement('button');
+        result.type = 'button';
+        result.style.cssText = 'display:flex;align-items:center;gap:9px;text-align:left;padding:8px;border:1px solid rgba(168,85,247,.24);border-radius:10px;background:rgba(26,18,44,.78);color:#f3f0f9;cursor:pointer;min-width:0';
+        if (game.image) {
+          const cover = document.createElement('img');
+          cover.src = game.image;
+          cover.alt = '';
+          cover.style.cssText = 'width:42px;height:42px;object-fit:cover;border-radius:6px;flex:none';
+          result.appendChild(cover);
+        }
+        const label = document.createElement('span');
+        label.textContent = game.title;
+        label.style.cssText = 'font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+        result.appendChild(label);
+        result.addEventListener('click', () => game.tile.click());
+        resultsGrid.appendChild(result);
       });
     };
 
+    const applySearch = () => {
+      window.clearTimeout(searchDebounce);
+      searchDebounce = window.setTimeout(renderSearchResults, 80);
+    };
+
     searchInput.addEventListener('input', applySearch);
-    const wallObserver = new MutationObserver(() => applySearch());
-    wallObserver.observe(wall, { childList: true, subtree: true });
+    const wallObserver = new MutationObserver(applySearch);
+    wallObserver.observe(wall, { childList: true, subtree: true, characterData: true });
 
     // Games always open as a URL in Vault Browser; there is no in-app player.
     const onSelectGame = event => {
@@ -140,6 +209,7 @@ export const AppManifest = {
       disposed = true;
       window.removeEventListener('zengs:select', onSelectGame);
       wallObserver.disconnect();
+      window.clearTimeout(searchDebounce);
       zenLoader.remove();
       containerEl.replaceChildren();
       containerEl.style.cssText = '';
