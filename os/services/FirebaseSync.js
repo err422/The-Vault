@@ -19,6 +19,7 @@ class FirebaseSync {
     this._initialized = false;
     this._syncTimer = null;
     this._cloudPrefs = {};
+    this._preferencesPromise = Promise.resolve({});
   }
 
   init() {
@@ -69,7 +70,7 @@ class FirebaseSync {
 
     if (user) {
       console.log(`[FirebaseSync] Signed in as @${username || user.uid}`);
-      this._pullCloudPreferences(user.uid);
+      this._preferencesPromise = this._pullCloudPreferences(user.uid);
     } else {
       console.log('[FirebaseSync] Running in guest mode.');
     }
@@ -98,6 +99,11 @@ class FirebaseSync {
 
   getCloudPreferences() {
     return { ...this._cloudPrefs };
+  }
+
+  async waitForCloudPreferences() {
+    try { await this._preferencesPromise; } catch (_) { /* local defaults remain usable */ }
+    return this.getCloudPreferences();
   }
 
   _scheduleSync() {
