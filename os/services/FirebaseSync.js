@@ -85,7 +85,7 @@ class FirebaseSync {
       if (cloudPrefs.displayName) store.setState('session.displayName', cloudPrefs.displayName);
       if (cloudPrefs.avatar) store.setState('session.avatar', cloudPrefs.avatar);
       if (cloudPrefs && typeof cloudPrefs === 'object' && Object.keys(cloudPrefs).length) {
-        const settingKeys = ['theme', 'accent', 'wallpaper', 'customWallpaperUrl', 'reducedMotion', 'windowSnapping', 'autoFullscreenOnClick', 'dockAutoHide', 'desktopIconSize', 'snapToGrid'];
+        const settingKeys = ['theme', 'accent', 'wallpaper', 'customWallpaperUrl', 'reducedMotion', 'windowSnapping', 'autoFullscreenOnClick', 'dockAutoHide', 'desktopIconSize', 'snapToGrid', 'desktopApps'];
         const settings = Object.fromEntries(settingKeys.filter(key => Object.prototype.hasOwnProperty.call(cloudPrefs, key)).map(key => [key, cloudPrefs[key]]));
         if (Object.keys(settings).length) settingsManager.setMultiple(settings);
         notificationManager.notify({
@@ -127,6 +127,7 @@ class FirebaseSync {
         windowSnapping: settings.windowSnapping,
         desktopIconSize: settings.desktopIconSize,
         snapToGrid: settings.snapToGrid,
+        desktopApps: settings.desktopApps,
         lastSynced: Date.now()
       };
 
