@@ -14,6 +14,7 @@ import settingsManager, { WALLPAPERS, ACCENTS } from '../core/SettingsManager.js
 import store from '../core/Store.js';
 import firebaseSync from '../services/FirebaseSync.js';
 import OnboardingTour from '../ui/OnboardingTour.js';
+import SetupWizard from '../ui/SetupWizard.js';
 
 export const AppManifest = {
   id: 'settings',
@@ -301,6 +302,14 @@ export const AppManifest = {
             </div>
           </div>
 
+          <!-- First-run setup -->
+          <div style="background:rgba(139,92,246,0.08); border:1px solid rgba(168,85,247,0.22); border-radius:12px; padding:18px; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:600; color:#fff;">Personalize WebOS</div>
+            <div style="font-size:12px; color:#c4b5fd; margin:4px 0 12px;">Run the first-time setup again to change your desktop apps, avatar, appearance, wallpaper, and launch behavior.</div>
+            <button id="set-rerun-setup-btn" type="button" style="padding:8px 16px; border:1px solid rgba(216,180,254,0.3); border-radius:8px; background:linear-gradient(135deg,#9333ea,#7e22ce); color:#fff; font-size:12px; font-weight:600; cursor:pointer;">Run Setup Again</button>
+            <div id="set-rerun-setup-status" role="status" style="font-size:12px; color:#c4b5fd; margin-top:8px;"></div>
+          </div>
+
           <!-- Danger Zone: Reset -->
           <div style="border:1px solid rgba(239,68,68,0.3); background:rgba(239,68,68,0.05); border-radius:12px; padding:18px;">
             <div style="font-size:14px; font-weight:600; color:#f87171;">Factory Reset WebOS</div>
@@ -323,6 +332,29 @@ export const AppManifest = {
             renderSection();
           });
         }
+
+        contentEl.querySelector('#set-rerun-setup-btn').addEventListener('click', async () => {
+          const button = contentEl.querySelector('#set-rerun-setup-btn');
+          const status = contentEl.querySelector('#set-rerun-setup-status');
+          const user = window.AuthCore?.currentUser || window.auth?.currentUser || null;
+          if (!user?.uid) {
+            status.textContent = 'Sign in first to save setup preferences to your account.';
+            return;
+          }
+          button.disabled = true;
+          button.textContent = 'Opening setup…';
+          try {
+            const snapshot = await window.database.ref(`users/${user.uid}/webos`).once('value');
+            const cloudPrefs = snapshot.val() || {};
+            await SetupWizard.show(user, { ...cloudPrefs, setupCompleted: false });
+          } catch (err) {
+            console.warn('[Settings] Could not reopen setup:', err);
+            status.textContent = 'Could not load your saved setup. Check your connection and try again.';
+          } finally {
+            button.disabled = false;
+            button.textContent = 'Run Setup Again';
+          }
+        });
 
         contentEl.querySelector('#set-reset-btn').addEventListener('click', () => {
           if (confirm('Are you sure you want to completely reset The Web Vault WebOS? All files in VirtualFS will be erased.')) {
