@@ -73,7 +73,7 @@ class SetupWizard {
         </div>
         <div class="vfs-step" data-step="1" hidden>
           <h2 class="vfs-title">Pick your vibe.</h2><p class="vfs-sub">Your accent and theme follow your account between computers.</p>
-          <label class="vfs-field">Appearance</label><div class="vfs-options"><button class="vfs-option" data-theme="dark" aria-pressed="true">🌙 Dark</button><button class="vfs-option" data-theme="light" aria-pressed="false">☀️ Light</button></div>
+          <label class="vfs-field">Appearance</label><div class="vfs-options"><button class="vfs-option" data-theme="dark" aria-pressed="${(cloudPrefs.theme || settingsManager.get('theme') || 'dark') === 'dark'}">🌙 Dark</button><button class="vfs-option" data-theme="light" aria-pressed="${(cloudPrefs.theme || settingsManager.get('theme') || 'dark') === 'light'}">☀️ Light</button></div>
           <label class="vfs-field">Accent color</label><div class="vfs-swatches">${accents}</div>
           <label class="vfs-field">Wallpaper</label><div class="vfs-options">${wallpaperOptions}</div>
           <label class="vfs-field" for="vfs-custom-wallpaper">Or use a custom wallpaper URL (optional)</label><input class="vfs-input" id="vfs-custom-wallpaper" type="url" maxlength="1500" placeholder="https://example.com/wallpaper.jpg" value="${String(cloudPrefs.customWallpaperUrl || '').replace(/[&<>"']/g,'')}">
@@ -126,7 +126,14 @@ class SetupWizard {
         else {settingsManager.set('wallpaper',wallpaper);settingsManager.set('customWallpaperUrl','');}
         settingsManager.set('autoFullscreenOnClick',fullscreen);
         const prefs={setupCompleted:true,setupVersion:1,displayName:(overlay.querySelector('#vfs-display-name').value.trim().slice(0,24) || store.getState('session.username') || 'User'),avatar,theme,accent,wallpaper:customUrl?'vault-default':wallpaper,customWallpaperUrl:customUrl,updatedAt:Date.now()};
-        if(window.database && user.uid) await window.database.ref(`users/${user.uid}/webos`).update(prefs);
+        if(window.database && user.uid) {
+          try {
+            await window.database.ref(`users/${user.uid}/webos`).update(prefs);
+          } catch (cloudError) {
+            // Do not trap a user in setup when Firebase is temporarily unavailable.
+            console.warn('[SetupWizard] Cloud save failed; keeping local choices:', cloudError);
+          }
+        }
         store.setState('session.displayName',prefs.displayName);
         store.setState('session.avatar',avatar);
         overlay.remove();
