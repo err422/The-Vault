@@ -187,6 +187,59 @@
             .auth-modal-tos a {
                 color: #667eea;
             }
+
+            /* Desktop-style lock screen */
+            #auth-required-overlay {
+                background:
+                    radial-gradient(ellipse at 18% 12%, rgba(139,92,246,.20), transparent 42%),
+                    radial-gradient(ellipse at 85% 90%, rgba(88,28,135,.22), transparent 40%),
+                    rgba(3,2,9,.88);
+                backdrop-filter: blur(22px) saturate(125%);
+            }
+            #auth-required-modal {
+                max-width: 460px;
+                padding: 34px;
+                border-radius: 24px;
+                background: linear-gradient(155deg, rgba(29,23,43,.96), rgba(10,9,17,.98));
+                border: 1px solid rgba(196,181,253,.24);
+                box-shadow: 0 30px 100px rgba(0,0,0,.65), inset 0 1px rgba(255,255,255,.06);
+            }
+            .auth-modal-header { margin-bottom: 24px; }
+            .auth-modal-header::before {
+                content: "🔒";
+                display: grid;
+                place-items: center;
+                width: 58px;
+                height: 58px;
+                margin: 0 auto 20px;
+                border-radius: 18px;
+                background: rgba(139,92,246,.16);
+                border: 1px solid rgba(196,181,253,.22);
+                font-size: 25px;
+                -webkit-text-fill-color: initial;
+            }
+            .auth-modal-title {
+                font-size: 1.8rem;
+                letter-spacing: -.04em;
+                background: linear-gradient(135deg, #f5f3ff 10%, #c4b5fd 85%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .auth-modal-subtitle { color: #aaa2bd; }
+            .auth-modal-tabs { gap: 6px; padding: 5px; border-radius: 13px; background: rgba(0,0,0,.24); }
+            .auth-modal-tab { border: 1px solid transparent; border-radius: 9px; padding: 11px; }
+            .auth-modal-tab.active { background: rgba(139,92,246,.25); border-color: rgba(167,139,250,.45); color: #f5f3ff; }
+            .auth-modal-input { border-radius: 11px; border-color: rgba(196,181,253,.16); background: rgba(0,0,0,.28); }
+            .auth-modal-input:focus { border-color: #a78bfa; box-shadow: 0 0 0 3px rgba(139,92,246,.14); }
+            .auth-modal-btn {
+                border-radius: 11px;
+                background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+                box-shadow: 0 8px 24px rgba(124,58,237,.2);
+            }
+            @media(max-width:520px) {
+                #auth-required-overlay { padding: 12px; }
+                #auth-required-modal { padding: 26px 20px; border-radius: 20px; }
+            }
         `;
         document.head.appendChild(style);
     }
