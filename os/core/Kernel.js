@@ -45,6 +45,10 @@ import AboutApp from '../apps/AboutApp.js';
 import LoungeApp from '../apps/LoungeApp.js';
 import BellApp from '../apps/BellApp.js';
 
+let _shellBootComplete = false;
+let _setupCheckRunning = false;
+const _setupCheckedUsers = new Set();
+
 export async function boot() {
   if (boot._booted) {
     console.warn('[Kernel] Already booted — ignoring duplicate boot() call.');
@@ -230,30 +234,43 @@ export async function boot() {
     });
 
     store.emit('kernel:ready', { bootMs });
-    // Wait for the auth profile and cloud preferences so returning users skip setup
-    // and first-time users can personalize the desktop before the regular tour.
-    window.setTimeout(async () => {
-      try {
-        if (window.AuthCore && !window.AuthCore.profileReady) {
-          await new Promise(resolve => window.addEventListener('authProfileReady', resolve, { once: true }));
-        }
-        const user = window.AuthCore?.currentUser || null;
-        const cloudPrefs = await firebaseSync.waitForCloudPreferences();
-        if (user && cloudPrefs.setupCompleted !== true) {
-          window.addEventListener('webos:setup-complete', () => OnboardingTour.init(), { once: true });
-          await SetupWizard.show(user, cloudPrefs);
-        } else {
-          OnboardingTour.init();
-        }
-      } catch (err) {
-        console.warn('[Kernel] First-run setup could not start:', err);
-        OnboardingTour.init();
-      }
-    }, 450);
+    _shellBootComplete = true;
+    // Handle both persistent sign-in during startup and users who sign in later.
+    window.setTimeout(() => _checkFirstRunSetup(), 450);
   }, 1500);
 }
 
 boot._booted = false;
+
+window.addEventListener('authProfileReady', (event) => {
+  if (_shellBootComplete && event.detail?.user) _checkFirstRunSetup(event.detail.user);
+});
+
+async function _checkFirstRunSetup(eventUser = null) {
+  if (!_shellBootComplete || _setupCheckRunning) return;
+  const user = eventUser || window.AuthCore?.currentUser || null;
+  if (!user?.uid || _setupCheckedUsers.has(user.uid)) {
+    if (!user) OnboardingTour.init();
+    return;
+  }
+  _setupCheckRunning = true;
+  try {
+    const cloudPrefs = await firebaseSync.waitForCloudPreferences();
+    if (cloudPrefs.setupCompleted === true) {
+      _setupCheckedUsers.add(user.uid);
+      OnboardingTour.init();
+      return;
+    }
+    _setupCheckedUsers.add(user.uid);
+    window.addEventListener('webos:setup-complete', () => OnboardingTour.init(), { once: true });
+    SetupWizard.show(user, cloudPrefs);
+  } catch (err) {
+    console.warn('[Kernel] First-run setup could not start:', err);
+    OnboardingTour.init();
+  } finally {
+    _setupCheckRunning = false;
+  }
+}
 
 
 /**
