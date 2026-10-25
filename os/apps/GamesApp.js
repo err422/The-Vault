@@ -119,10 +119,8 @@ export const AppManifest = {
       }
 
       AppRegistry.launch('browser', {
-        launchOptions: {
-          url,
-          title: detail.title || window.ZenGS?.decodeTitle?.(detail.item) || 'Game'
-        }
+        url,
+        title: detail.title || window.ZenGS?.decodeTitle?.(detail.item) || 'Game'
       });
     };
 
