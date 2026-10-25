@@ -280,8 +280,8 @@
         overlay.innerHTML = `
             <div id="auth-required-modal">
                 <div class="auth-modal-header">
-                    <div class="auth-modal-title">Create Your Profile</div>
-                    <p class="auth-modal-subtitle">An account is required to use The Vault. Sign up to track playtime, save favorites, and climb the leaderboard.</p>
+                    <div class="auth-modal-title" id="auth-modal-title">Sign in to your desktop</div>
+                    <p class="auth-modal-subtitle" id="auth-modal-subtitle">Unlock your WebOS session to pick up where you left off.</p>
                 </div>
                 <div class="auth-modal-tabs">
                     <button class="auth-modal-tab" id="auth-tab-signin" type="button">Sign In</button>
@@ -331,12 +331,18 @@
         const signInForm = document.getElementById('auth-modal-signin');
         const signUpForm = document.getElementById('auth-modal-signup');
 
+        const title = document.getElementById('auth-modal-title');
+        const subtitle = document.getElementById('auth-modal-subtitle');
         if (tab === 'signin') {
+            if (title) title.textContent = 'Sign in to your desktop';
+            if (subtitle) subtitle.textContent = 'Unlock your WebOS session to pick up where you left off.';
             signInTab.classList.add('active');
             signUpTab.classList.remove('active');
             signInForm.style.display = 'block';
             signUpForm.style.display = 'none';
         } else {
+            if (title) title.textContent = 'Create your Vault account';
+            if (subtitle) subtitle.textContent = 'Set up your account, then make the desktop your own.';
             signUpTab.classList.add('active');
             signInTab.classList.remove('active');
             signUpForm.style.display = 'block';
@@ -445,7 +451,7 @@
                 if (user) {
                     this.hideModal();
                 } else {
-                    this.showModal('signup');
+                    this.showModal('signin');
                 }
             });
         },
