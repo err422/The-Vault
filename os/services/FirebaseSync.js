@@ -82,7 +82,9 @@ class FirebaseSync {
       const snap = await window.database.ref(`users/${uid}/webos`).once('value');
       const cloudPrefs = snap.val() || {};
       this._cloudPrefs = cloudPrefs;
-      if (cloudPrefs && typeof cloudPrefs === 'object') {
+      if (cloudPrefs.displayName) store.setState('session.displayName', cloudPrefs.displayName);
+      if (cloudPrefs.avatar) store.setState('session.avatar', cloudPrefs.avatar);
+      if (cloudPrefs && typeof cloudPrefs === 'object' && Object.keys(cloudPrefs).length) {
         const settingKeys = ['theme', 'accent', 'wallpaper', 'customWallpaperUrl', 'reducedMotion', 'windowSnapping', 'autoFullscreenOnClick', 'dockAutoHide', 'desktopIconSize', 'snapToGrid'];
         const settings = Object.fromEntries(settingKeys.filter(key => Object.prototype.hasOwnProperty.call(cloudPrefs, key)).map(key => [key, cloudPrefs[key]]));
         if (Object.keys(settings).length) settingsManager.setMultiple(settings);
