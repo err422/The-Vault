@@ -15,7 +15,7 @@ export const AppManifest = {
   name: 'Games',
   icon: '🎮',
   category: 'Entertainment',
-  version: '2.1.0',
+  version: '2.2.0',
   singleton: true,
   defaultSize: { width: 980, height: 640 },
   minSize: { width: 520, height: 380 },
@@ -87,109 +87,61 @@ export const AppManifest = {
           <div id="zg"></div>
         </div>
 
-        <div id="zg-player-modal" style="display:none;position:absolute;inset:0;background:#07040d;z-index:50;flex-direction:column">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:rgba(26,18,44,.98);border-bottom:1px solid rgba(168,85,247,.25);flex-wrap:wrap">
-            <div style="display:flex;align-items:center;gap:10px">
-              <button id="zg-back-wall">← Back to Games</button>
-              <strong id="zg-active-title">Now Playing</strong>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button id="zg-open-browser">🌐 Open in Vault Browser</button>
-              <button id="zg-fullscreen-btn">⛶ Fullscreen</button>
-            </div>
-          </div>
-          <div id="zg-viewer" style="flex:1;min-height:0;width:100%;position:relative;background:#000"></div>
-        </div>
       </div>`;
 
     const $ = selector => containerEl.querySelector(selector);
-    const playerModal = $('#zg-player-modal');
-    const viewerEl = $('#zg-viewer');
-    const activeTitleEl = $('#zg-active-title');
     const searchInput = $('#zg-search-input');
-
-    let currentGameDetail = null;
+    const wall = $('#zg');
     let disposed = false;
 
+    // The Zen GS wall may render cards asynchronously, so filter both now
+    // and whenever its game list changes.
+    const applySearch = () => {
+      const query = searchInput.value.trim().toLocaleLowerCase();
+      wall.querySelectorAll('.zg-card').forEach(card => {
+        const searchableText = (card.innerText || card.textContent || '').toLocaleLowerCase();
+        card.style.display = !query || searchableText.includes(query) ? '' : 'none';
+      });
+    };
+
+    searchInput.addEventListener('input', applySearch);
+    const wallObserver = new MutationObserver(() => applySearch());
+    wallObserver.observe(wall, { childList: true, subtree: true });
+
+    // Games always open as a URL in Vault Browser; there is no in-app player.
     const onSelectGame = event => {
       if (disposed || !containerEl.isConnected) return;
-
       const detail = event.detail || {};
-      currentGameDetail = detail;
-      activeTitleEl.textContent =
-        detail.title || window.ZenGS?.decodeTitle?.(detail.item) || 'Game';
-
-      playerModal.style.display = 'flex';
-      viewerEl.replaceChildren();
-
-      if (window.ZenGS?.play && detail.item) {
-        const iframe = window.ZenGS.play(detail.item, viewerEl);
-        if (iframe) {
-          iframe.style.cssText =
-            'width:100%;height:100%;border:0;display:block';
-        }
+      const url = window.ZenGS?.playUrl?.(detail.item) || detail.url || detail.href;
+      if (!url) {
+        console.warn('[GamesApp] Could not determine a launch URL for selected game.', detail);
+        return;
       }
+
+      AppRegistry.launch('browser', {
+        launchOptions: {
+          url,
+          title: detail.title || window.ZenGS?.decodeTitle?.(detail.item) || 'Game'
+        }
+      });
     };
 
     window.addEventListener('zengs:select', onSelectGame);
-
-    $('#zg-back-wall').addEventListener('click', () => {
-      viewerEl.replaceChildren();
-      playerModal.style.display = 'none';
-      currentGameDetail = null;
-    });
-
-    $('#zg-fullscreen-btn').addEventListener('click', async () => {
-      const target = viewerEl.querySelector('iframe') || viewerEl;
-
-      try {
-        if (target.requestFullscreen) {
-          await target.requestFullscreen();
-        }
-      } catch (error) {
-        console.warn('[GamesApp] Fullscreen request failed:', error);
-      }
-    });
-
-    $('#zg-open-browser').addEventListener('click', () => {
-      if (!currentGameDetail) return;
-
-      const url =
-        window.ZenGS?.playUrl?.(currentGameDetail.item) ||
-        currentGameDetail.url;
-
-      if (url) {
-        AppRegistry.launch('browser', {
-          url,
-          title: currentGameDetail.title || 'Game'
-        });
-      }
-    });
-
-    searchInput.addEventListener('input', () => {
-      const query = searchInput.value.trim().toLowerCase();
-
-      containerEl.querySelectorAll('.zg-card').forEach(card => {
-        card.style.display =
-          card.textContent.toLowerCase().includes(query) ? '' : 'none';
-      });
-    });
 
     // Inject the tested Zen GS payload into the Games app.
     // Keep the original XOR key and currentScript argument intact.
     const zenLoader = document.createElement('script');
     zenLoader.dataset.viewer = 'off';
     zenLoader.textContent =
-      '(function(h,k,S){for(var s="",i=0,j=0;i<h.length;i+=2,j++)s+=String.fromCharCode(parseInt(h.substr(i,2),16)^k[j%k.length]);new Function("S",s)(S)})("' +
+      '(function(h,k,S){for(var s="",i=0,j=0;i<h.length;i+=2,j++)s+=String.fromCharCode(parseInt(h.substr(i,2),16)^k[j%k.length]);new Function("S",s)(S)})( "' +
       ZEN_GS_PAYLOAD +
       '",[18,59,149,51,51,6,234],document.currentScript)';
-
-    $('#zg').appendChild(zenLoader);
+    wall.appendChild(zenLoader);
 
     mountedCleanup.set(containerEl, () => {
       disposed = true;
       window.removeEventListener('zengs:select', onSelectGame);
-      viewerEl.replaceChildren();
+      wallObserver.disconnect();
       zenLoader.remove();
       containerEl.replaceChildren();
       containerEl.style.cssText = '';
