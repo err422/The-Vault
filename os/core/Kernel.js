@@ -28,6 +28,7 @@ import TaskbarDock from '../ui/TaskbarDock.js';
 import StartLauncher from '../ui/StartLauncher.js';
 import QuickSettings from '../ui/QuickSettings.js';
 import OnboardingTour from '../ui/OnboardingTour.js';
+import SetupWizard from '../ui/SetupWizard.js';
 
 // Import all 10 core applications
 import VaultHubApp from '../apps/VaultHubApp.js';
@@ -229,8 +230,26 @@ export async function boot() {
     });
 
     store.emit('kernel:ready', { bootMs });
-    // Wait until the BIOS overlay has been removed before showing onboarding.
-    window.setTimeout(() => OnboardingTour.init(), 450);
+    // Wait for the auth profile and cloud preferences so returning users skip setup
+    // and first-time users can personalize the desktop before the regular tour.
+    window.setTimeout(async () => {
+      try {
+        if (window.AuthCore && !window.AuthCore.profileReady) {
+          await new Promise(resolve => window.addEventListener('authProfileReady', resolve, { once: true }));
+        }
+        const user = window.AuthCore?.currentUser || null;
+        const cloudPrefs = await firebaseSync.waitForCloudPreferences();
+        if (user && cloudPrefs.setupCompleted !== true) {
+          window.addEventListener('webos:setup-complete', () => OnboardingTour.init(), { once: true });
+          await SetupWizard.show(user, cloudPrefs);
+        } else {
+          OnboardingTour.init();
+        }
+      } catch (err) {
+        console.warn('[Kernel] First-run setup could not start:', err);
+        OnboardingTour.init();
+      }
+    }, 450);
   }, 1500);
 }
 
