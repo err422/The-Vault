@@ -18,6 +18,7 @@ class FirebaseSync {
     this._user = null;
     this._initialized = false;
     this._syncTimer = null;
+    this._cloudPrefs = {};
   }
 
   init() {
@@ -78,9 +79,12 @@ class FirebaseSync {
     if (!window.database) return;
     try {
       const snap = await window.database.ref(`users/${uid}/webos`).once('value');
-      const cloudPrefs = snap.val();
+      const cloudPrefs = snap.val() || {};
+      this._cloudPrefs = cloudPrefs;
       if (cloudPrefs && typeof cloudPrefs === 'object') {
-        settingsManager.setMultiple(cloudPrefs);
+        const settingKeys = ['theme', 'accent', 'wallpaper', 'customWallpaperUrl', 'reducedMotion', 'windowSnapping', 'autoFullscreenOnClick', 'dockAutoHide', 'desktopIconSize', 'snapToGrid'];
+        const settings = Object.fromEntries(settingKeys.filter(key => Object.prototype.hasOwnProperty.call(cloudPrefs, key)).map(key => [key, cloudPrefs[key]]));
+        if (Object.keys(settings).length) settingsManager.setMultiple(settings);
         notificationManager.notify({
           title: 'Cloud Synced',
           message: 'Your WebOS desktop preferences have been loaded from cloud.',
@@ -90,6 +94,10 @@ class FirebaseSync {
     } catch (err) {
       console.warn('[FirebaseSync] Could not pull cloud preferences (falling back to local):', err);
     }
+  }
+
+  getCloudPreferences() {
+    return { ...this._cloudPrefs };
   }
 
   _scheduleSync() {
@@ -110,6 +118,7 @@ class FirebaseSync {
         reducedMotion: settings.reducedMotion,
         windowSnapping: settings.windowSnapping,
         desktopIconSize: settings.desktopIconSize,
+        snapToGrid: settings.snapToGrid,
         lastSynced: Date.now()
       };
 
