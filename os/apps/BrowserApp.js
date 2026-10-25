@@ -1,23 +1,25 @@
 /**
- * @fileoverview Multi-tab Web Browser for The Web Vault WebOS.
+ * @fileoverview Multi-tab Web Browser with Scramjet Proxy for The Web Vault WebOS.
  *
- * Each tab can toggle between two channels:
- * - Proxy Mode (default): Loads https://proxy.thewebvault.org/embed.html and communicates via postMessage.
- * - Direct Mode: Loads the target URL directly into the tab's iframe.
+ * Each tab supports two channels:
+ * - Proxy Mode (default): Interception routing via https://proxy.thewebvault.org/embed.html
+ *   and bidirectional postMessage communication. Avoids iframe headers (CSP, X-Frame-Options).
+ * - Direct Mode: Loads the target URL straight into the tab iframe with fallback detection.
  *
  * @module os/apps/BrowserApp
  */
 
 import { showBrowserGuide } from '../ui/BrowserGuide.js';
+import AppRegistry from '../core/AppRegistry.js';
 
 export const AppManifest = {
   id: 'browser',
   name: 'Vault Browser',
   icon: '🌐',
   category: 'Utility',
-  version: '3.1.0',
+  version: '3.2.0',
   singleton: false,
-  defaultSize: { width: 900, height: 600 },
+  defaultSize: { width: 960, height: 640 },
   minSize: { width: 440, height: 320 },
   menus: [
     {
@@ -31,7 +33,8 @@ export const AppManifest = {
       label: 'Navigation',
       items: [
         { label: 'Reload', action: 'browser:reload', shortcut: '⌘R' },
-        { label: 'Go Home', action: 'browser:home' }
+        { label: 'Go Home', action: 'browser:home' },
+        { label: 'Toggle Proxy Mode', action: 'browser:toggle-mode' }
       ]
     }
   ],
@@ -42,94 +45,165 @@ export const AppManifest = {
     const EMBED_URL = `${PROXY_ORIGIN}/embed.html`;
     const SEARCH_URL = 'https://duckduckgo.com/?q=';
     const FRAME_ALLOW =
-      'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+      'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share';
 
     const initialUrl = context?.launchOptions?.url || 'about:home';
     const initialTitle = context?.launchOptions?.title || 'Home';
 
-    // Each tab: { id, title, url, history, histIdx, frameEl, frameMode, useProxy, ready, queued }
+    // Tabs state: { id, title, url, history, histIdx, frameEl, frameMode, useProxy, ready, queued, timer }
     let tabs = [
       {
-        id: 1, title: initialTitle, url: initialUrl,
-        history: [initialUrl], histIdx: 0,
-        frameEl: null, frameMode: null, useProxy: true, ready: false, queued: null
+        id: 1,
+        title: initialTitle,
+        url: initialUrl,
+        history: [initialUrl],
+        histIdx: 0,
+        frameEl: null,
+        frameMode: null,
+        useProxy: true,
+        ready: false,
+        queued: null,
+        timer: null
       }
     ];
     let activeTabId = 1;
     let nextTabId = 2;
 
     const BOOKMARKS = [
-      { name: 'Vault Hub', url: 'vault:hub', icon: '🏠' },
-      { name: 'Google', url: 'https://www.google.com/', icon: '🔍' },
-      { name: 'DuckDuckGo', url: 'https://duckduckgo.com/', icon: '🦆' },
-      { name: 'Wikipedia', url: 'https://en.wikipedia.org/', icon: '📖' }
+      { name: 'Vault Hub', url: 'vault:hub', icon: '🏠', desc: 'Browse all games & tools' },
+      { name: 'Games', url: 'vault:games', icon: '🎮', desc: 'Vault game collection' },
+      { name: 'Google', url: 'https://www.google.com/', icon: '🔍', desc: 'Search engine' },
+      { name: 'DuckDuckGo', url: 'https://duckduckgo.com/', icon: '🦆', desc: 'Private search' },
+      { name: 'YouTube', url: 'https://www.youtube.com/', icon: '📺', desc: 'Video platform' },
+      { name: 'Wikipedia', url: 'https://en.wikipedia.org/', icon: '📖', desc: 'Free encyclopedia' },
+      { name: 'Reddit', url: 'https://www.reddit.com/', icon: '💬', desc: 'Community discussions' },
+      { name: 'GitHub', url: 'https://github.com/', icon: '🐱', desc: 'Code repository' },
+      { name: 'Endis Proxy', url: 'https://endis.rest/', icon: '🔒', desc: 'Alternative proxy' }
     ];
 
     containerEl.innerHTML = `
-      <div class="browser-app-root" style="display:flex; flex-direction:column; height:100%; background:#1a1625; color:#fff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-        <!-- Tab Strip -->
-        <div class="browser-tabs-bar os-window-titlebar" style="display:flex; align-items:flex-end; gap:8px; height:42px; min-height:42px; padding:0 8px 0 12px; background:rgba(10,7,18,0.95); border-bottom:1px solid rgba(255,255,255,0.08); overflow:hidden; cursor:grab; box-sizing:border-box;">
+      <div class="browser-app-root" style="display:flex; flex-direction:column; height:100%; background:#100b1a; color:#fff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position:relative; overflow:hidden;">
+        <!-- Tab Strip & Window Controls -->
+        <div class="browser-tabs-bar os-window-titlebar" style="display:flex; align-items:flex-end; gap:8px; height:42px; min-height:42px; padding:0 8px 0 12px; background:rgba(12,8,20,0.96); border-bottom:1px solid rgba(255,255,255,0.08); overflow:hidden; cursor:grab; box-sizing:border-box;">
           <div id="browser-mac-controls" style="height:100%; display:flex; align-items:center; gap:8px; padding-right:6px; flex:0 0 auto;">
             <button id="browser-mac-close" aria-label="Close window" title="Close" style="width:12px;height:12px;min-width:12px;padding:0;border:0;border-radius:50%;background:#ff5f57;cursor:pointer;"></button>
             <button id="browser-mac-min" aria-label="Minimize window" title="Minimize" style="width:12px;height:12px;min-width:12px;padding:0;border:0;border-radius:50%;background:#febc2e;cursor:pointer;"></button>
             <button id="browser-mac-max" aria-label="Maximize window" title="Maximize" style="width:12px;height:12px;min-width:12px;padding:0;border:0;border-radius:50%;background:#28c840;cursor:pointer;"></button>
           </div>
           <div id="tab-headers-container" style="display:flex; align-items:flex-end; gap:4px; flex:0 1 auto; min-width:0; max-width:calc(100% - 120px); overflow-x:auto; scrollbar-width:none; height:100%;"></div>
-          <button id="browser-add-tab-btn" title="New tab" style="width:26px; height:26px; margin-bottom:4px; flex:0 0 auto; border:none; border-radius:6px; background:rgba(255,255,255,0.06); color:#c4b5fd; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">+</button>
+          <button id="browser-add-tab-btn" title="New tab (⌘T)" style="width:26px; height:26px; margin-bottom:4px; flex:0 0 auto; border:none; border-radius:6px; background:rgba(255,255,255,0.06); color:#c4b5fd; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s;">+</button>
         </div>
 
         <!-- Navigation Bar -->
-        <div class="browser-navigation-bar" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 12px; background:rgba(26,18,44,0.95); border-bottom:1px solid rgba(168,85,247,0.18); box-sizing:border-box;">
+        <div class="browser-navigation-bar" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 12px; background:rgba(22,14,36,0.96); border-bottom:1px solid rgba(168,85,247,0.18); box-sizing:border-box; position:relative; z-index:10;">
           <div style="display:flex; gap:4px; flex:0 0 auto;">
-            <button id="browser-back-btn" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">←</button>
-            <button id="browser-fwd-btn" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">→</button>
-            <button id="browser-reload-btn" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">↻</button>
+            <button id="browser-back-btn" title="Back" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">←</button>
+            <button id="browser-fwd-btn" title="Forward" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">→</button>
+            <button id="browser-reload-btn" title="Reload (⌘R)" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">↻</button>
+            <button id="browser-home-btn" title="Home" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">🏠</button>
           </div>
 
           <!-- URL / Search Omnibox -->
-          <div style="position:relative; flex:1 1 220px; min-width:0;">
-            <input type="text" id="browser-url-input" style="box-sizing:border-box; display:block; width:100%; min-width:0; height:32px; padding:0 12px 0 32px; border-radius:16px; border:1px solid rgba(168,85,247,0.25); background:rgba(15,11,26,0.85); color:#f5f3ff; font-size:12.5px; outline:none;" placeholder="Enter web address or search term...">
-            <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; opacity:0.6;">🔒</span>
+          <div style="position:relative; flex:1 1 240px; min-width:0;">
+            <input type="text" id="browser-url-input" style="box-sizing:border-box; display:block; width:100%; min-width:0; height:32px; padding:0 30px 0 32px; border-radius:16px; border:1px solid rgba(168,85,247,0.3); background:rgba(12,8,20,0.85); color:#f5f3ff; font-size:12.5px; outline:none; transition:border-color .15s, box-shadow .15s;" placeholder="Enter address or search with DuckDuckGo...">
+            <span id="browser-ssl-icon" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; opacity:0.75;" title="Security mode">🔒</span>
+            <button id="browser-url-clear" title="Clear address" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:#a79bc8; cursor:pointer; font-size:14px; padding:0 4px;">×</button>
           </div>
 
-          <!-- Channel Toggle Button (Proxy vs Direct) -->
-          <button id="browser-mode-btn" type="button" role="switch" aria-checked="true" title="Proxy is ON. Click to switch to Direct mode." style="height:34px; min-width:118px; flex:0 0 auto; padding:0 10px; border-radius:999px; border:1px solid rgba(168,85,247,.45); background:rgba(139,92,246,.18); color:#e9d5ff; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; display:flex; align-items:center; justify-content:space-between; gap:8px; transition:all .18s ease;"><span class="browser-mode-label">Proxy</span><span class="browser-switch-track" aria-hidden="true" style="position:relative; width:34px; height:18px; border-radius:999px; background:#8b5cf6; flex:0 0 auto; transition:background .18s ease;"><span class="browser-switch-thumb" style="position:absolute; top:2px; left:18px; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0005; transition:left .18s ease;"></span></span><span class="browser-mode-state">ON</span></button>
-          <button id="browser-pin-btn" title="Pin this website to your WebOS desktop" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(168,85,247,.3);background:rgba(168,85,247,.1);color:#d8b4fe;font-size:12px;cursor:pointer;white-space:nowrap;">📌 Pin</button>
-          <button id="browser-help-btn" title="Explain how the browser and proxy work" style="height:30px; padding:0 10px; border-radius:8px; border:1px solid rgba(168,85,247,0.3); background:rgba(168,85,247,0.1); color:#d8b4fe; font-size:12px; cursor:pointer; white-space:nowrap;">? Help</button>
+          <!-- Mode Toggle Switch (Proxy vs Direct) -->
+          <button id="browser-mode-btn" type="button" role="switch" aria-checked="true" title="Scramjet Proxy is ON. Avoids iframe blocking. Click to switch to Direct." style="height:32px; min-width:122px; flex:0 0 auto; padding:0 10px; border-radius:999px; border:1px solid rgba(168,85,247,.55); background:rgba(139,92,246,.2); color:#e9d5ff; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; display:flex; align-items:center; justify-content:space-between; gap:8px; transition:all .18s ease;">
+            <span class="browser-mode-label">Proxy</span>
+            <span class="browser-switch-track" aria-hidden="true" style="position:relative; width:34px; height:18px; border-radius:999px; background:#8b5cf6; flex:0 0 auto; transition:background .18s ease;">
+              <span class="browser-switch-thumb" style="position:absolute; top:2px; left:18px; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0006; transition:left .18s ease;"></span>
+            </span>
+            <span class="browser-mode-state">ON</span>
+          </button>
+
+          <!-- Utilities -->
+          <button id="browser-popout-btn" title="Open current URL in an external browser tab" style="height:30px; padding:0 10px; border-radius:8px; border:1px solid rgba(168,85,247,.3); background:rgba(168,85,247,.1); color:#d8b4fe; font-size:12px; cursor:pointer; white-space:nowrap;">↗ Pop Out</button>
+          <button id="browser-pin-btn" title="Pin this website to your WebOS desktop" style="height:30px; padding:0 10px; border-radius:8px; border:1px solid rgba(168,85,247,.3); background:rgba(168,85,247,.1); color:#d8b4fe; font-size:12px; cursor:pointer; white-space:nowrap;">📌 Pin</button>
+          <button id="browser-help-btn" title="Browser & Scramjet proxy guide" style="height:30px; padding:0 10px; border-radius:8px; border:1px solid rgba(168,85,247,.3); background:rgba(168,85,247,.1); color:#d8b4fe; font-size:12px; cursor:pointer; white-space:nowrap;">? Help</button>
         </div>
 
         <!-- Bookmarks Bar -->
-        <div style="display:flex; gap:6px; padding:4px 12px; background:rgba(15,11,26,0.5); border-bottom:1px solid rgba(255,255,255,0.04); overflow-x:auto;">
+        <div style="display:flex; gap:6px; padding:4px 12px; background:rgba(12,8,20,0.55); border-bottom:1px solid rgba(255,255,255,0.05); overflow-x:auto;">
           ${BOOKMARKS.map(bm => `
-            <button class="browser-bm-btn" data-url="${bm.url}" style="display:flex; align-items:center; gap:5px; padding:3px 10px; border-radius:6px; border:none; background:transparent; color:#a79bc8; font-size:11.5px; cursor:pointer; white-space:nowrap;">
+            <button class="browser-bm-btn" data-url="${bm.url}" style="display:flex; align-items:center; gap:5px; padding:3px 10px; border-radius:6px; border:none; background:transparent; color:#c4b5fd; font-size:11.5px; cursor:pointer; white-space:nowrap; transition:background .12s;">
               <span>${bm.icon}</span>
               <span>${bm.name}</span>
             </button>
           `).join('')}
         </div>
 
-        <!-- Browser View Area: home screen + one iframe per tab -->
+        <!-- Progress Loading Indicator -->
+        <div id="browser-loading-bar" style="position:absolute; top:86px; left:0; width:0%; height:2.5px; background:linear-gradient(90deg, #8b5cf6, #d946ef, #38bdf8); z-index:15; transition:width 0.25s ease, opacity 0.3s ease; opacity:0; pointer-events:none;"></div>
+
+        <!-- Direct Mode Fallback Banner -->
+        <div id="browser-direct-banner" style="display:none; align-items:center; justify-content:space-between; gap:10px; padding:6px 14px; background:rgba(217,119,6,0.92); color:#fff; font-size:12px; z-index:14; position:relative; border-bottom:1px solid rgba(255,255,255,0.15);">
+          <span>⚡ Direct Mode: If this website appears blank or restricts embedding, <button id="direct-enable-proxy" style="margin-left:6px; padding:3px 8px; border-radius:4px; border:none; background:#fff; color:#78350f; font-weight:700; cursor:pointer;">Switch to Proxy</button> or <button id="direct-popout" style="margin-left:4px; padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.5); background:transparent; color:#fff; cursor:pointer;">Open in New Tab ↗</button></span>
+          <button id="direct-dismiss" style="background:none; border:none; color:#fff; font-size:16px; cursor:pointer; padding:0 4px;">×</button>
+        </div>
+
+        <!-- Proxy Status / Error Banner -->
+        <div id="browser-proxy-banner" style="display:none; align-items:center; justify-content:space-between; gap:10px; padding:6px 14px; background:rgba(220,38,38,0.92); color:#fff; font-size:12px; z-index:14; position:relative; border-bottom:1px solid rgba(255,255,255,0.15);">
+          <span id="proxy-banner-text">⚠️ Scramjet proxy is connecting...</span>
+          <div style="display:flex; gap:6px;">
+            <button id="proxy-btn-direct" style="padding:3px 8px; border-radius:4px; border:none; background:#fff; color:#991b1b; font-weight:700; cursor:pointer;">Try Direct Mode</button>
+            <button id="proxy-btn-popout" style="padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.5); background:transparent; color:#fff; cursor:pointer;">Pop Out ↗</button>
+            <button id="proxy-btn-retry" style="padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.5); background:transparent; color:#fff; cursor:pointer;">Retry</button>
+            <button id="proxy-btn-dismiss" style="background:none; border:none; color:#fff; font-size:16px; cursor:pointer; padding:0 4px;">×</button>
+          </div>
+        </div>
+
+        <!-- Browser View Area: Home screen + per-tab iframes -->
         <div id="browser-viewport" style="flex:1; position:relative; overflow:hidden; background:#07050c;">
-          <div id="browser-home" style="position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; background:radial-gradient(ellipse at 50% 40%, #1a0b33, #07050c); overflow:auto;">
-            <div style="font-size:48px; margin-bottom:12px;">🌐</div>
-            <h2 style="margin:0 0 8px 0; font-size:22px; font-weight:700; color:#fff;">Vault Browser</h2>
-            <p id="browser-home-desc" style="margin:0 0 24px 0; color:#c4b5fd; font-size:13px; max-width:420px;">Type an address or a search above. Use the toggle in the toolbar to switch between Proxy and Direct modes.</p>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:12px; max-width:600px; width:100%;">
-              ${BOOKMARKS.map(bm => `
-                <div class="home-bm-card" data-url="${bm.url}" style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px; background:rgba(255,255,255,0.04); border:1px solid rgba(168,85,247,0.18); border-radius:12px; cursor:pointer;">
-                  <span style="font-size:26px;">${bm.icon}</span>
-                  <span style="font-size:12px; font-weight:500; color:#e8e0f0;">${bm.name}</span>
+          <!-- Home Screen -->
+          <div id="browser-home" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:clamp(20px, 4vw, 40px); background:radial-gradient(ellipse at 50% 25%, rgba(139,92,246,0.22), transparent 55%), linear-gradient(155deg, #120924 0%, #080410 60%, #05020a 100%); overflow-y:auto; box-sizing:border-box;">
+            <div style="width:min(100%, 720px); margin:auto; display:flex; flex-direction:column; align-items:center;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; color:#c4b5fd; font-size:11px; font-weight:800; letter-spacing:.2em; text-transform:uppercase;">
+                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow:0 0 10px #10b981;"></span>
+                THE WEB VAULT · SCRAMJET PROXY BROWSER
+              </div>
+              <div style="font-size:44px; line-height:1; margin-bottom:12px; filter:drop-shadow(0 6px 20px rgba(139,92,246,0.3));">🌐</div>
+              <h2 style="margin:0 0 8px 0; font-size:clamp(24px, 4vw, 32px); font-weight:800; color:#fff; letter-spacing:-.03em;">Browse without limits.</h2>
+              <p style="margin:0 0 22px 0; color:#c4b5fd; font-size:13px; max-width:460px; line-height:1.5;">Search the web or launch any favorite. Bypasses iframe restrictions and security headers using the dedicated Scramjet proxy.</p>
+
+              <!-- Central Search Form -->
+              <form id="home-search-form" style="width:100%; max-width:540px; margin-bottom:28px; display:flex; gap:8px;">
+                <div style="position:relative; flex:1;">
+                  <input type="text" id="home-search-input" placeholder="Search freely with DuckDuckGo or enter URL..." style="width:100%; height:44px; padding:0 16px 0 40px; border-radius:12px; border:1px solid rgba(168,85,247,0.35); background:rgba(18,12,28,0.9); color:#fff; font-size:13.5px; outline:none; box-sizing:border-box; box-shadow:0 6px 20px rgba(0,0,0,0.35);">
+                  <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:15px; opacity:0.6;">🔍</span>
                 </div>
-              `).join('')}
+                <button type="submit" style="height:44px; padding:0 20px; border:none; border-radius:12px; background:linear-gradient(135deg, #8b5cf6, #a855f7); color:#fff; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 4px 16px rgba(139,92,246,0.35); white-space:nowrap;">Go</button>
+              </form>
+
+              <!-- Bookmarks Grid -->
+              <div style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:12px; font-weight:700; color:#eee7ff; letter-spacing:0.04em;">QUICK ACCESS</span>
+                <span style="font-size:11px; color:#8b7aa8;">POPULAR DESTINATIONS</span>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; width:100%;">
+                ${BOOKMARKS.map(bm => `
+                  <div class="home-bm-card" data-url="${bm.url}" style="display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:14px; background:rgba(255,255,255,0.04); border:1px solid rgba(168,85,247,0.18); border-radius:12px; cursor:pointer; text-align:left; transition:transform .15s, border-color .15s, background .15s;">
+                    <span style="font-size:24px;">${bm.icon}</span>
+                    <span style="font-size:12.5px; font-weight:600; color:#f5f3ff;">${bm.name}</span>
+                    <span style="font-size:10.5px; color:#a79bc8; line-height:1.2;">${bm.desc}</span>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Proxy Status Bar -->
+              <div style="margin-top:24px; padding:8px 16px; border-radius:20px; background:rgba(139,92,246,0.1); border:1px solid rgba(168,85,247,0.25); display:flex; align-items:center; gap:8px; font-size:11.5px; color:#d8b4fe;">
+                <span style="width:7px; height:7px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span>
+                <span>Active Service: <strong>proxy.thewebvault.org</strong> (Scramjet + BareMux Wisp)</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     `;
 
-    // Integrate with the actual WindowFrame DOM (.vault-window / .window-titlebar).
-    // WindowFrame uses private handlers, so invoke its real buttons instead of
-    // trying to recreate window-management behavior here.
+    // Hook WindowFrame's actual drag region and traffic lights
     window.setTimeout(() => {
       const osWindow = containerEl.closest('.vault-window');
       if (!osWindow || !containerEl.isConnected) return;
@@ -143,9 +217,6 @@ export const AppManifest = {
       const nativeDragRegion = nativeTitlebar.querySelector('.window-drag-region');
       const browserTitlebar = containerEl.querySelector('.browser-tabs-bar');
 
-      // Reuse WindowFrame's actual drag region inside the browser's custom titlebar.
-      // Its pointer handlers are private to WindowFrame, so moving the existing
-      // element preserves native dragging without changing shared window code.
       if (nativeClose && nativeMin && nativeMax && nativeDragRegion && browserTitlebar) {
         browserTitlebar.style.position = 'relative';
         nativeDragRegion.style.position = 'absolute';
@@ -153,21 +224,19 @@ export const AppManifest = {
         nativeDragRegion.style.zIndex = '0';
         browserTitlebar.prepend(nativeDragRegion);
 
-        // Keep interactive browser controls above the drag surface.
         [
           containerEl.querySelector('#browser-mac-controls'),
           containerEl.querySelector('#tab-headers-container'),
           containerEl.querySelector('#browser-add-tab-btn')
-        ].forEach(element => {
-          if (!element) return;
-          element.style.position = 'relative';
-          element.style.zIndex = '1';
+        ].forEach(el => {
+          if (!el) return;
+          el.style.position = 'relative';
+          el.style.zIndex = '1';
         });
 
         nativeTitlebar.style.display = 'none';
 
-        // Preserve titlebar double-click-to-maximize behavior on the custom bar.
-        browserTitlebar.addEventListener('dblclick', event => {
+        browserTitlebar.addEventListener('dblclick', (event) => {
           if (event.target.closest('button, #tab-headers-container')) return;
           nativeMax.click();
         });
@@ -179,11 +248,11 @@ export const AppManifest = {
         [containerEl.querySelector('#browser-mac-max'), nativeMax]
       ].forEach(([custom, native]) => {
         if (!custom || !native) return;
-        custom.addEventListener('pointerdown', event => event.stopPropagation());
-        custom.addEventListener('mousedown', event => event.stopPropagation());
-        custom.addEventListener('click', event => {
-          event.preventDefault();
-          event.stopPropagation();
+        custom.addEventListener('pointerdown', (e) => e.stopPropagation());
+        custom.addEventListener('mousedown', (e) => e.stopPropagation());
+        custom.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           native.click();
         });
       });
@@ -191,23 +260,31 @@ export const AppManifest = {
 
     const tabHeadersContainer = containerEl.querySelector('#tab-headers-container');
     const urlInput = containerEl.querySelector('#browser-url-input');
+    const urlClear = containerEl.querySelector('#browser-url-clear');
+    const sslIcon = containerEl.querySelector('#browser-ssl-icon');
     const viewport = containerEl.querySelector('#browser-viewport');
     const homeEl = containerEl.querySelector('#browser-home');
     const backBtn = containerEl.querySelector('#browser-back-btn');
     const fwdBtn = containerEl.querySelector('#browser-fwd-btn');
     const reloadBtn = containerEl.querySelector('#browser-reload-btn');
+    const homeBtn = containerEl.querySelector('#browser-home-btn');
     const modeBtn = containerEl.querySelector('#browser-mode-btn');
+    const popoutBtn = containerEl.querySelector('#browser-popout-btn');
     const pinBtn = containerEl.querySelector('#browser-pin-btn');
     const helpBtn = containerEl.querySelector('#browser-help-btn');
     const addTabBtn = containerEl.querySelector('#browser-add-tab-btn');
+    const loadingBar = containerEl.querySelector('#browser-loading-bar');
+    const directBanner = containerEl.querySelector('#browser-direct-banner');
+    const proxyBanner = containerEl.querySelector('#browser-proxy-banner');
+    const proxyBannerText = containerEl.querySelector('#proxy-banner-text');
 
     const getActiveTab = () => tabs.find(t => t.id === activeTabId) || tabs[0];
-    const isHomeUrl = (url) => url === 'about:home' || url === 'vault:hub';
+    const isHomeUrl = (url) => url === 'about:home' || url === 'vault:hub' || url === 'vault:games';
     const hostOf = (url) => {
       try { return new URL(url).hostname || url; } catch { return url; }
     };
 
-    // Share only the active page's title/hostname with VaultNet, never its full URL.
+    // Share active page label with VaultNet presence
     const publishBrowserActivity = (tab = getActiveTab()) => {
       if (!tab) return;
       let pageLabel = '';
@@ -219,8 +296,35 @@ export const AppManifest = {
       }));
     };
 
-    // ---- Iframes (Proxy & Direct) --------------------------------------------
+    // ---- Loading Progress Bar ------------------------------------------------
+    let progressTimer = null;
+    const startLoading = () => {
+      if (loadingBar) {
+        loadingBar.style.opacity = '1';
+        loadingBar.style.width = '30%';
+        clearTimeout(progressTimer);
+        progressTimer = setTimeout(() => {
+          if (loadingBar) loadingBar.style.width = '75%';
+        }, 300);
+      }
+    };
 
+    const finishLoading = () => {
+      clearTimeout(progressTimer);
+      if (loadingBar) {
+        loadingBar.style.width = '100%';
+        setTimeout(() => {
+          if (loadingBar) {
+            loadingBar.style.opacity = '0';
+            setTimeout(() => {
+              if (loadingBar) loadingBar.style.width = '0%';
+            }, 300);
+          }
+        }, 200);
+      }
+    };
+
+    // ---- Iframe Management ---------------------------------------------------
     const ensureFrameElement = (tab) => {
       if (!tab.frameEl) {
         const el = document.createElement('iframe');
@@ -228,36 +332,64 @@ export const AppManifest = {
         el.allowFullscreen = true;
         el.style.cssText =
           'position:absolute; inset:0; width:100%; height:100%; border:none; background:#07050c; display:none;';
+
+        el.addEventListener('load', () => {
+          if (!tab.useProxy) finishLoading();
+        });
+
         viewport.appendChild(el);
         tab.frameEl = el;
       }
     };
 
     const sendToFrame = (tab, message) => {
-      tab.frameEl?.contentWindow?.postMessage(message, PROXY_ORIGIN);
+      try {
+        tab.frameEl?.contentWindow?.postMessage(message, PROXY_ORIGIN);
+      } catch (err) {
+        console.warn('[BrowserApp] postMessage failed:', err);
+      }
     };
 
-    /** Load a URL in a tab's frame according to its current mode (Proxy vs Direct). */
+    /**
+     * Load a target URL in a tab's iframe according to its mode.
+     */
     const loadInTab = (tab, url) => {
       ensureFrameElement(tab);
+      startLoading();
+
+      if (tab.timer) {
+        clearTimeout(tab.timer);
+        tab.timer = null;
+      }
 
       if (tab.useProxy) {
-        // Switch iframe to Scramjet embed if it wasn't already in proxy mode
+        directBanner.style.display = 'none';
+        proxyBanner.style.display = 'none';
+
+        // Set an 8-second readiness timeout in case proxy initialization hangs
+        tab.timer = setTimeout(() => {
+          if (!tab.ready && tab.useProxy && tab === getActiveTab()) {
+            proxyBannerText.textContent = '⚠️ Proxy connection is taking longer than usual. You can retry or switch to Direct mode.';
+            proxyBanner.style.display = 'flex';
+            finishLoading();
+          }
+        }, 8500);
+
         if (tab.frameMode !== 'proxy') {
           tab.frameMode = 'proxy';
           tab.ready = false;
           tab.queued = url;
           tab.frameEl.src = EMBED_URL;
-          return;
-        }
-
-        if (tab.ready) {
+        } else if (tab.ready) {
           sendToFrame(tab, { type: 'go', url });
         } else {
           tab.queued = url;
         }
       } else {
-        // Direct mode: bypass proxy and load URL straight into the iframe
+        // Direct Mode: load directly into the iframe
+        proxyBanner.style.display = 'none';
+        directBanner.style.display = 'flex';
+
         tab.frameMode = 'direct';
         tab.ready = false;
         tab.queued = null;
@@ -265,20 +397,29 @@ export const AppManifest = {
       }
     };
 
+    // ---- PostMessage Listener (Scramjet Embed Communication) -----------------
     const onMessage = (e) => {
-      // Stop listening once this window has been closed.
       if (!containerEl.isConnected) {
         window.removeEventListener('message', onMessage);
         return;
       }
+
       if (e.origin !== PROXY_ORIGIN) return;
       const tab = tabs.find(t => t.frameEl && t.frameEl.contentWindow === e.source);
       if (!tab || !tab.useProxy) return;
+
       const data = e.data;
       if (!data || typeof data !== 'object') return;
 
       if (data.type === 'ready') {
+        if (tab.timer) {
+          clearTimeout(tab.timer);
+          tab.timer = null;
+        }
         tab.ready = true;
+        proxyBanner.style.display = 'none';
+        finishLoading();
+
         if (tab.queued) {
           sendToFrame(tab, { type: 'go', url: tab.queued });
           tab.queued = null;
@@ -290,46 +431,57 @@ export const AppManifest = {
           tab.history.push(data.url);
           tab.histIdx = tab.history.length - 1;
         }
-        // Use the actual document title when the Scramjet embed supplies it.
-        // Some pages/proxy configurations only send the URL, so keep a hostname fallback.
         tab.title = typeof data.title === 'string' && data.title.trim()
           ? data.title.trim().slice(0, 120)
           : hostOf(data.url);
+
+        finishLoading();
         renderTabs();
         if (tab.id === activeTabId) {
           renderViewport();
           publishBrowserActivity(tab);
         }
+      } else if (data.type === 'error') {
+        finishLoading();
+        if (tab === getActiveTab()) {
+          proxyBannerText.textContent = `⚠️ Scramjet proxy error: ${data.message || 'Failed to route request'}`;
+          proxyBanner.style.display = 'flex';
+        }
       }
     };
+
     window.addEventListener('message', onMessage);
 
-    // ---- Rendering -----------------------------------------------------------
-
+    // ---- UI Rendering --------------------------------------------------------
     const renderModeToggle = (active) => {
       const label = modeBtn.querySelector('.browser-mode-label');
       const state = modeBtn.querySelector('.browser-mode-state');
       const track = modeBtn.querySelector('.browser-switch-track');
       const thumb = modeBtn.querySelector('.browser-switch-thumb');
       modeBtn.setAttribute('aria-checked', String(active.useProxy));
+
       if (active.useProxy) {
         label.textContent = 'Proxy';
         state.textContent = 'ON';
-        modeBtn.style.background = 'rgba(139, 92, 246, 0.2)';
+        modeBtn.style.background = 'rgba(139, 92, 246, 0.22)';
         modeBtn.style.borderColor = 'rgba(168, 85, 247, 0.55)';
         modeBtn.style.color = '#e9d5ff';
         track.style.background = '#8b5cf6';
         thumb.style.left = '18px';
-        modeBtn.title = 'Proxy is ON. Click to switch to Direct mode.';
+        modeBtn.title = 'Scramjet Proxy is ON. Avoids iframe blocking. Click to switch to Direct mode.';
+        sslIcon.textContent = '🛡️';
+        sslIcon.title = 'Protected by Scramjet Proxy';
       } else {
-        label.textContent = 'Proxy';
+        label.textContent = 'Direct';
         state.textContent = 'OFF';
-        modeBtn.style.background = 'rgba(255, 255, 255, 0.045)';
-        modeBtn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-        modeBtn.style.color = '#c4b5fd';
+        modeBtn.style.background = 'rgba(245, 158, 11, 0.15)';
+        modeBtn.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+        modeBtn.style.color = '#fde68a';
         track.style.background = 'rgba(148, 163, 184, 0.45)';
         thumb.style.left = '2px';
-        modeBtn.title = 'Proxy is OFF (Direct mode). Click to turn Proxy on.';
+        modeBtn.title = 'Proxy is OFF (Direct iframe mode). Click to turn Scramjet Proxy on.';
+        sslIcon.textContent = '⚡';
+        sslIcon.title = 'Direct iframe mode';
       }
     };
 
@@ -341,24 +493,27 @@ export const AppManifest = {
         el.style.cssText = `
           display:flex; align-items:center; gap:8px; height:30px; padding:0 10px;
           border-radius:8px 8px 0 0; cursor:pointer; font-size:12px; max-width:180px; min-width:100px;
-          border:1px solid ${isActive ? 'rgba(168,85,247,0.4)' : 'transparent'};
+          border:1px solid ${isActive ? 'rgba(168,85,247,0.45)' : 'transparent'};
           border-bottom:none;
-          background:${isActive ? '#1a1625' : 'rgba(255,255,255,0.03)'};
+          background:${isActive ? '#1c132b' : 'rgba(255,255,255,0.03)'};
           color:${isActive ? '#fff' : '#a79bc8'};
+          transition:background .12s, border-color .12s;
         `;
 
         const icon = document.createElement('span');
-        icon.style.fontSize = '13px';
-        icon.textContent = tab.useProxy ? '🌐' : '⚡';
+        icon.style.fontSize = '12px';
+        icon.textContent = isHomeUrl(tab.url) ? '🏠' : (tab.useProxy ? '🛡️' : '⚡');
 
         const label = document.createElement('span');
         label.style.cssText = 'flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
-        label.textContent = tab.title;
+        label.textContent = tab.title || 'New Tab';
 
         const close = document.createElement('button');
         close.className = 'tab-close';
-        close.style.cssText = 'background:none; border:none; color:inherit; font-size:14px; cursor:pointer; padding:0 2px;';
+        close.style.cssText = 'background:none; border:none; color:inherit; font-size:14px; cursor:pointer; padding:0 2px; opacity:0.6;';
         close.textContent = '×';
+        close.onmouseenter = () => { close.style.opacity = '1'; };
+        close.onmouseleave = () => { close.style.opacity = '0.6'; };
 
         el.append(icon, label, close);
         el.addEventListener('click', (e) => {
@@ -378,6 +533,7 @@ export const AppManifest = {
       const active = getActiveTab();
       const home = isHomeUrl(active.url);
       urlInput.value = home ? '' : active.url;
+      urlClear.style.display = urlInput.value ? 'block' : 'none';
 
       backBtn.disabled = active.histIdx <= 0;
       backBtn.style.opacity = backBtn.disabled ? '0.3' : '1';
@@ -387,6 +543,12 @@ export const AppManifest = {
       renderModeToggle(active);
 
       homeEl.style.display = home ? 'flex' : 'none';
+      if (!home && !active.useProxy) {
+        directBanner.style.display = 'flex';
+      } else {
+        directBanner.style.display = 'none';
+      }
+
       for (const tab of tabs) {
         if (tab.frameEl) {
           tab.frameEl.style.display = (tab === active && !home) ? 'block' : 'none';
@@ -394,8 +556,7 @@ export const AppManifest = {
       }
     };
 
-    // ---- Navigation ----------------------------------------------------------
-
+    // ---- Navigation Handlers -------------------------------------------------
     const normalizeInput = (input) => {
       const url = input.trim();
       if (!url) return null;
@@ -406,7 +567,20 @@ export const AppManifest = {
     };
 
     const navigate = (input) => {
-      const url = normalizeInput(input);
+      const raw = input.trim();
+      if (!raw) return;
+
+      // Handle internal app shortcuts
+      if (raw === 'vault:hub') {
+        AppRegistry.launch('vault-hub');
+        return;
+      }
+      if (raw === 'vault:games') {
+        AppRegistry.launch('games');
+        return;
+      }
+
+      const url = normalizeInput(raw);
       if (!url) return;
 
       const active = getActiveTab();
@@ -416,7 +590,12 @@ export const AppManifest = {
       active.history.push(url);
       active.histIdx = active.history.length - 1;
 
-      if (!isHomeUrl(url)) loadInTab(active, url);
+      if (!isHomeUrl(url)) {
+        loadInTab(active, url);
+      } else {
+        finishLoading();
+      }
+
       renderTabs();
       renderViewport();
       publishBrowserActivity(active);
@@ -433,9 +612,10 @@ export const AppManifest = {
       const tab = tabs.find(t => t.id === id);
       if (!tab) return;
 
+      if (tab.timer) clearTimeout(tab.timer);
+      tab.frameEl?.remove();
+
       if (tabs.length === 1) {
-        // Reset the last tab to home
-        tab.frameEl?.remove();
         tab.frameEl = null;
         tab.frameMode = null;
         tab.ready = false;
@@ -446,7 +626,6 @@ export const AppManifest = {
         tab.histIdx = 0;
       } else {
         const idx = tabs.findIndex(t => t.id === id);
-        tab.frameEl?.remove();
         tabs = tabs.filter(t => t.id !== id);
         if (activeTabId === id) {
           activeTabId = tabs[Math.max(0, idx - 1)].id;
@@ -458,29 +637,45 @@ export const AppManifest = {
 
     const addTab = (url = 'about:home', title = 'New Tab') => {
       const newId = nextTabId++;
-      // Inherit the current tab's channel preference when opening a new tab
       const defaultProxyState = getActiveTab()?.useProxy ?? true;
       tabs.push({
-        id: newId, title, url, history: [url], histIdx: 0,
-        frameEl: null, frameMode: null, useProxy: defaultProxyState, ready: false, queued: null
+        id: newId,
+        title,
+        url,
+        history: [url],
+        histIdx: 0,
+        frameEl: null,
+        frameMode: null,
+        useProxy: defaultProxyState,
+        ready: false,
+        queued: null,
+        timer: null
       });
       switchTab(newId);
       if (!isHomeUrl(url)) loadInTab(getActiveTab(), url);
     };
 
-    // Omnibox submit
+    // Omnibox submit & clear
     urlInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') navigate(urlInput.value);
     });
+    urlInput.addEventListener('input', () => {
+      urlClear.style.display = urlInput.value ? 'block' : 'none';
+    });
+    urlClear.addEventListener('click', () => {
+      urlInput.value = '';
+      urlClear.style.display = 'none';
+      urlInput.focus();
+    });
 
-    // Toolbar buttons
+    // Navigation buttons
     backBtn.addEventListener('click', () => {
       const active = getActiveTab();
       if (active.histIdx > 0) {
         active.histIdx--;
         active.url = active.history[active.histIdx];
-        if (!isHomeUrl(active.url)) loadInTab(active, active.url);
         active.title = isHomeUrl(active.url) ? 'Home' : hostOf(active.url);
+        if (!isHomeUrl(active.url)) loadInTab(active, active.url);
         renderTabs();
         renderViewport();
       }
@@ -491,8 +686,8 @@ export const AppManifest = {
       if (active.histIdx < active.history.length - 1) {
         active.histIdx++;
         active.url = active.history[active.histIdx];
-        if (!isHomeUrl(active.url)) loadInTab(active, active.url);
         active.title = isHomeUrl(active.url) ? 'Home' : hostOf(active.url);
+        if (!isHomeUrl(active.url)) loadInTab(active, active.url);
         renderTabs();
         renderViewport();
       }
@@ -500,10 +695,42 @@ export const AppManifest = {
 
     reloadBtn.addEventListener('click', () => {
       const active = getActiveTab();
-      if (!isHomeUrl(active.url)) loadInTab(active, active.url);
+      if (!isHomeUrl(active.url)) {
+        if (active.useProxy && active.ready) {
+          startLoading();
+          sendToFrame(active, { type: 'go', url: active.url });
+        } else {
+          loadInTab(active, active.url);
+        }
+      }
     });
 
-    // Pin the current page without leaving the browser or using native dialogs.
+    homeBtn.addEventListener('click', () => {
+      navigate('about:home');
+    });
+
+    // Toggle Proxy vs Direct mode
+    modeBtn.addEventListener('click', () => {
+      const active = getActiveTab();
+      active.useProxy = !active.useProxy;
+      if (!isHomeUrl(active.url)) {
+        loadInTab(active, active.url);
+      }
+      renderTabs();
+      renderViewport();
+    });
+
+    // Pop out to native browser tab
+    popoutBtn.addEventListener('click', () => {
+      const active = getActiveTab();
+      if (active.url && !isHomeUrl(active.url)) {
+        window.open(active.url, '_blank', 'noopener,noreferrer');
+      } else {
+        showBrowserNotice('Navigate to a website first, then pop it out.');
+      }
+    });
+
+    // Pin current website shortcut to desktop
     pinBtn.addEventListener('click', () => {
       const active = getActiveTab();
       let parsed;
@@ -517,19 +744,22 @@ export const AppManifest = {
         const saved = JSON.parse(localStorage.getItem('vaultos_custom_shortcuts') || '[]');
         if (Array.isArray(saved)) shortcuts = saved;
       } catch {}
+
       const title = (active.title && active.title !== 'Home' ? active.title : parsed.hostname).trim().slice(0, 60);
       if (shortcuts.some(item => item && item.url === parsed.href && String(item.label).toLowerCase() === title.toLowerCase())) {
         showBrowserNotice('This website is already pinned to your desktop.');
         return;
       }
+
       const id = 'shortcut-' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
       shortcuts.push({ id, appId: 'browser', label: title, icon: '🔗', url: parsed.href });
+
       try {
         localStorage.setItem('vaultos_custom_shortcuts', JSON.stringify(shortcuts));
         window.dispatchEvent(new CustomEvent('vaultos:shortcuts-changed'));
         showBrowserNotice('Pinned "' + title + '" to your desktop.');
       } catch {
-        showBrowserNotice('Could not save the shortcut. Browser storage may be unavailable or full.');
+        showBrowserNotice('Could not save the shortcut. Browser storage may be unavailable.');
       }
     });
 
@@ -538,30 +768,50 @@ export const AppManifest = {
       const notice = document.createElement('div');
       notice.className = 'browser-inline-notice';
       notice.textContent = message;
-      notice.style.cssText = 'position:absolute;z-index:20;top:12px;left:50%;transform:translateX(-50%);max-width:90%;padding:11px 16px;border:1px solid rgba(168,85,247,.5);border-radius:10px;background:#201533;color:#f5f3ff;box-shadow:0 10px 30px #0008;font-size:12px;text-align:center;';
-      const root = containerEl.querySelector('.browser-app-root');
-      root.style.position = 'relative';
-      root.appendChild(notice);
+      notice.style.cssText = 'position:absolute; z-index:50; top:52px; left:50%; transform:translateX(-50%); max-width:90%; padding:10px 18px; border:1px solid rgba(168,85,247,.6); border-radius:10px; background:#1e1030; color:#f5f3ff; box-shadow:0 10px 30px rgba(0,0,0,0.6); font-size:12.5px; text-align:center;';
+      containerEl.querySelector('.browser-app-root').appendChild(notice);
       window.setTimeout(() => notice.remove(), 2600);
     }
 
-    // Open the beginner-friendly browser and proxy walkthrough.
     helpBtn.addEventListener('click', () => showBrowserGuide());
+    addTabBtn.addEventListener('click', () => addTab());
 
-    // Toggle between Proxy and Direct channels
-    modeBtn.addEventListener('click', () => {
+    // Banner buttons
+    containerEl.querySelector('#direct-enable-proxy').addEventListener('click', () => {
       const active = getActiveTab();
-      active.useProxy = !active.useProxy;
-      if (!isHomeUrl(active.url)) {
-        loadInTab(active, active.url);
-      }
+      active.useProxy = true;
+      loadInTab(active, active.url);
       renderTabs();
       renderViewport();
     });
+    containerEl.querySelector('#direct-popout').addEventListener('click', () => {
+      const active = getActiveTab();
+      if (active.url && !isHomeUrl(active.url)) window.open(active.url, '_blank', 'noopener,noreferrer');
+    });
+    containerEl.querySelector('#direct-dismiss').addEventListener('click', () => {
+      directBanner.style.display = 'none';
+    });
 
-    addTabBtn.addEventListener('click', () => addTab());
+    containerEl.querySelector('#proxy-btn-direct').addEventListener('click', () => {
+      const active = getActiveTab();
+      active.useProxy = false;
+      loadInTab(active, active.url);
+      renderTabs();
+      renderViewport();
+    });
+    containerEl.querySelector('#proxy-btn-popout').addEventListener('click', () => {
+      const active = getActiveTab();
+      if (active.url && !isHomeUrl(active.url)) window.open(active.url, '_blank', 'noopener,noreferrer');
+    });
+    containerEl.querySelector('#proxy-btn-retry').addEventListener('click', () => {
+      const active = getActiveTab();
+      loadInTab(active, active.url);
+    });
+    containerEl.querySelector('#proxy-btn-dismiss').addEventListener('click', () => {
+      proxyBanner.style.display = 'none';
+    });
 
-    // Bookmarks bar + home screen cards
+    // Bookmarks and Home screen forms
     containerEl.querySelectorAll('.browser-bm-btn').forEach(btn => {
       btn.addEventListener('click', () => navigate(btn.dataset.url));
     });
@@ -569,26 +819,38 @@ export const AppManifest = {
       card.addEventListener('click', () => navigate(card.dataset.url));
     });
 
-    // ---- Start ---------------------------------------------------------------
+    const homeSearchForm = containerEl.querySelector('#home-search-form');
+    const homeSearchInput = containerEl.querySelector('#home-search-input');
+    if (homeSearchForm && homeSearchInput) {
+      homeSearchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        navigate(homeSearchInput.value);
+      });
+    }
+
+    // Initial render and boot
     renderTabs();
     renderViewport();
     publishBrowserActivity(getActiveTab());
     if (!isHomeUrl(initialUrl)) loadInTab(getActiveTab(), initialUrl);
     renderViewport();
 
-    // Show the browser walkthrough once, the first time this app is opened.
-    // The toolbar Help button can reopen it at any time.
+    // Show onboarding guide once on first launch
     let hasSeenBrowserGuide = false;
     try {
       hasSeenBrowserGuide = localStorage.getItem('vault_browser_guide_seen_v2') === 'true';
-    } catch (error) {
-      console.warn('[BrowserApp] Could not read browser guide flag:', error);
-    }
+    } catch {}
     if (!hasSeenBrowserGuide) {
       window.setTimeout(() => {
         if (containerEl.isConnected) showBrowserGuide();
       }, 350);
     }
+  },
+
+  unmount(containerEl) {
+    // Iframes and listeners cleanup
+    const frames = containerEl.querySelectorAll('iframe');
+    frames.forEach(f => f.remove());
   }
 };
 

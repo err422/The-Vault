@@ -237,6 +237,7 @@ class WindowManager {
 
     // Focus the next top window
     this._focusTopWindow();
+    this._syncMaximizedClass();
   }
 
   /* ---------------------------------------------------------------- */
@@ -312,6 +313,7 @@ class WindowManager {
 
     // Focus the next window
     this._focusTopWindow();
+    this._syncMaximizedClass();
   }
 
   /* ---------------------------------------------------------------- */
@@ -432,7 +434,7 @@ class WindowManager {
     }
 
     if (targetState === 'maximized') document.body.classList.add('os-window-maximized');
-    else document.body.classList.remove('os-window-maximized');
+    else this._syncMaximizedClass();
 
     store.emit('window:stateChanged', { instanceId, state: targetState });
     store.emit('window:focused', { instanceId });
@@ -700,6 +702,22 @@ class WindowManager {
       }
     }
     this._nextZ = z;
+  }
+
+  /**
+   * Synchronize body.os-window-maximized class with current window states.
+   * Ensures topbar and dock are restored if all maximized windows are minimized or closed.
+   *
+   * @private
+   */
+  _syncMaximizedClass() {
+    const windows = this.getAllWindows();
+    const hasMax = windows.some(w => w && w.state === 'maximized');
+    if (hasMax) {
+      document.body.classList.add('os-window-maximized');
+    } else {
+      document.body.classList.remove('os-window-maximized');
+    }
   }
 }
 

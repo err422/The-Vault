@@ -119,14 +119,15 @@ function _updateUser() {
 }
 
 // ── App menus (from focused window's manifest) ─────────────────────
-function _updateMenus(win) {
+function _updateMenus(data) {
   if (!_menuArea) return;
   // Clear existing menu items (keep logo)
   while (_menuArea.children.length > 1) {
     _menuArea.removeChild(_menuArea.lastChild);
   }
 
-  if (!win) return;
+  const win = data?.instanceId ? WindowManager.getWindow(data.instanceId) : data;
+  if (!win?.appId) return;
   const app = AppRegistry.getApp(win.appId);
   if (!app?.menus) return;
 

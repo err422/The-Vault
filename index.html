@@ -216,6 +216,12 @@
 
     <!-- WebOS Boot Script -->
     <script type="module">
+        // If developer runs Live Server via 127.0.0.1, seamlessly redirect to localhost
+        // so that proxy.thewebvault.org CSP frame-ancestors & postMessage origins match.
+        if (window.location.hostname === '127.0.0.1') {
+          window.location.replace(window.location.href.replace('//127.0.0.1:', '//localhost:'));
+        }
+
         // Load WebOS dynamically so import/startup failures are shown on the boot screen
         // instead of leaving users with an unresponsive black overlay.
         import('./os/core/Kernel.js?bootdiag=20261021')

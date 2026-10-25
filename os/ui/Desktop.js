@@ -100,12 +100,21 @@ function _removeCustomShortcut(id) {
 
 function _launchDesktopShortcut(def) {
   maybeTriggerChaos();
-  if (def.url) AppRegistry.launch(def.appId, { url: def.url, title: def.label });
-  else AppRegistry.launch(def.appId);
+  if (def.vfsPath) {
+    if (def.type === 'dir') {
+      AppRegistry.launch('file-explorer', { path: def.vfsPath });
+    } else {
+      AppRegistry.launch('notes', { filePath: def.vfsPath });
+    }
+  } else if (def.url) {
+    AppRegistry.launch(def.appId, { url: def.url, title: def.label });
+  } else {
+    AppRegistry.launch(def.appId);
+  }
 }
 
 function _iconKey(def) {
-  return def.id || def.appId;
+  return def.id || def.vfsPath || def.appId;
 }
 
 const LAYOUT_STORAGE_KEY = 'vaultos_desktop_layout_v1';
@@ -519,6 +528,32 @@ function _showShortcutDialog(initial = {}) {
   panel.elements.label.focus();
 }
 
+// ── In-WebOS prompt dialog ─────────────────────────────────────────
+function _showPromptDialog(title, placeholder, defaultValue, onConfirm) {
+  if (!_root) return;
+  _root.querySelector('.vault-prompt-modal')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'vault-prompt-modal';
+  overlay.style.cssText = 'position:absolute;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(5,3,12,.72);backdrop-filter:blur(8px);';
+  const panel = document.createElement('form');
+  panel.style.cssText = 'width:min(360px,100%);padding:20px;border:1px solid rgba(168,85,247,.45);border-radius:16px;background:#171124;color:#f5f3ff;box-shadow:0 24px 70px #0009;font:13px -apple-system,BlinkMacSystemFont,sans-serif;';
+  panel.innerHTML = `<h3 style="margin:0 0 12px;font-size:16px">${title}</h3><input name="val" required placeholder="${placeholder}" style="box-sizing:border-box;width:100%;padding:10px;border-radius:8px;border:1px solid #594477;background:#0d0916;color:#fff;margin-bottom:14px;"><div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" data-cancel style="padding:8px 12px;border:1px solid #594477;border-radius:8px;background:transparent;color:#ddd;cursor:pointer;">Cancel</button><button type="submit" style="padding:8px 14px;border:0;border-radius:8px;background:#7c3aed;color:white;font-weight:600;cursor:pointer;">Create</button></div>`;
+  overlay.appendChild(panel);
+  _root.appendChild(overlay);
+  panel.elements.val.value = defaultValue || '';
+  panel.querySelector('[data-cancel]').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('pointerdown', (e) => { if (e.target === overlay) overlay.remove(); });
+  panel.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const val = panel.elements.val.value.trim();
+    if (val) {
+      overlay.remove();
+      await onConfirm(val);
+    }
+  });
+  panel.elements.val.focus();
+}
+
 // ── Desktop context menu ───────────────────────────────────────────
 function _onContextMenu(e) {
   e.preventDefault();
@@ -527,29 +562,26 @@ function _onContextMenu(e) {
       label: 'Add Website Shortcut',
       icon: '🔗',
       action: () => _showShortcutDialog()
-
     },
     { type: 'separator' },
     {
       label: 'New Folder',
       icon: '📁',
-      action: async () => {
-        const name = prompt('Folder name:', 'New Folder');
-        if (name) {
+      action: () => {
+        _showPromptDialog('New Folder', 'Folder name', 'New Folder', async (name) => {
           await virtualFS.mkdir(`/Desktop/${name}`);
           _renderIcons();
-        }
+        });
       }
     },
     {
       label: 'New Text File',
       icon: '📄',
-      action: async () => {
-        const name = prompt('File name:', 'Untitled.md');
-        if (name) {
-          await virtualFS.writeFile(`/Desktop/${name}`, '# Note\\n\\n', 'text/markdown');
+      action: () => {
+        _showPromptDialog('New Text File', 'File name', 'Untitled.md', async (name) => {
+          await virtualFS.writeFile(`/Desktop/${name}`, '# Note\n\n', 'text/markdown');
           _renderIcons();
-        }
+        });
       }
     },
     { type: 'separator' },
@@ -563,10 +595,27 @@ function _onContextMenu(e) {
 }
 
 // ── Render ──────────────────────────────────────────────────────────
-function _renderIcons() {
+async function _renderIcons() {
   if (!_iconGrid) return;
   _iconGrid.textContent = '';
-  for (const def of [...DEFAULT_ICONS, ...customShortcuts]) _iconGrid.appendChild(_createIcon(def));
+
+  let vfsItems = [];
+  try {
+    const list = await virtualFS.list('/Desktop');
+    if (Array.isArray(list)) {
+      vfsItems = list
+        .filter(item => !item.name.endsWith('.lnk'))
+        .map(item => ({
+          vfsPath: item.path,
+          label: item.name,
+          icon: item.type === 'dir' ? '📁' : (item.name.endsWith('.md') || item.name.endsWith('.txt') ? '📝' : '📄'),
+          type: item.type
+        }));
+    }
+  } catch {}
+
+  const allIcons = [...DEFAULT_ICONS, ...customShortcuts, ...vfsItems];
+  for (const def of allIcons) _iconGrid.appendChild(_createIcon(def));
   _selectedIcon = null;
 }
 
@@ -610,6 +659,10 @@ export function init(mountTarget) {
     _resizeHandler = () => _reflowLayout();
     window.addEventListener('resize', _resizeHandler);
   }
+
+  Store.on('vfs:change', () => {
+    _renderIcons();
+  });
 
   Store.on('wallpaper:changed', (url) => {
     if (!_root) return;

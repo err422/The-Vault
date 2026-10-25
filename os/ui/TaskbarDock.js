@@ -204,17 +204,42 @@ function _refreshRunningState(el, appId) {
   el.classList.toggle('running', wins.length > 0);
 }
 
-// ── Pin / Unpin (runtime only — no persistence yet) ────────────────
-const _pinned = new Set(PINNED_IDS);
+// ── Pin / Unpin with LocalStorage Persistence ──────────────────────
+const DOCK_STORAGE_KEY = 'vaultos_dock_pinned_v1';
+function _loadPinned() {
+  try {
+    const raw = localStorage.getItem(DOCK_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return new Set(parsed);
+    }
+  } catch {}
+  return new Set(PINNED_IDS);
+}
 
-function _pinApp(appId) {
+const _pinned = _loadPinned();
+
+function _savePinned() {
+  try {
+    localStorage.setItem(DOCK_STORAGE_KEY, JSON.stringify([..._pinned]));
+    Store.setState('dock.pinned', [..._pinned]);
+  } catch {}
+}
+
+export function pinApp(appId) {
   _pinned.add(appId);
+  _savePinned();
   _render();
 }
 
-function _unpinApp(appId) {
+export function unpinApp(appId) {
   _pinned.delete(appId);
+  _savePinned();
   _render();
+}
+
+export function isPinned(appId) {
+  return _pinned.has(appId);
 }
 
 // ── Render ──────────────────────────────────────────────────────────
@@ -282,5 +307,5 @@ export function destroy() {
 
 export function getElement() { return _dock; }
 
-const TaskbarDock = { init, destroy, getElement };
+const TaskbarDock = { init, destroy, getElement, pinApp, unpinApp, isPinned };
 export default TaskbarDock;

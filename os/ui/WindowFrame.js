@@ -612,7 +612,7 @@ export default class WindowFrame {
   #setupFullscreenIframeCovers() {
     const isFullscreen = () => Boolean(document.fullscreenElement || document.webkitFullscreenElement);
     const syncCovers = () => {
-      const shouldCover = settingsManager.get('autoFullscreenOnClick') !== false && !isFullscreen();
+      const shouldCover = Boolean(settingsManager.get('autoFullscreenOnClick')) && !isFullscreen();
       const frames = [...this.#contentEl.querySelectorAll('iframe')];
 
       for (const [frame, cover] of this.#iframeCovers) {
@@ -636,21 +636,23 @@ export default class WindowFrame {
         cover.addEventListener('click', (event) => {
           event.preventDefault();
           event.stopPropagation();
+          // Remove cover immediately on first click so user can interact
+          cover.remove();
+          this.#iframeCovers.delete(frame);
+          try { this.#iframeCoverResizeObserver?.unobserve(frame); } catch {}
+
           if (isFullscreen()) return;
           const root = document.documentElement;
           const request = root.requestFullscreen || root.webkitRequestFullscreen;
-          if (!request) {
-            cover.remove();
-            this.#iframeCovers.delete(frame);
-            return;
-          }
-          try {
-            const result = request.call(root);
-            if (result && typeof result.catch === 'function') {
-              result.catch((error) => console.debug('[WebOS] Fullscreen request from iframe cover was blocked:', error));
+          if (request) {
+            try {
+              const result = request.call(root);
+              if (result && typeof result.catch === 'function') {
+                result.catch((error) => console.debug('[WebOS] Fullscreen request from iframe cover was blocked:', error));
+              }
+            } catch (error) {
+              console.debug('[WebOS] Fullscreen request from iframe cover was blocked:', error);
             }
-          } catch (error) {
-            console.debug('[WebOS] Fullscreen request from iframe cover was blocked:', error);
           }
         });
         this.#contentEl.appendChild(cover);
@@ -913,8 +915,12 @@ export default class WindowFrame {
     if (this.#state === 'normal' || this.#state === 'snapped') {
       this.#restoreBounds = { ...this.#bounds };
     }
+    const wasMaximized = this.#state === 'maximized';
     this.#state = 'minimized';
     this.#el.classList.add('state-minimized');
+    if (wasMaximized) {
+      document.body.classList.remove('os-window-maximized');
+    }
 
     // Animate out: scale down and fade
     this.#el.classList.add('animating');
@@ -1172,6 +1178,9 @@ export default class WindowFrame {
 
     // Clean up any lingering drag/resize state
     document.body.classList.remove('is-dragging-window');
+    if (this.#state === 'maximized') {
+      document.body.classList.remove('os-window-maximized');
+    }
 
     // Clean up iframe fullscreen covers and observers
     this.#iframeCoverObserver?.disconnect();

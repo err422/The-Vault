@@ -161,7 +161,14 @@ function _buildMenu(items) {
       row.addEventListener('click', (e) => {
         e.stopPropagation();
         hideContextMenu();
-        item.action();
+        if (typeof item.action === 'function') {
+          item.action(item);
+        } else if (typeof item.action === 'string') {
+          import('../core/Store.js').then(({ default: store }) => {
+            store.emit(item.action, { item });
+          }).catch(() => {});
+          window.dispatchEvent(new CustomEvent(item.action, { detail: item }));
+        }
       });
     }
 

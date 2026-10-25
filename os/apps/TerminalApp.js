@@ -268,16 +268,41 @@ export const AppManifest = {
 
         case 'open': {
           if (!args[0]) {
-            println('open: specify an appId (e.g., file-explorer, notes, browser, settings, vault-hub, calculator)', '#ef4444');
+            println('open: specify an appId, URL, or file path (e.g., file-explorer, notes, browser, https://google.com, /Documents/Notes/Welcome.md)', '#ef4444');
             break;
           }
-          const appId = args[0].toLowerCase();
+          const targetArg = args[0];
+          if (/^https?:\/\//i.test(targetArg)) {
+            appRegistry.launch('browser', { url: targetArg, title: targetArg });
+            println(`Opening ${targetArg} in Vault Browser...`, '#10b981');
+            break;
+          }
+          const appId = targetArg.toLowerCase();
           const app = appRegistry.getApp(appId);
           if (app) {
             appRegistry.launch(appId);
             println(`Launched ${app.name}`, '#10b981');
           } else {
-            println(`open: app "${appId}" not found in registry.`, '#ef4444');
+            // Check if it's a VFS file path
+            const resolved = resolvePath(targetArg);
+            try {
+              const stat = await virtualFS.stat(resolved);
+              if (stat) {
+                if (stat.type === 'dir') {
+                  appRegistry.launch('file-explorer', { path: stat.path });
+                  println(`Opened folder ${stat.path} in File Explorer`, '#10b981');
+                } else if (stat.name.endsWith('.md') || stat.name.endsWith('.txt')) {
+                  appRegistry.launch('notes', { filePath: stat.path });
+                  println(`Opened file ${stat.path} in Vault Notes`, '#10b981');
+                } else {
+                  println(`open: no default application associated with ${stat.name}`, '#ef4444');
+                }
+              } else {
+                println(`open: "${targetArg}" is neither an app ID nor an existing file.`, '#ef4444');
+              }
+            } catch (err) {
+              println(`open: app or file "${appId}" not found.`, '#ef4444');
+            }
           }
           break;
         }
