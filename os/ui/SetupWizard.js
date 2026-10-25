@@ -65,7 +65,7 @@ class SetupWizard {
     }
 
     const accents = ACCENTS.map(a => `<button type="button" class="vfs-swatch" data-accent="${a.id}" title="${a.name}" aria-label="${a.name}" style="background:${a.primary}" aria-pressed="${(cloudPrefs.accent || settingsManager.get('accent')) === a.id}"></button>`).join('');
-    const avatars = ['🧑‍💻','👾','🎮','🦊','🐈','🌙','⚡','🛸'].map((emoji,i)=>`<button type="button" class="vfs-avatar" data-avatar="${emoji}" aria-label="Avatar ${i+1}" aria-pressed="${(cloudPrefs.avatar || '👾')===emoji}">${emoji}</button>`).join('');
+    const avatars = ['🧑‍💻','🎮','🦊','🐈','🌙','⚡','🛸'].map((emoji,i)=>`<button type="button" class="vfs-avatar" data-avatar="${emoji}" aria-label="Avatar ${i+1}" aria-pressed="${(cloudPrefs.avatar || '🧑‍💻')===emoji}">${emoji}</button>`).join('');
     const savedDesktopApps = Array.isArray(cloudPrefs.desktopApps) ? cloudPrefs.desktopApps : (Array.isArray(settingsManager.get('desktopApps')) ? settingsManager.get('desktopApps') : APP_CHOICES.map(a => a.id));
     const desktopAppOptions = APP_CHOICES.map(app => `<label class="vfs-app-choice"><input type="checkbox" data-desktop-app="${app.id}" ${savedDesktopApps.includes(app.id) ? 'checked' : ''}><span class="vfs-app-icon">${app.icon}</span><span>${app.label}</span></label>`).join('');
 
@@ -118,7 +118,7 @@ class SetupWizard {
     let accent = cloudPrefs.accent || settingsManager.get('accent') || 'violet';
     let theme = cloudPrefs.theme || settingsManager.get('theme') || 'dark';
     let wallpaper = cloudPrefs.wallpaper || settingsManager.get('wallpaper') || 'vault-default';
-    let avatar = cloudPrefs.avatar || '👾';
+    let avatar = cloudPrefs.avatar || '🧑‍💻';
     let fullscreen = settingsManager.get('autoFullscreenOnClick') === true;
     const steps = [...overlay.querySelectorAll('.vfs-step')];
     const progress = [...overlay.querySelectorAll('.vfs-progress span')];
