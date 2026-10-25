@@ -6,6 +6,17 @@ import settingsManager, { ACCENTS, WALLPAPERS } from '../core/SettingsManager.js
 import store from '../core/Store.js';
 
 const STYLE_ID = 'vault-first-run-setup-styles';
+const APP_CHOICES = [
+  { id: 'file-explorer', label: 'File Explorer', icon: '📁' },
+  { id: 'browser', label: 'Browser', icon: '🌐' },
+  { id: 'games', label: 'Games', icon: '🎮' },
+  { id: 'terminal', label: 'Terminal', icon: '💻' },
+  { id: 'notes', label: 'Notes', icon: '📝' },
+  { id: 'settings', label: 'Settings', icon: '⚙️' },
+  { id: 'vault-hub', label: 'Vault Hub', icon: '🏠' },
+  { id: 'lounge', label: 'VaultNet', icon: '💬' },
+  { id: 'bell', label: 'Bell', icon: '🔔' }
+];
 
 class SetupWizard {
   constructor() {
@@ -39,6 +50,12 @@ class SetupWizard {
         .vfs-option[aria-pressed=true]{border-color:#a78bfa;background:#8b5cf629;box-shadow:inset 0 0 0 1px #8b5cf655}
         .vfs-swatches{display:flex;gap:10px;flex-wrap:wrap}.vfs-swatch{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:0 0 0 1px #ffffff35}.vfs-swatch[aria-pressed=true]{outline:2px solid #fff;outline-offset:3px}
         .vfs-note{font-size:12px;color:#9991ad;margin-top:8px}
+        .vfs-app-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+        .vfs-app-choice{display:flex;align-items:center;gap:8px;min-width:0;padding:11px;border:1px solid #ffffff20;border-radius:12px;background:#ffffff08;color:#eee8ff;cursor:pointer;font-weight:600}
+        .vfs-app-choice:has(input:checked){border-color:#a78bfa;background:#8b5cf626}
+        .vfs-app-choice input{accent-color:#8b5cf6;width:16px;height:16px;flex-shrink:0}
+        .vfs-app-icon{font-size:20px}
+        @media(max-width:480px){.vfs-app-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
         .vfs-footer{display:flex;justify-content:space-between;gap:12px;margin-top:28px}
         .vfs-btn{border:1px solid #ffffff26;border-radius:12px;padding:11px 17px;background:#ffffff0c;color:#eee8ff;font:inherit;font-weight:700;cursor:pointer}.vfs-btn.primary{background:#8b5cf6;border-color:#a78bfa;color:white}.vfs-btn:disabled{opacity:.6;cursor:wait}
         .vfs-avatars{display:flex;gap:8px;flex-wrap:wrap}.vfs-avatar{font-size:22px;width:44px;height:44px;border:1px solid #ffffff24;border-radius:12px;background:#ffffff08;cursor:pointer}.vfs-avatar[aria-pressed=true]{border-color:#a78bfa;background:#8b5cf633}
@@ -49,6 +66,9 @@ class SetupWizard {
 
     const accents = ACCENTS.map(a => `<button type="button" class="vfs-swatch" data-accent="${a.id}" title="${a.name}" aria-label="${a.name}" style="background:${a.primary}" aria-pressed="${(cloudPrefs.accent || settingsManager.get('accent')) === a.id}"></button>`).join('');
     const avatars = ['🧑‍💻','👾','🎮','🦊','🐈','🌙','⚡','🛸'].map((emoji,i)=>`<button type="button" class="vfs-avatar" data-avatar="${emoji}" aria-label="Avatar ${i+1}" aria-pressed="${(cloudPrefs.avatar || '👾')===emoji}">${emoji}</button>`).join('');
+    const savedDesktopApps = Array.isArray(cloudPrefs.desktopApps) ? cloudPrefs.desktopApps : (Array.isArray(settingsManager.get('desktopApps')) ? settingsManager.get('desktopApps') : APP_CHOICES.map(a => a.id));
+    const desktopAppOptions = APP_CHOICES.map(app => `<label class="vfs-app-choice"><input type="checkbox" data-desktop-app="${app.id}" ${savedDesktopApps.includes(app.id) ? 'checked' : ''}><span class="vfs-app-icon">${app.icon}</span><span>${app.label}</span></label>`).join('');
+
     const wallpaperOptions = [
       {id:'vault-default',name:'Current Vault wallpaper'},
       {id:'nebula-purple',name:'Cosmic Nebula'},
@@ -81,6 +101,9 @@ class SetupWizard {
         </div>
         <div class="vfs-step" data-step="2" hidden>
           <h2 class="vfs-title">One last thing.</h2><p class="vfs-sub">These choices make the desktop feel right on this computer.</p>
+                    <label class="vfs-field">Desktop shortcuts</label>
+          <p class="vfs-note">Choose which apps appear on your desktop. You can still open any app from the launcher.</p>
+          <div class="vfs-app-grid">${desktopAppOptions}</div>
           <label class="vfs-field">Launch behavior</label>
           <div class="vfs-options"><button type="button" class="vfs-option" data-fullscreen="false" aria-pressed="true">🪟 Normal window</button><button type="button" class="vfs-option" data-fullscreen="true" aria-pressed="false">⛶ Auto-fullscreen on click</button></div>
           <p class="vfs-note">Fullscreen is saved on this device only, since different computers may have different needs.</p>
@@ -125,7 +148,9 @@ class SetupWizard {
         if(customUrl){settingsManager.set('customWallpaperUrl',customUrl);}
         else {settingsManager.set('wallpaper',wallpaper);settingsManager.set('customWallpaperUrl','');}
         settingsManager.set('autoFullscreenOnClick',fullscreen);
-        const prefs={setupCompleted:true,setupVersion:1,displayName:(overlay.querySelector('#vfs-display-name').value.trim().slice(0,24) || store.getState('session.username') || 'User'),avatar,theme,accent,wallpaper:customUrl?'vault-default':wallpaper,customWallpaperUrl:customUrl,updatedAt:Date.now()};
+        const desktopApps=[...overlay.querySelectorAll('[data-desktop-app]:checked')].map(input=>input.dataset.desktopApp);
+        settingsManager.set('desktopApps',desktopApps);
+        const prefs={setupCompleted:true,setupVersion:1,displayName:(overlay.querySelector('#vfs-display-name').value.trim().slice(0,24) || store.getState('session.username') || 'User'),avatar,theme,accent,wallpaper:customUrl?'vault-default':wallpaper,customWallpaperUrl:customUrl,desktopApps,updatedAt:Date.now()};
         if(window.database && user.uid) {
           try {
             await window.database.ref(`users/${user.uid}/webos`).update(prefs);
@@ -136,6 +161,7 @@ class SetupWizard {
         }
         store.setState('session.displayName',prefs.displayName);
         store.setState('session.avatar',avatar);
+        window.dispatchEvent(new CustomEvent('vaultos:desktop-apps-changed',{detail:{desktopApps}}));
         overlay.remove();
         window.dispatchEvent(new CustomEvent('webos:setup-complete',{detail:prefs}));
       }catch(err){console.warn('[SetupWizard] Could not save preferences to cloud:',err);error.textContent='Could not sync right now. Your choices are applied on this device; try saving again when online.';next.disabled=false;next.textContent='Save & enter desktop →';}
