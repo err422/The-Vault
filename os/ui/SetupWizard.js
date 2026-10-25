@@ -23,10 +23,10 @@ class SetupWizard {
     this._shownFor = new Set();
   }
 
-  async show(user, cloudPrefs = {}) {
-    if (!user?.uid || this._shownFor.has(user.uid)) return;
+  async show(user, cloudPrefs = {}, { force = false } = {}) {
+    if (!user?.uid || (this._shownFor.has(user.uid) && !force)) return;
     this._shownFor.add(user.uid);
-    if (cloudPrefs.setupCompleted === true) return;
+    if (cloudPrefs.setupCompleted === true && !force) return;
 
     const existing = document.getElementById('vault-first-run-setup');
     if (existing) existing.remove();
