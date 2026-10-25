@@ -3,6 +3,7 @@
 // Desktop layout is intentionally local-only; this module does not write to Firebase.
 
 import Store from '../core/Store.js';
+import settingsManager from '../core/SettingsManager.js';
 import AppRegistry from '../core/AppRegistry.js';
 import virtualFS from '../core/VirtualFS.js';
 import { showContextMenu } from './ContextMenu.js';
@@ -39,6 +40,12 @@ function _loadCustomShortcuts() {
   }
 }
 let customShortcuts = _loadCustomShortcuts();
+const DEFAULT_DESKTOP_APP_IDS = DEFAULT_ICONS.map(item => item.appId);
+function _getVisibleDesktopIcons() {
+  const configured = settingsManager.get('desktopApps');
+  const allowed = new Set(Array.isArray(configured) ? configured : DEFAULT_DESKTOP_APP_IDS);
+  return DEFAULT_ICONS.filter(item => allowed.has(item.appId));
+}
 
 function _saveCustomShortcuts() {
   try {
@@ -297,7 +304,7 @@ function _loadLayout() {
   _iconPositions = Object.create(null);
   const maxRows = _getMaxRows();
 
-  [...DEFAULT_ICONS, ...customShortcuts].forEach((def, index) => {
+  [..._getVisibleDesktopIcons(), ...customShortcuts].forEach((def, index) => {
     const key = _iconKey(def);
     const existing = saved[key];
     if (
@@ -328,7 +335,7 @@ function _reflowLayout() {
 
   // Preserve each icon's position where possible; clamp and resolve collisions
   // after the available viewport changes.
-  for (const def of [...DEFAULT_ICONS, ...customShortcuts]) {
+  for (const def of [..._getVisibleDesktopIcons(), ...customShortcuts]) {
     const key = _iconKey(def);
     const pos = previous[key] || { col: 0, row: 0 };
     const cell = _findNearestFreeCell(pos.col, pos.row);
@@ -614,7 +621,7 @@ async function _renderIcons() {
     }
   } catch {}
 
-  const allIcons = [...DEFAULT_ICONS, ...customShortcuts, ...vfsItems];
+  const allIcons = [..._getVisibleDesktopIcons(), ...customShortcuts, ...vfsItems];
   for (const def of allIcons) _iconGrid.appendChild(_createIcon(def));
   _selectedIcon = null;
 }
@@ -650,6 +657,16 @@ export function init(mountTarget) {
     customShortcuts = _loadCustomShortcuts();
     _loadLayout();
     _renderIcons();
+  });
+  window.addEventListener('vaultos:desktop-apps-changed', () => {
+    _loadLayout();
+    _renderIcons();
+  });
+  Store.on('settings:changed', ({ key }) => {
+    if (key === 'desktopApps' || key == null) {
+      _loadLayout();
+      _renderIcons();
+    }
   });
 
   if (typeof ResizeObserver !== 'undefined') {
