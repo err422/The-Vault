@@ -346,7 +346,7 @@ export const AppManifest = {
           try {
             const snapshot = await window.database.ref(`users/${user.uid}/webos`).once('value');
             const cloudPrefs = snapshot.val() || {};
-            await SetupWizard.show(user, { ...cloudPrefs, setupCompleted: false });
+            await SetupWizard.show(user, { ...cloudPrefs, setupCompleted: false }, { force: true });
           } catch (err) {
             console.warn('[Settings] Could not reopen setup:', err);
             status.textContent = 'Could not load your saved setup. Check your connection and try again.';
