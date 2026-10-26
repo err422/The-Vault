@@ -226,6 +226,9 @@ export function init() {
   _unsubs.push(Store.on('window:closed', () => {
     _updateMenus(WindowManager.getFocusedWindow());
   }));
+  // Populate menus immediately as well; the top bar can mount after a window
+  // was created, in which case it would otherwise wait for the next focus event.
+  _updateMenus(WindowManager.getFocusedWindow());
 }
 
 export function destroy() {
