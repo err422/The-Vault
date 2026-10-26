@@ -1,90 +1,87 @@
 /**
- * @fileoverview About Application for The Web Vault WebOS.
- *
- * macOS-inspired system card displaying:
- * - The Web Vault branding & logo
- * - OS version (2.0.0 WebOS)
- * - User profile status
- * - Client browser & rendering engine
- * - Quick action links to Settings and System Monitor
+ * @fileoverview Native What's New window for The Web Vault WebOS.
+ * Keeps release notes inside the OS window manager instead of a legacy modal.
  *
  * @module os/apps/AboutApp
  */
 
-import store from '../core/Store.js';
 import appRegistry from '../core/AppRegistry.js';
 
 export const AppManifest = {
+  // Keep the stable ID so existing launcher/menu/terminal references still work.
   id: 'about',
-  name: 'About This WebOS',
-  icon: 'ℹ️',
+  name: "What's New",
+  icon: '✨',
   category: 'System',
   version: '2.0.0',
   singleton: true,
-  defaultSize: { width: 500, height: 420 },
-  minSize: { width: 360, height: 320 },
+  defaultSize: { width: 620, height: 560 },
+  minSize: { width: 380, height: 360 },
 
-  mount(containerEl, context) {
-    const session = store.getState('session');
-    const user = session?.displayName || 'Guest User';
-    const browserUA = navigator.userAgent;
-    let browserName = 'Modern Web Browser';
-    if (browserUA.includes('Chrome')) browserName = 'Google Chrome / Chromium';
-    else if (browserUA.includes('Safari') && !browserUA.includes('Chrome')) browserName = 'Apple Safari';
-    else if (browserUA.includes('Firefox')) browserName = 'Mozilla Firefox';
-
+  mount(containerEl) {
     containerEl.innerHTML = `
-      <div class="about-root" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; background:radial-gradient(ellipse at 50% 30%, #1e1038, #07050c); color:#f5f3ff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding:24px; text-align:center; user-select:none;">
-        <!-- Logo -->
-        <div style="width:72px; height:72px; border-radius:20px; background:linear-gradient(135deg, #8b5cf6, #3b82f6); display:flex; align-items:center; justify-content:center; font-size:36px; box-shadow:0 12px 30px rgba(139,92,246,0.4); margin-bottom:16px;">
-          🏛️
-        </div>
-
-        <h2 style="margin:0 0 4px 0; font-size:22px; font-weight:700; color:#fff;">The Web Vault</h2>
-        <div style="font-size:12.5px; color:#c4b5fd; margin-bottom:18px;">WebOS Edition — Version 2.0.0 (Release)</div>
-
-        <!-- Specs Box -->
-        <div style="width:100%; max-width:380px; background:rgba(255,255,255,0.03); border:1px solid rgba(168,85,247,0.2); border-radius:12px; padding:12px 18px; display:flex; flex-direction:column; gap:8px; text-align:left; font-size:12px; margin-bottom:20px;">
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:#7c6f9f;">Host:</span>
-            <span style="color:#e8e0f0; font-weight:500;">thewebvault.org</span>
+      <div class="whats-new-root" style="height:100%;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(145deg,#100b1a 0%,#090611 100%);color:#f5f3ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+        <header style="padding:24px 26px 20px;background:radial-gradient(ellipse at 10% 0%,rgba(139,92,246,.24),transparent 65%);border-bottom:1px solid rgba(168,85,247,.16);">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:48px;height:48px;flex:0 0 48px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:25px;background:linear-gradient(135deg,#8b5cf6,#4c1d95);box-shadow:0 8px 24px rgba(139,92,246,.25);">✨</div>
+            <div style="min-width:0;">
+              <div style="font-size:22px;font-weight:750;letter-spacing:-.03em;color:#fff;">What's New</div>
+              <div style="font-size:12px;color:#b9a7df;margin-top:4px;">The latest from The Vault WebOS</div>
+            </div>
+            <span style="margin-left:auto;align-self:flex-start;padding:5px 9px;border:1px solid rgba(196,181,253,.2);border-radius:999px;background:rgba(139,92,246,.12);color:#d8b4fe;font-size:11px;white-space:nowrap;">WebOS 2.0</span>
           </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:#7c6f9f;">User:</span>
-            <span style="color:#10b981; font-weight:500;">@${user}</span>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:#7c6f9f;">Runtime:</span>
-            <span style="color:#e8e0f0;">ES6 Modules / IndexedDB VFS</span>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:#7c6f9f;">Renderer:</span>
-            <span style="color:#e8e0f0;">${browserName}</span>
-          </div>
-        </div>
+          <p style="font-size:13px;line-height:1.6;color:#c4b5fd;margin:17px 0 0;">A quick look at what's changed, what works better, and what's new in your desktop.</p>
+        </header>
 
-        <!-- Quick Action Buttons -->
-        <div style="display:flex; gap:10px;">
-          <button id="about-open-settings" style="padding:8px 16px; border-radius:8px; border:1px solid rgba(168,85,247,0.3); background:rgba(139,92,246,0.15); color:#c4b5fd; font-size:12px; font-weight:500; cursor:pointer;">
-            Settings...
-          </button>
-          <button id="about-open-sysmon" style="padding:8px 16px; border-radius:8px; border:1px solid rgba(168,85,247,0.3); background:rgba(139,92,246,0.15); color:#c4b5fd; font-size:12px; font-weight:500; cursor:pointer;">
-            System Monitor...
-          </button>
-        </div>
+        <main style="flex:1;overflow:auto;padding:20px 26px 24px;display:flex;flex-direction:column;gap:14px;">
+          <section style="padding:16px;border:1px solid rgba(168,85,247,.2);border-radius:13px;background:rgba(139,92,246,.08);">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
+              <span style="font-size:17px;">🖥️</span><h3 style="margin:0;font-size:14px;color:#fff;">The WebOS desktop</h3>
+              <span style="margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.06em;color:#c4b5fd;">CORE</span>
+            </div>
+            <ul style="margin:0;padding-left:19px;color:#d7ccef;font-size:12.5px;line-height:1.85;">
+              <li>A desktop built around draggable, resizable app windows.</li>
+              <li>A macOS-inspired top bar, dock, and app launcher.</li>
+              <li>Personalizable wallpapers, accent colors, and display settings.</li>
+            </ul>
+          </section>
 
-        <div style="margin-top:20px; font-size:10.5px; color:#5b5175;">
-          © 2026 The Web Vault. All original games and proxy assets preserved.
-        </div>
+          <section style="padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:rgba(255,255,255,.025);">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
+              <span style="font-size:17px;">🌐</span><h3 style="margin:0;font-size:14px;color:#fff;">Browser & games</h3>
+            </div>
+            <ul style="margin:0;padding-left:19px;color:#d7ccef;font-size:12.5px;line-height:1.85;">
+              <li>Vault Browser with tabs, navigation controls, and proxy-mode options.</li>
+              <li>Games open through the browser, keeping the experience in one place.</li>
+              <li>App windows and fullscreen behavior designed for school laptops.</li>
+            </ul>
+          </section>
+
+          <section style="padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:rgba(255,255,255,.025);">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
+              <span style="font-size:17px;">🛠️</span><h3 style="margin:0;font-size:14px;color:#fff;">Settings & everyday tools</h3>
+            </div>
+            <ul style="margin:0;padding-left:19px;color:#d7ccef;font-size:12.5px;line-height:1.85;">
+              <li>Run the setup wizard again from Settings whenever you want.</li>
+              <li>Replay the navigation tour to refresh yourself on the desktop.</li>
+              <li>VaultNet, Lounge, and the school bell app are part of the expanding app lineup.</li>
+            </ul>
+          </section>
+
+          <div style="display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:11px;border:1px solid rgba(168,85,247,.13);background:rgba(0,0,0,.14);">
+            <span style="font-size:18px;">🔮</span>
+            <div style="min-width:0;">
+              <div style="font-size:12px;font-weight:650;color:#f5f3ff;">The Web Vault WebOS</div>
+              <div style="font-size:11px;color:#8f80ac;margin-top:3px;">thewebvault.org · Built for the Vault community</div>
+            </div>
+            <button id="whats-new-about-settings" type="button" style="margin-left:auto;padding:7px 10px;border:1px solid rgba(168,85,247,.25);border-radius:8px;background:rgba(139,92,246,.12);color:#d8b4fe;font-size:11px;cursor:pointer;white-space:nowrap;">Settings</button>
+          </div>
+        </main>
       </div>
     `;
 
-    containerEl.querySelector('#about-open-settings').addEventListener('click', () => {
+    containerEl.querySelector('#whats-new-about-settings')?.addEventListener('click', () => {
       appRegistry.launch('settings');
-    });
-
-    containerEl.querySelector('#about-open-sysmon').addEventListener('click', () => {
-      appRegistry.launch('system-monitor');
     });
   }
 };
