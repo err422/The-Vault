@@ -340,7 +340,7 @@ export function init() {
 
   const btnAbout = document.createElement('button');
   btnAbout.className = 'vault-launcher__footer-btn';
-  btnAbout.textContent = 'About';
+  btnAbout.textContent = "What's New";
   btnAbout.addEventListener('click', () => {
     AppRegistry.launch('about');
     close();
