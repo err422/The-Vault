@@ -11,6 +11,7 @@ let _searchInput = null;
 let _pinnedGrid = null;
 let _allAppsList = null;
 let _open = false;
+let _launcherKeydownHandler = null;
 let _unsubs = [];
 
 const PINNED_IDS = ['file-explorer', 'browser', 'terminal', 'notes', 'settings', 'vault-hub', 'lounge'];
@@ -378,17 +379,33 @@ export function init() {
   _overlay.appendChild(_panel);
   document.body.appendChild(_overlay);
 
-  // Global keyboard
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && _open) { close(); e.preventDefault(); }
-    if (e.key === 'Alt' || e.key === 'OS') toggle();
-  });
+  // Global keyboard: Alt+Space (Option+Space on macOS) toggles the launcher.
+  // Keep Escape for dismissal and prevent the browser/system default for the chord.
+  const handleLauncherKeydown = (e) => {
+    if (e.key === 'Escape' && _open) {
+      close();
+      e.preventDefault();
+      return;
+    }
+    const isSpace = e.key === ' ' || e.key === 'Space' || e.code === 'Space';
+    if (isSpace && e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggle();
+    }
+  };
+  document.addEventListener('keydown', handleLauncherKeydown);
+  _launcherKeydownHandler = handleLauncherKeydown;
 
   // Store toggle event (from TopMenuBar logo click)
   _unsubs.push(Store.on('launcher:toggle', toggle));
 }
 
 export function destroy() {
+  if (_launcherKeydownHandler) {
+    document.removeEventListener('keydown', _launcherKeydownHandler);
+    _launcherKeydownHandler = null;
+  }
   for (const u of _unsubs) u();
   _unsubs = [];
   if (_overlay) _overlay.remove();
