@@ -261,13 +261,13 @@ export async function boot() {
                 if (attempt < 8) {
                   window.setTimeout(() => openWhatsNew(attempt + 1), 800);
                 } else {
-                  console.warn('[Kernel] What\\x27s New window did not mount; will retry next startup.');
+                  console.warn('[Kernel] Whats New window did not mount; will retry next startup.');
                 }
               }, 350);
               return;
             }
           } catch (launchError) {
-            console.warn('[Kernel] Could not open What\\x27s New:', launchError);
+            console.warn('[Kernel] Could not open Whats New:', launchError);
           }
 
           if (attempt < 8) {
@@ -279,7 +279,7 @@ export async function boot() {
         window.setTimeout(() => openWhatsNew(), 2800);
       }
     } catch (err) {
-      console.warn('[Kernel] Could not check What\\x27s New startup state:', err);
+      console.warn('[Kernel] Could not check Whats New startup state:', err);
     }
 
     // Handle both persistent sign-in during startup and users who sign in later.
