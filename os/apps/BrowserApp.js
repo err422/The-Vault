@@ -867,11 +867,15 @@ export const AppManifest = {
     const browserKeydown = (e) => {
       // Only handle events belonging to this browser window, not another app.
       const activeElement = document.activeElement;
-      if (!containerEl.isConnected || !(containerEl.contains(activeElement) || activeElement === document.body)) return;
+      const browserWindow = containerEl.closest('.vault-window');
+      if (!containerEl.isConnected || !browserWindow || !browserWindow.classList.contains('focused')) return;
+      // The launcher can leave its hidden search input focused after dismissal.
+      // Only suppress shortcuts for editable controls that belong to this browser window.
       if (!e.altKey || e.ctrlKey || e.metaKey) return;
       const key = e.key.toLowerCase();
       const editable = isEditableTarget(e.target);
-      if (editable && !(key === 'l' && !e.shiftKey)) return;
+      if (editable && containerEl.contains(e.target) && !(key === 'l' && !e.shiftKey)) return;
+      if (document.querySelector('.vault-launcher-overlay.open')) return;
       let handled = true;
       if (key === 't' && !e.shiftKey) addTab();
       else if (key === 'w' && !e.shiftKey) closeTab(activeTabId);
@@ -901,7 +905,7 @@ export const AppManifest = {
       else handled = false;
       if (handled) { e.preventDefault(); e.stopPropagation(); }
     };
-    containerEl.addEventListener('keydown', browserKeydown, true);
+    document.addEventListener('keydown', browserKeydown, true);
     containerEl.__vaultBrowserKeydown = browserKeydown;
 
     // Keep a minimal snapshot so Alt+Shift+T can reopen the most recently closed tab.
@@ -935,7 +939,7 @@ export const AppManifest = {
 
   unmount(containerEl) {
     if (containerEl.__vaultBrowserKeydown) {
-      containerEl.removeEventListener('keydown', containerEl.__vaultBrowserKeydown, true);
+      document.removeEventListener('keydown', containerEl.__vaultBrowserKeydown, true);
       delete containerEl.__vaultBrowserKeydown;
     }
     // Iframes and listeners cleanup
