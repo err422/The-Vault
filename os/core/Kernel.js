@@ -252,7 +252,7 @@ export async function boot() {
         }, 2200);
       }
     } catch (err) {
-      console.warn("[Kernel] Could not check What's New startup state:", err);
+      console.warn('[Kernel] Could not check What\x27s New startup state:', err);
     }
 
     // Handle both persistent sign-in during startup and users who sign in later.
