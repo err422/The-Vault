@@ -872,7 +872,16 @@ export const AppManifest = {
       // The launcher can leave its hidden search input focused after dismissal.
       // Only suppress shortcuts for editable controls that belong to this browser window.
       if (!e.altKey || e.ctrlKey || e.metaKey) return;
-      const key = e.key.toLowerCase();
+      // On macOS, Option+letter often changes e.key to a symbol (e.g. Option+T = †).
+      // Use the physical key code so shortcuts still match the intended letter.
+      const codeKeys = {
+        KeyT: 't', KeyW: 'w', KeyL: 'l', KeyR: 'r', KeyH: 'h',
+        Digit1: '1', Digit2: '2', Digit3: '3', Digit4: '4', Digit5: '5',
+        Digit6: '6', Digit7: '7', Digit8: '8', Digit9: '9',
+        ArrowLeft: 'arrowleft', ArrowRight: 'arrowright', Enter: 'enter',
+        Slash: '/'
+      };
+      const key = codeKeys[e.code] || e.key.toLowerCase();
       const editable = isEditableTarget(e.target);
       if (editable && containerEl.contains(e.target) && !(key === 'l' && !e.shiftKey)) return;
       if (document.querySelector('.vault-launcher-overlay.open')) return;
