@@ -527,7 +527,7 @@ export const AppManifest = {
         el.addEventListener('click', (e) => {
           if (e.target === close) {
             e.stopPropagation();
-            closeTab(tab.id);
+            closeTabWithRestore(tab.id);
           } else {
             switchTab(tab.id);
           }
@@ -885,7 +885,7 @@ export const AppManifest = {
         const target = containerEl.closest('.vault-window') || containerEl;
         if (document.fullscreenElement) document.exitFullscreen?.().catch?.(() => {});
         else target.requestFullscreen?.().catch?.(() => {});
-      } else if (key === '/' && !e.shiftKey) showShortcutReference();
+      } else if (key === '/') showShortcutReference();
       else if (key === 'arrowleft' && e.shiftKey) {
         const idx = tabs.findIndex(t => t.id === activeTabId);
         switchTab(tabs[(idx - 1 + tabs.length) % tabs.length].id);
