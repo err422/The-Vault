@@ -215,7 +215,13 @@ export function init() {
   _updateUser();
   window.addEventListener('authProfileReady', _updateUser);
 
-  // Menus from focused window
+  // Menus from the active app window.
+  // New windows emit "window:created" before they emit a focus event, so
+  // listening only to "window:focused" leaves the top bar empty on first launch.
+  _unsubs.push(Store.on('window:created', (data) => {
+    const win = data?.instanceId ? WindowManager.getWindow(data.instanceId) : WindowManager.getFocusedWindow();
+    _updateMenus(win || WindowManager.getFocusedWindow());
+  }));
   _unsubs.push(Store.on('window:focused', _updateMenus));
   _unsubs.push(Store.on('window:closed', () => {
     _updateMenus(WindowManager.getFocusedWindow());
