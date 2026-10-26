@@ -31,7 +31,7 @@ export const AppManifest = {
       NOTICE: 'background:#343014;color:#fff176;border-color:#fff17660'
     };
 
-    containerEl.innerHTML = \`
+    containerEl.innerHTML = `
       <div style="height:100%;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(145deg,#100b1a,#090611);color:#e8e0f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
         <header style="padding:18px 20px 14px;border-bottom:1px solid rgba(168,85,247,.18);background:radial-gradient(ellipse at top left,rgba(139,92,246,.18),transparent 70%);">
           <div style="display:flex;align-items:center;gap:10px;">
@@ -49,7 +49,7 @@ export const AppManifest = {
           <button id="whats-new-got-it" type="button" style="padding:8px 18px;background:rgba(139,92,246,.16);color:#eee7ff;border:1px solid rgba(168,85,247,.35);border-radius:8px;font-size:12px;font-weight:650;cursor:pointer;">Got it</button>
         </footer>
       </div>
-    \`;
+    `;
 
     const list = containerEl.querySelector('#whats-new-entry-list');
     for (const entry of entries) {
