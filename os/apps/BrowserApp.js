@@ -17,7 +17,7 @@ export const AppManifest = {
   name: 'Vault Browser',
   icon: '🌐',
   category: 'Utility',
-  version: '3.3.0',
+  version: '3.4.0',
   singleton: false,
   defaultSize: { width: 960, height: 640 },
   minSize: { width: 440, height: 320 },
@@ -343,6 +343,19 @@ export const AppManifest = {
 
         el.addEventListener('load', () => {
           if (!tab.useProxy) finishLoading();
+
+          // Keyboard events inside an iframe do not bubble to the parent document.
+          // In Proxy mode the Scramjet frame is same-origin, so register the same
+          // shortcut handler inside its document too. Direct cross-origin frames
+          // intentionally fall back silently because browser security blocks access.
+          try {
+            const frameDocument = el.contentDocument;
+            if (frameDocument && typeof browserKeydown === 'function') {
+              frameDocument.addEventListener('keydown', browserKeydown, true);
+            }
+          } catch {
+            // Cross-origin direct-mode iframe: its document is inaccessible.
+          }
         });
 
         viewport.appendChild(el);
