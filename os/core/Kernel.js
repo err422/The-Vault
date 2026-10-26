@@ -236,23 +236,50 @@ export async function boot() {
     store.emit('kernel:ready', { bootMs });
     _shellBootComplete = true;
 
-    // Show What's New once for this release. Bump the key for each release
-    // so users who dismissed an earlier version see the latest notes.
-    const whatsNewKey = 'vaultos_whats_new_seen_2_2';
+    // Show What's New once per release. Do not mark it seen until its UI
+    // has actually mounted; launch() returning an ID only means a window was created.
+    const whatsNewKey = 'vaultos_whats_new_seen_2_3';
     try {
       if (localStorage.getItem(whatsNewKey) !== 'true') {
-        window.setTimeout(() => {
+        const openWhatsNew = (attempt = 0) => {
+          if (localStorage.getItem(whatsNewKey) === 'true') return;
+
           try {
-            // launch() focuses/restores an existing singleton window, or opens it.
             const instanceId = appRegistry.launch('about');
-            if (instanceId) localStorage.setItem(whatsNewKey, 'true');
+            if (instanceId) {
+              // AppRegistry mounts on a microtask after WindowManager creates the host.
+              // Wait for the actual changelog UI before saving the dismissal state.
+              window.setTimeout(() => {
+                const content = document.querySelector(
+                  '[data-window-content="' + instanceId + '"]'
+                );
+                if (content && content.querySelector('#whats-new-entry-list')) {
+                  localStorage.setItem(whatsNewKey, 'true');
+                  return;
+                }
+
+                if (attempt < 8) {
+                  window.setTimeout(() => openWhatsNew(attempt + 1), 800);
+                } else {
+                  console.warn('[Kernel] What\\x27s New window did not mount; will retry next startup.');
+                }
+              }, 350);
+              return;
+            }
           } catch (launchError) {
-            console.warn('[Kernel] Could not open What\x27s New:', launchError);
+            console.warn('[Kernel] Could not open What\\x27s New:', launchError);
           }
-        }, 2200);
+
+          if (attempt < 8) {
+            window.setTimeout(() => openWhatsNew(attempt + 1), 800);
+          }
+        };
+
+        // Let the desktop and any first-run setup UI settle before opening it.
+        window.setTimeout(() => openWhatsNew(), 2800);
       }
     } catch (err) {
-      console.warn('[Kernel] Could not check What\x27s New startup state:', err);
+      console.warn('[Kernel] Could not check What\\x27s New startup state:', err);
     }
 
     // Handle both persistent sign-in during startup and users who sign in later.
