@@ -17,7 +17,7 @@ export const AppManifest = {
   name: 'Vault Browser',
   icon: '🌐',
   category: 'Utility',
-  version: '3.4.0',
+  version: '3.4.1',
   singleton: false,
   defaultSize: { width: 960, height: 640 },
   minSize: { width: 440, height: 320 },
@@ -493,14 +493,14 @@ export const AppManifest = {
         sslIcon.textContent = '🛡️';
         sslIcon.title = 'Protected by Scramjet Proxy';
       } else {
-        label.textContent = 'Direct';
+        label.textContent = 'Proxy';
         state.textContent = 'OFF';
         modeBtn.style.background = 'rgba(245, 158, 11, 0.15)';
         modeBtn.style.borderColor = 'rgba(245, 158, 11, 0.4)';
         modeBtn.style.color = '#fde68a';
         track.style.background = 'rgba(148, 163, 184, 0.45)';
         thumb.style.left = '2px';
-        modeBtn.title = 'Proxy is OFF (Direct iframe mode). Click to turn Scramjet Proxy on.';
+        modeBtn.title = 'Proxy is OFF (direct iframe mode). Click to turn Scramjet Proxy on.';
         sslIcon.textContent = '⚡';
         sslIcon.title = 'Direct iframe mode';
       }
