@@ -17,7 +17,7 @@ export const AppManifest = {
   name: 'Vault Browser',
   icon: '🌐',
   category: 'Utility',
-  version: '3.2.0',
+  version: '3.3.0',
   singleton: false,
   defaultSize: { width: 960, height: 640 },
   minSize: { width: 440, height: 320 },
@@ -25,15 +25,23 @@ export const AppManifest = {
     {
       label: 'Tab',
       items: [
-        { label: 'New Tab', action: 'browser:new-tab', shortcut: '⌘T' },
-        { label: 'Close Tab', action: 'browser:close-tab', shortcut: '⌘W' }
+        { label: 'New Tab', action: 'browser:new-tab', shortcut: 'Alt+T' },
+        { label: 'Close Tab', action: 'browser:close-tab', shortcut: 'Alt+W' },
+        { label: 'Reopen Closed Tab', action: 'browser:reopen-tab', shortcut: 'Alt+Shift+T' },
+        { label: 'Next Tab', action: 'browser:next-tab', shortcut: 'Alt+Shift+Right' },
+        { label: 'Previous Tab', action: 'browser:previous-tab', shortcut: 'Alt+Shift+Left' },
+        { label: 'Keyboard Shortcuts', action: 'browser:shortcuts', shortcut: 'Alt+/' }
       ]
     },
     {
       label: 'Navigation',
       items: [
-        { label: 'Reload', action: 'browser:reload', shortcut: '⌘R' },
-        { label: 'Go Home', action: 'browser:home' },
+        { label: 'Focus Address Bar', action: 'browser:focus-address', shortcut: 'Alt+L' },
+        { label: 'Back', action: 'browser:back', shortcut: 'Alt+Left' },
+        { label: 'Forward', action: 'browser:forward', shortcut: 'Alt+Right' },
+        { label: 'Reload', action: 'browser:reload', shortcut: 'Alt+R' },
+        { label: 'Go Home', action: 'browser:home', shortcut: 'Alt+H' },
+        { label: 'Toggle Fullscreen', action: 'browser:fullscreen', shortcut: 'Alt+Enter' },
         { label: 'Toggle Proxy Mode', action: 'browser:toggle-mode' }
       ]
     }
@@ -91,7 +99,7 @@ export const AppManifest = {
             <button id="browser-mac-max" aria-label="Maximize window" title="Maximize" style="width:12px;height:12px;min-width:12px;padding:0;border:0;border-radius:50%;background:#28c840;cursor:pointer;"></button>
           </div>
           <div id="tab-headers-container" style="display:flex; align-items:flex-end; gap:4px; flex:0 1 auto; min-width:0; max-width:calc(100% - 120px); overflow-x:auto; scrollbar-width:none; height:100%;"></div>
-          <button id="browser-add-tab-btn" title="New tab (⌘T)" style="width:26px; height:26px; margin-bottom:4px; flex:0 0 auto; border:none; border-radius:6px; background:rgba(255,255,255,0.06); color:#c4b5fd; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s;">+</button>
+          <button id="browser-add-tab-btn" title="New tab (Alt+T)" style="width:26px; height:26px; margin-bottom:4px; flex:0 0 auto; border:none; border-radius:6px; background:rgba(255,255,255,0.06); color:#c4b5fd; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s;">+</button>
         </div>
 
         <!-- Navigation Bar -->
@@ -99,7 +107,7 @@ export const AppManifest = {
           <div style="display:flex; gap:4px; flex:0 0 auto;">
             <button id="browser-back-btn" title="Back" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">←</button>
             <button id="browser-fwd-btn" title="Forward" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">→</button>
-            <button id="browser-reload-btn" title="Reload (⌘R)" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">↻</button>
+            <button id="browser-reload-btn" title="Reload (Alt+R)" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">↻</button>
             <button id="browser-home-btn" title="Home" style="width:28px; height:28px; border:none; border-radius:6px; background:rgba(255,255,255,0.05); color:#c4b5fd; cursor:pointer;">🏠</button>
           </div>
 
@@ -828,6 +836,84 @@ export const AppManifest = {
       });
     }
 
+    // ---- Vault Browser keyboard shortcuts ------------------------------------
+    // Use Alt/Option rather than Command. Ignore editable controls except for
+    // the dedicated address-bar shortcut, and never steal browser/system chords.
+    const closedTabs = [];
+    const shortcutOverlayId = 'vault-browser-shortcuts-overlay';
+    const isEditableTarget = (target) => {
+      if (!target) return false;
+      const tag = String(target.tagName || '').toLowerCase();
+      return target.isContentEditable || ['input', 'textarea', 'select'].includes(tag);
+    };
+    const showShortcutReference = () => {
+      let overlay = containerEl.querySelector('#' + shortcutOverlayId);
+      if (overlay) { overlay.remove(); return; }
+      overlay = document.createElement('div');
+      overlay.id = shortcutOverlayId;
+      overlay.style.cssText = 'position:absolute;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(4,2,10,.78);backdrop-filter:blur(8px);';
+      const panel = document.createElement('div');
+      panel.style.cssText = 'width:min(440px,100%);max-height:90%;overflow:auto;background:#171023;border:1px solid rgba(168,85,247,.45);border-radius:14px;padding:20px;color:#f5f3ff;box-shadow:0 20px 70px #0009;';
+      panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><strong style="font-size:18px">Vault Browser Shortcuts</strong><button type="button" aria-label="Close shortcuts" style="border:0;background:#ffffff12;color:#fff;border-radius:7px;padding:5px 9px;cursor:pointer">✕</button></div><div style="display:grid;grid-template-columns:1fr auto;gap:10px 16px;font-size:13px;align-items:center"><span>New tab</span><kbd>Alt + T</kbd><span>Close tab</span><kbd>Alt + W</kbd><span>Reopen closed tab</span><kbd>Alt + Shift + T</kbd><span>Next / previous tab</span><kbd>Alt + Shift + → / ←</kbd><span>Switch to tab 1–8</span><kbd>Alt + 1–8</kbd><span>Focus address bar</span><kbd>Alt + L</kbd><span>Back / forward</span><kbd>Alt + ← / →</kbd><span>Reload</span><kbd>Alt + R</kbd><span>Home</span><kbd>Alt + H</kbd><span>Fullscreen</span><kbd>Alt + Enter</kbd><span>Show this reference</span><kbd>Alt + /</kbd></div><p style="font-size:11px;color:#b8a9d6;line-height:1.5;margin:16px 0 0">Shortcuts may not reach the browser while a website or game inside an iframe has keyboard focus. Some system-reserved shortcuts cannot be intercepted.</p>';
+      panel.querySelectorAll('kbd').forEach(k => { k.style.cssText = 'font:11px ui-monospace,monospace;background:#ffffff12;border:1px solid #ffffff20;border-radius:5px;padding:4px 7px;text-align:center;white-space:nowrap'; });
+      panel.querySelector('button').addEventListener('click', () => overlay.remove());
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+      overlay.appendChild(panel);
+      containerEl.appendChild(overlay);
+      panel.querySelector('button').focus();
+    };
+    const performBack = () => backBtn.click();
+    const performForward = () => fwdBtn.click();
+    const browserKeydown = (e) => {
+      // Only handle events belonging to this browser window, not another app.
+      const activeElement = document.activeElement;
+      if (!containerEl.isConnected || !(containerEl.contains(activeElement) || activeElement === document.body)) return;
+      if (!e.altKey || e.ctrlKey || e.metaKey) return;
+      const key = e.key.toLowerCase();
+      const editable = isEditableTarget(e.target);
+      if (editable && !(key === 'l' && !e.shiftKey)) return;
+      let handled = true;
+      if (key === 't' && !e.shiftKey) addTab();
+      else if (key === 'w' && !e.shiftKey) closeTab(activeTabId);
+      else if (key === 't' && e.shiftKey) {
+        const previous = closedTabs.pop();
+        if (previous) { addTab(previous.url, previous.title || 'Reopened Tab'); getActiveTab().useProxy = previous.useProxy; renderTabs(); renderViewport(); if (!isHomeUrl(previous.url)) loadInTab(getActiveTab(), previous.url); }
+      } else if (key === 'l' && !e.shiftKey) { urlInput.focus(); urlInput.select(); }
+      else if (key === 'r' && !e.shiftKey) reloadBtn.click();
+      else if (key === 'h' && !e.shiftKey) homeBtn.click();
+      else if (key === 'enter' && !e.shiftKey) {
+        const target = containerEl.closest('.vault-window') || containerEl;
+        if (document.fullscreenElement) document.exitFullscreen?.().catch?.(() => {});
+        else target.requestFullscreen?.().catch?.(() => {});
+      } else if (key === '/' && !e.shiftKey) showShortcutReference();
+      else if (key === 'arrowleft' && e.shiftKey) {
+        const idx = tabs.findIndex(t => t.id === activeTabId);
+        switchTab(tabs[(idx - 1 + tabs.length) % tabs.length].id);
+      } else if (key === 'arrowright' && e.shiftKey) {
+        const idx = tabs.findIndex(t => t.id === activeTabId);
+        switchTab(tabs[(idx + 1) % tabs.length].id);
+      } else if (/^[1-8]$/.test(key) && !e.shiftKey) {
+        const tab = tabs[Number(key) - 1];
+        if (tab) switchTab(tab.id);
+      } else if (key === '9' && !e.shiftKey) switchTab(tabs[tabs.length - 1].id);
+      else if (key === 'arrowleft' && !e.shiftKey) performBack();
+      else if (key === 'arrowright' && !e.shiftKey) performForward();
+      else handled = false;
+      if (handled) { e.preventDefault(); e.stopPropagation(); }
+    };
+    containerEl.addEventListener('keydown', browserKeydown, true);
+    containerEl.__vaultBrowserKeydown = browserKeydown;
+
+    // Keep a minimal snapshot so Alt+Shift+T can reopen the most recently closed tab.
+    const originalCloseTab = closeTab;
+    // Record closed-tab information through the existing tab-close buttons and shortcut.
+    // The active tab is snapshotted immediately before closing via this wrapper.
+    const closeTabWithRestore = (id) => {
+      const tab = tabs.find(t => t.id === id);
+      if (tab) closedTabs.push({ url: tab.url, title: tab.title, useProxy: tab.useProxy });
+      originalCloseTab(id);
+    };
+
     // Initial render and boot
     renderTabs();
     renderViewport();
@@ -848,6 +934,10 @@ export const AppManifest = {
   },
 
   unmount(containerEl) {
+    if (containerEl.__vaultBrowserKeydown) {
+      containerEl.removeEventListener('keydown', containerEl.__vaultBrowserKeydown, true);
+      delete containerEl.__vaultBrowserKeydown;
+    }
     // Iframes and listeners cleanup
     const frames = containerEl.querySelectorAll('iframe');
     frames.forEach(f => f.remove());
