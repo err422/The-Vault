@@ -235,6 +235,26 @@ export async function boot() {
 
     store.emit('kernel:ready', { bootMs });
     _shellBootComplete = true;
+
+    // Show What's New once for this release, rather than on every restart.
+    // The release-specific key means existing users see it after this update.
+    const whatsNewKey = 'vaultos_whats_new_seen_2_1';
+    try {
+      if (localStorage.getItem(whatsNewKey) !== 'true') {
+        window.setTimeout(() => {
+          // Don't steal focus if another startup flow has already opened a window.
+          if (appRegistry.getRunningInstances('about').length === 0) {
+            const instanceId = appRegistry.launch('about');
+            if (instanceId) localStorage.setItem(whatsNewKey, 'true');
+          } else {
+            localStorage.setItem(whatsNewKey, 'true');
+          }
+        }, 1200);
+      }
+    } catch (err) {
+      console.warn('[Kernel] Could not check What's New startup state:', err);
+    }
+
     // Handle both persistent sign-in during startup and users who sign in later.
     window.setTimeout(() => _checkFirstRunSetup(), 450);
   }, 1500);
