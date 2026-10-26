@@ -19,14 +19,14 @@ export const AppManifest = {
 
   mount(containerEl, context) {
     const entries = [
-      { label: 'NEW', text: 'WebOS now opens What's New after an update.' },
+      { label: "NEW", text: "WebOS now opens What's New after an update." },
       { label: 'IMPROVED', text: 'Vault Browser has a cleaner tab bar and navigation controls.' },
       { label: 'FIX', text: 'Games search now has its own results section, and games are meant to open at their URL in Vault Browser.' },
       { label: 'NEW', text: 'You can rerun the setup wizard from Settings.' },
       { label: 'NEW', text: 'VaultNet adds the Lounge, presence, chat, and multiplayer features.' },
       { label: 'NEW', text: 'The school bell app is available as its own WebOS app.' },
       { label: 'IMPROVED', text: 'Fullscreen-on-click can be toggled in Settings, including an iframe cover when fullscreen is off.' },
-      { label: 'IMPROVED', text: 'The What's New window now uses the native WebOS window style.' }
+      { label: "IMPROVED", text: "The What's New window now uses the native WebOS window style." }
     ];
     const badgeColors = {
       NEW: 'background:#153d2a;color:#4ade80;border-color:#4ade8060',
