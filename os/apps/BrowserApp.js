@@ -130,6 +130,7 @@ export const AppManifest = {
           <!-- Utilities -->
           <button id="browser-popout-btn" title="Open current URL in an external browser tab" style="height:30px; padding:0 10px; border-radius:8px; border:1px solid rgba(168,85,247,.3); background:rgba(168,85,247,.1); color:#d8b4fe; font-size:12px; cursor:pointer; white-space:nowrap;">↗ Pop Out</button>
           <button id="browser-pin-btn" title="Pin this website to your WebOS desktop" style="height:30px; padding:0 10px; border-radius:8px; border:1px solid rgba(168,85,247,.3); background:rgba(168,85,247,.1); color:#d8b4fe; font-size:12px; cursor:pointer; white-space:nowrap;">📌 Pin</button>
+          <button id="browser-bell-btn" type="button" title="ETHS bell schedule" aria-expanded="false" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(168,85,247,.35);background:rgba(139,92,246,.16);color:#e9d5ff;font-size:12px;cursor:pointer;white-space:nowrap;">🔔 Bell</button>
           <button id="browser-help-btn" title="Browser & Scramjet proxy guide" style="height:30px; padding:0 10px; border-radius:8px; border:1px solid rgba(168,85,247,.3); background:rgba(168,85,247,.1); color:#d8b4fe; font-size:12px; cursor:pointer; white-space:nowrap;">? Help</button>
         </div>
 
@@ -849,6 +850,97 @@ export const AppManifest = {
       });
     }
 
+
+    // ---- Built-in Bell extension ---------------------------------------------
+    const bellBtn = containerEl.querySelector('#browser-bell-btn');
+    const bellPopup = document.createElement('section');
+    bellPopup.id = 'browser-bell-popup';
+    bellPopup.setAttribute('aria-label', 'ETHS bell schedule');
+    bellPopup.style.cssText = 'display:none;position:absolute;top:88px;right:12px;z-index:200;box-sizing:border-box;width:min(340px,calc(100% - 24px));max-height:calc(100% - 110px);overflow:auto;padding:16px;border:1px solid rgba(168,85,247,.42);border-radius:14px;background:rgba(17,11,29,.98);box-shadow:0 18px 55px #0009;color:#f5f3ff;font:12px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backdrop-filter:blur(16px);';
+    bellPopup.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
+        <div><div style="font-size:15px;font-weight:800">🔔 ETHS Bell</div><div id="browser-bell-date" style="color:#b8a9d6;margin-top:3px"></div></div>
+        <button type="button" id="browser-bell-close" aria-label="Close bell extension" style="border:0;border-radius:7px;background:#ffffff12;color:#eee;padding:6px 9px;cursor:pointer">✕</button>
+      </div>
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;color:#c4b5fd">Schedule
+        <select id="browser-bell-day" style="max-width:175px;padding:6px 8px;border-radius:8px;border:1px solid #ffffff20;background:#211631;color:#fff">
+          <option value="auto">Automatic</option><option value="monday">Wildkit Monday</option><option value="orange">Orange Day</option><option value="blue">Blue Day</option><option value="none">No school</option>
+        </select>
+      </label>
+      <div style="padding:15px;border-radius:11px;background:linear-gradient(135deg,rgba(139,92,246,.23),rgba(217,70,239,.08));border:1px solid rgba(167,139,250,.18)">
+        <div id="browser-bell-status" style="font-size:12px;color:#c4b5fd;font-weight:650">Checking schedule…</div>
+        <div id="browser-bell-countdown" style="font-size:34px;line-height:1.2;font-weight:800;letter-spacing:-1px;margin:7px 0">--:--</div>
+        <div id="browser-bell-caption" style="color:#b8a9d6">until the next bell</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:13px 0 7px"><strong>Up next</strong><span id="browser-bell-type" style="color:#b8a9d6"></span></div>
+      <div id="browser-bell-next" style="padding:10px;border-radius:9px;background:#ffffff08;color:#ddd6fe">Loading…</div>
+      <div style="margin-top:10px;color:#897ba8;font-size:10px;line-height:1.45">Times use your device's local timezone. Schedule overrides are saved on this device.</div>
+    `;
+    containerEl.appendChild(bellPopup);
+    const bellSchedules = {
+      monday: { label: 'Wildkit Monday', periods: [['Early Bird','07:10','07:50'],['AM Support','08:00','08:25'],['Block 1','08:30','09:03'],['Block 2','09:08','09:41'],['Block 3','09:46','10:19'],['Block 4','10:24','10:57'],['Lunch 1 / Block 5','11:02','11:35'],['Lunch 2 / Block 5','11:40','12:13'],['Block 6','12:18','12:51'],['Block 7','12:56','13:29'],['Block 8','13:34','14:07']] },
+      orange: { label: 'Orange Day', periods: [['Early Bird','07:10','07:50'],['AM Support','08:00','08:25'],['Block 1','08:30','09:55'],['Passing Period','09:55','10:05'],['Block 3','10:05','11:30'],['Block 5 / Lunch window','11:40','13:55'],['Block 7','14:05','15:35']] },
+      blue: { label: 'Blue Day', periods: [['Early Bird','07:10','07:50'],['AM Support','08:00','08:25'],['Block 2','08:30','09:55'],['Passing Period','09:55','10:05'],['Block 4','10:05','11:30'],['Block 6 / Lunch window','11:40','13:55'],['Block 8','14:05','15:35']] }
+    };
+    let bellOverride = 'auto';
+    try {
+      const savedBellDay = localStorage.getItem('vaultos_bell_day_override_v1');
+      if (savedBellDay && ['auto','monday','orange','blue','none'].includes(savedBellDay)) bellOverride = savedBellDay;
+    } catch {}
+    const bellDaySelect = bellPopup.querySelector('#browser-bell-day');
+    bellDaySelect.value = bellOverride;
+    const bellTime = (date) => date.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    const bellTimestamp = (date, time) => { const [h,m] = time.split(':').map(Number); const d = new Date(date); d.setHours(h,m,0,0); return d; };
+    const bellCountdown = (ms) => { const s = Math.max(0,Math.floor(ms/1000)); const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),r=s%60; return h ? String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(r).padStart(2,'0') : String(m).padStart(2,'0')+':'+String(r).padStart(2,'0'); };
+    const renderBellExtension = () => {
+      const now = new Date();
+      bellPopup.querySelector('#browser-bell-date').textContent = now.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'});
+      let dayKey = bellOverride;
+      if (dayKey === 'auto') { const wd=now.getDay(); dayKey=wd===1?'monday':(wd===2||wd===4)?'orange':(wd===3||wd===5)?'blue':'none'; }
+      const schedule = bellSchedules[dayKey];
+      bellPopup.querySelector('#browser-bell-type').textContent = schedule?.label || 'No school';
+      const status = bellPopup.querySelector('#browser-bell-status');
+      const count = bellPopup.querySelector('#browser-bell-countdown');
+      const caption = bellPopup.querySelector('#browser-bell-caption');
+      const nextBox = bellPopup.querySelector('#browser-bell-next');
+      if (!schedule) {
+        status.textContent='No school schedule'; count.textContent='—';
+        caption.textContent=bellOverride==='auto'?'Weekend · choose a day to preview':'No schedule selected';
+        nextBox.textContent='No school schedule for this day.';
+        return;
+      }
+      const periods=schedule.periods.map(([name,start,end])=>({name,startAt:bellTimestamp(now,start),endAt:bellTimestamp(now,end)}));
+      const current=periods.find(p=>now>=p.startAt&&now<p.endAt);
+      const next=periods.find(p=>p.startAt>now);
+      const previous=[...periods].reverse().find(p=>p.endAt<=now);
+      if (current) {
+        status.textContent=current.name; count.textContent=bellCountdown(current.endAt-now); caption.textContent='until this period ends';
+        nextBox.textContent=next ? next.name+' · '+bellTime(next.startAt) : 'Last scheduled period';
+      } else if (next) {
+        status.textContent=previous?'Passing period':'Before school'; count.textContent=bellCountdown(next.startAt-now); caption.textContent='until '+next.name;
+        nextBox.textContent=next.name+' · '+bellTime(next.startAt);
+      } else {
+        status.textContent='School day ended'; count.textContent='✓'; caption.textContent='You made it';
+        nextBox.textContent='No more periods today.';
+      }
+    };
+    const closeBellPopup = () => { bellPopup.style.display='none'; bellBtn.setAttribute('aria-expanded','false'); };
+    bellBtn.addEventListener('click', () => {
+      const opening = bellPopup.style.display === 'none';
+      bellPopup.style.display = opening ? 'block' : 'none';
+      bellBtn.setAttribute('aria-expanded', String(opening));
+      if (opening) renderBellExtension();
+    });
+    bellPopup.querySelector('#browser-bell-close').addEventListener('click', closeBellPopup);
+    bellDaySelect.addEventListener('change', () => {
+      bellOverride=bellDaySelect.value;
+      try { localStorage.setItem('vaultos_bell_day_override_v1',bellOverride); } catch {}
+      renderBellExtension();
+    });
+    const bellTimer = window.setInterval(renderBellExtension,1000);
+    containerEl.__vaultBellCleanup = () => { window.clearInterval(bellTimer); bellPopup.remove(); };
+    renderBellExtension();
+
     // ---- Vault Browser keyboard shortcuts ------------------------------------
     // Use Alt/Option rather than Command. Ignore editable controls except for
     // the dedicated address-bar shortcut, and never steal browser/system chords.
@@ -964,6 +1056,7 @@ export const AppManifest = {
       document.removeEventListener('keydown', containerEl.__vaultBrowserKeydown, true);
       delete containerEl.__vaultBrowserKeydown;
     }
+    if (containerEl.__vaultBellCleanup) { containerEl.__vaultBellCleanup(); delete containerEl.__vaultBellCleanup; }
     // Iframes and listeners cleanup
     const frames = containerEl.querySelectorAll('iframe');
     frames.forEach(f => f.remove());
