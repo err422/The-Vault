@@ -43,7 +43,6 @@ import SystemMonitorApp from '../apps/SystemMonitorApp.js';
 import AppStoreApp from '../apps/AppStoreApp.js';
 import AboutApp from '../apps/AboutApp.js';
 import LoungeApp from '../apps/LoungeApp.js';
-import BellApp from '../apps/BellApp.js';
 
 let _shellBootComplete = false;
 let _setupCheckRunning = false;
@@ -377,8 +376,7 @@ function _registerCoreApps() {
     SystemMonitorApp,
     AppStoreApp,
     AboutApp,
-    LoungeApp,
-    BellApp
+    LoungeApp
   ];
 
   for (const manifest of apps) {
