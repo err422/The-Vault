@@ -29,7 +29,6 @@ const APP_DESCRIPTIONS = {
   'app-store': 'System package manager and utility catalog for launching, pinning, and managing all WebOS applications.',
   'about': 'WebOS architecture summary, version credits, system specifications, and developer documentation.',
   'lounge': 'VaultNet multiplayer social lounge with real-time presence indicators, customizable profiles, and global chat.',
-  'bell': 'ETHS bell schedule tracker featuring period countdowns, daily schedules, and custom day overrides.'
 };
 
 export const AppManifest = {
