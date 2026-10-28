@@ -3,6 +3,18 @@
     const GATED_PAGES = ['index.html', 'games.html', 'websites.html', ''];
 
     function injectStyles() {
+        const guestStyle = document.createElement('style');
+        guestStyle.textContent = `
+            .auth-guest-btn {
+                display: block; width: 100%; margin-top: 14px; padding: 12px 16px;
+                border: 1px solid rgba(168, 85, 247, .7); border-radius: 10px;
+                background: rgba(124, 58, 237, .14); color: inherit; font: inherit;
+                font-weight: 600; cursor: pointer; transition: background .15s ease;
+            }
+            .auth-guest-btn:hover { background: rgba(124, 58, 237, .28); }
+            .auth-guest-note { margin: 8px 0 0; font-size: 12px; opacity: .72; text-align: center; }
+        `;
+        document.head.appendChild(guestStyle);
         if (document.getElementById('auth-ui-styles')) return;
         const style = document.createElement('style');
         style.id = 'auth-ui-styles';
@@ -287,6 +299,8 @@
                     <button class="auth-modal-tab" id="auth-tab-signin" type="button">Sign In</button>
                     <button class="auth-modal-tab active" id="auth-tab-signup" type="button">Sign Up</button>
                 </div>
+                <button class="auth-guest-btn" id="auth-continue-guest" type="button">Continue as Guest →</button>
+                <p class="auth-guest-note">Guest sessions stay on this device. Some account features may be unavailable.</p>
                 <div id="auth-modal-signin" style="display: none;">
                     <div class="auth-modal-group">
                         <label class="auth-modal-label">Username or Email</label>
@@ -398,6 +412,7 @@
     function attachModalListeners() {
         document.getElementById('auth-tab-signin').addEventListener('click', () => switchTab('signin'));
         document.getElementById('auth-tab-signup').addEventListener('click', () => switchTab('signup'));
+        document.getElementById('auth-continue-guest').addEventListener('click', () => window.AuthCore.continueAsGuest());
         document.getElementById('auth-signin-btn').addEventListener('click', handleSignIn);
         document.getElementById('auth-signup-btn').addEventListener('click', handleSignUp);
         document.getElementById('auth-signin-pass').addEventListener('keypress', (e) => {
@@ -448,7 +463,7 @@
             createModal();
 
             auth.onAuthStateChanged((user) => {
-                if (user) {
+                if (user || localStorage.getItem('vault_guest_session') === '1') {
                     this.hideModal();
                 } else {
                     this.showModal('signin');

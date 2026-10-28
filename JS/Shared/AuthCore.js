@@ -4,11 +4,14 @@
         currentUser: null,
         currentUsername: null,
         currentAdmin: false,
+        currentGuest: false,
         profileReady: false,
         
         init() {
             auth.onAuthStateChanged((user) => {
                 this.currentUser = user;
+                this.currentGuest = !user && localStorage.getItem('vault_guest_session') === '1';
+                if (user) localStorage.removeItem('vault_guest_session');
                 
                 this.profileReady = false;
                 this.currentAdmin = false;
@@ -55,7 +58,7 @@
                     this.profileReady = true;
                     this.updateUI();
                     window.dispatchEvent(new CustomEvent('authProfileReady', {
-                        detail: { user: null, username: null, admin: false }
+                        detail: { user: null, username: this.currentGuest ? 'Guest' : null, admin: false, guest: this.currentGuest }
                     }));
                 }
             });
@@ -68,6 +71,9 @@
                 if (this.currentUser && this.currentUsername) {
                     btn.innerHTML = '👤';
                     btn.title = '@' + this.currentUsername;
+                } else if (this.currentGuest) {
+                    btn.innerHTML = '👤';
+                    btn.title = 'Guest session — click to sign in';
                 } else {
                     btn.innerHTML = '🔓';
                     btn.title = 'Sign In';
@@ -209,7 +215,22 @@
             this.updateUI();
         },
         
+        continueAsGuest() {
+            localStorage.setItem('vault_guest_session', '1');
+            this.currentGuest = true;
+            this.currentUser = null;
+            this.currentUsername = null;
+            this.currentAdmin = false;
+            this.profileReady = true;
+            this.updateUI();
+            window.dispatchEvent(new CustomEvent('authProfileReady', { detail: { user: null, username: 'Guest', admin: false, guest: true } }));
+            if (window.AuthUI) window.AuthUI.hideModal();
+        },
+
         async signOut() {
+            localStorage.removeItem('vault_guest_session');
+            this.currentGuest = false;
+            if (window.AuthUI) window.AuthUI.showModal('signin');
             return auth.signOut();
         },
         
@@ -321,6 +342,6 @@
         showModal: () => window.AuthUI && window.AuthUI.showModal(),
         getCurrentUser: () => window.AuthCore.currentUser,
         getCurrentUsername: () => window.AuthCore.currentUsername,
-        isLoggedIn: () => !!window.AuthCore.currentUser
+        isLoggedIn: () => !!window.AuthCore.currentUser || !!window.AuthCore.currentGuest
     };
 })();
