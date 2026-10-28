@@ -1,0 +1,559 @@
+/* ==========================================================================
+   WINDOW FRAMES — The Web Vault WebOS
+   ==========================================================================
+   Every application window is wrapped in an .os-window element managed by
+   WindowManager.  This file covers:
+     - Window frame + glassmorphism
+     - Titlebar with traffic-light buttons
+     - 8-way resize handles
+     - Window states: normal, maximized, minimized, snapped
+     - Focused / unfocused appearance
+     - Snap preview overlay
+     - Transitions for state changes
+     - iframe pointer-event safety during drags
+
+   Depends on: tokens.css
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. WINDOW FRAME
+   -------------------------------------------------------------------------- */
+.os-window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+
+  /* Glass surface */
+  background: var(--vault-surface-base);
+  backdrop-filter: var(--vault-glass-blur);
+  -webkit-backdrop-filter: var(--vault-glass-blur);
+  border: 1px solid var(--vault-border-subtle);
+  border-radius: var(--vault-radius-window);
+  box-shadow: var(--vault-shadow-window);
+
+  /* Min dimensions — prevent windows from collapsing */
+  min-width:  320px;
+  min-height: 200px;
+
+  /* The window itself is positioned via transform: translate3d() by JS    */
+  /* for GPU-accelerated movement.  `left` and `top` are set once on open. */
+  will-change: transform, width, height;
+
+  /* Contain paint to improve compositing performance */
+  contain: layout style;
+
+  /* Smooth transitions for non-drag state changes (maximize, restore, etc.) */
+  transition: box-shadow var(--vault-transition-smooth),
+              border-color var(--vault-transition-smooth),
+              opacity var(--vault-transition-smooth);
+
+  /* Default font */
+  font-family: var(--vault-font-sans);
+  font-size: var(--vault-text-base);
+  color: var(--vault-text-primary);
+}
+
+/* Top inner edge highlight — simulates light from above */
+.os-window::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent
+  );
+  border-radius: var(--vault-radius-window) var(--vault-radius-window) 0 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+
+/* --------------------------------------------------------------------------
+   2. FOCUSED vs UNFOCUSED
+   -------------------------------------------------------------------------- */
+.os-window.is-focused {
+  box-shadow: var(--vault-shadow-focused);
+  border-color: var(--vault-border-focused);
+}
+
+/* Unfocused windows are visually de-emphasized */
+.os-window:not(.is-focused) {
+  opacity: 0.88;
+}
+
+.os-window:not(.is-focused) .os-titlebar {
+  /* Desaturate traffic-light buttons when unfocused */
+  filter: saturate(0.3);
+}
+
+
+/* --------------------------------------------------------------------------
+   3. TITLEBAR
+   -------------------------------------------------------------------------- */
+.os-titlebar {
+  display: flex;
+  align-items: center;
+  height: var(--vault-titlebar-height);
+  padding: 0 var(--vault-space-4);
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+
+  /* Subtle separator below titlebar */
+  border-bottom: 1px solid var(--vault-border-subtle);
+
+  /* Background matches but slightly lighter for depth */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    transparent 100%
+  );
+  border-radius: var(--vault-radius-window) var(--vault-radius-window) 0 0;
+
+  /* Double-click to maximize — cursor hint */
+  cursor: default;
+}
+
+/* --- Traffic Light Buttons (macOS-style close/min/max) ------------------- */
+.os-titlebar__buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--vault-space-2);
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.os-titlebar__btn {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+
+  /* Icon hidden by default — show on group hover */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: filter var(--vault-transition-instant),
+              transform var(--vault-transition-instant);
+}
+
+.os-titlebar__btn:active {
+  transform: scale(0.85);
+}
+
+/* Individual button colors */
+.os-titlebar__btn--close {
+  background: #ff5f57;
+}
+
+.os-titlebar__btn--minimize {
+  background: #febc2e;
+}
+
+.os-titlebar__btn--maximize {
+  background: #28c840;
+}
+
+/* Hover glow */
+.os-titlebar__btn:hover {
+  filter: brightness(1.15);
+}
+
+/* Icons inside buttons (×, −, +) — visible on parent hover */
+.os-titlebar__btn-icon {
+  font-size: 9px;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.0);
+  transition: color var(--vault-transition-instant);
+  pointer-events: none;
+  font-weight: bold;
+}
+
+.os-titlebar__buttons:hover .os-titlebar__btn-icon {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+/* Unfocused: grey out buttons but keep them functional */
+.os-window:not(.is-focused) .os-titlebar__btn {
+  background: var(--vault-text-muted);
+  opacity: 0.45;
+}
+
+.os-window:not(.is-focused) .os-titlebar__buttons:hover .os-titlebar__btn {
+  opacity: 1;
+}
+
+.os-window:not(.is-focused) .os-titlebar__buttons:hover .os-titlebar__btn--close {
+  background: #ff5f57;
+}
+
+.os-window:not(.is-focused) .os-titlebar__buttons:hover .os-titlebar__btn--minimize {
+  background: #febc2e;
+}
+
+.os-window:not(.is-focused) .os-titlebar__buttons:hover .os-titlebar__btn--maximize {
+  background: #28c840;
+}
+
+/* --- Title Text --------------------------------------------------------- */
+.os-titlebar__title {
+  flex: 1;
+  text-align: center;
+  font-size: var(--vault-text-sm);
+  font-weight: var(--vault-weight-medium);
+  color: var(--vault-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 var(--vault-space-8);
+  pointer-events: none;
+}
+
+.os-window.is-focused .os-titlebar__title {
+  color: var(--vault-text-primary);
+}
+
+/* --- Optional App Icon in Titlebar -------------------------------------- */
+.os-titlebar__icon {
+  width: var(--vault-icon-sm);
+  height: var(--vault-icon-sm);
+  margin-right: var(--vault-space-2);
+  flex-shrink: 0;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+
+/* --------------------------------------------------------------------------
+   4. WINDOW CONTENT AREA
+   -------------------------------------------------------------------------- */
+.os-window__content {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  border-radius: 0 0 var(--vault-radius-window) var(--vault-radius-window);
+
+  /* Prevent content from bleeding past rounded corners */
+  isolation: isolate;
+}
+
+/* Iframes within windows — fill the content area */
+.os-window__content iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  background: var(--vault-bg-deep);
+}
+
+/* Optional toolbar below titlebar (e.g. file explorer address bar) */
+.os-window__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--vault-space-2);
+  padding: var(--vault-space-1_5) var(--vault-space-3);
+  border-bottom: 1px solid var(--vault-border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+/* Optional status bar at bottom */
+.os-window__statusbar {
+  display: flex;
+  align-items: center;
+  gap: var(--vault-space-3);
+  padding: var(--vault-space-1) var(--vault-space-3);
+  border-top: 1px solid var(--vault-border-subtle);
+  font-size: var(--vault-text-xs);
+  color: var(--vault-text-muted);
+  flex-shrink: 0;
+  min-height: 24px;
+}
+
+
+/* --------------------------------------------------------------------------
+   5. RESIZE HANDLES (8-way)
+   --------------------------------------------------------------------------
+   Invisible hit areas positioned on the edges and corners of the window.
+   Edge handles: 6px thick.  Corner handles: 12×12px.
+   -------------------------------------------------------------------------- */
+.os-resize-handle {
+  position: absolute;
+  z-index: 2;
+  /* Invisible — only the cursor matters */
+  background: transparent;
+}
+
+/* --- Edges -------------------------------------------------------------- */
+.os-resize-handle--n {
+  top: -3px;
+  left: 12px;
+  right: 12px;
+  height: 6px;
+  cursor: n-resize;
+}
+
+.os-resize-handle--s {
+  bottom: -3px;
+  left: 12px;
+  right: 12px;
+  height: 6px;
+  cursor: s-resize;
+}
+
+.os-resize-handle--w {
+  top: 12px;
+  bottom: 12px;
+  left: -3px;
+  width: 6px;
+  cursor: w-resize;
+}
+
+.os-resize-handle--e {
+  top: 12px;
+  bottom: 12px;
+  right: -3px;
+  width: 6px;
+  cursor: e-resize;
+}
+
+/* --- Corners ------------------------------------------------------------ */
+.os-resize-handle--nw {
+  top: -3px;
+  left: -3px;
+  width: 12px;
+  height: 12px;
+  cursor: nw-resize;
+}
+
+.os-resize-handle--ne {
+  top: -3px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  cursor: ne-resize;
+}
+
+.os-resize-handle--sw {
+  bottom: -3px;
+  left: -3px;
+  width: 12px;
+  height: 12px;
+  cursor: sw-resize;
+}
+
+.os-resize-handle--se {
+  bottom: -3px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  cursor: se-resize;
+}
+
+
+/* --------------------------------------------------------------------------
+   6. WINDOW STATES
+   -------------------------------------------------------------------------- */
+
+/* --- Maximized ---------------------------------------------------------- */
+.os-window.is-maximized {
+  /* JS sets width/height to viewport.  We remove radii and borders. */
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+
+  /* Animate to maximized position */
+  transition: transform var(--vault-transition-smooth),
+              width     var(--vault-transition-smooth),
+              height    var(--vault-transition-smooth),
+              border-radius var(--vault-transition-smooth),
+              box-shadow    var(--vault-transition-smooth);
+}
+
+.os-window.is-maximized .os-titlebar {
+  border-radius: 0;
+}
+
+.os-window.is-maximized .os-window__content {
+  border-radius: 0;
+}
+
+/* Hide resize handles when maximized */
+.os-window.is-maximized .os-resize-handle {
+  display: none;
+}
+
+/* Remove top highlight when maximized */
+.os-window.is-maximized::before {
+  display: none;
+}
+
+/* --- Minimized (scale-down animation to dock) --------------------------- */
+.os-window.is-minimizing {
+  transition: transform var(--vault-transition-gentle),
+              opacity   var(--vault-transition-gentle);
+  opacity: 0;
+  /* JS will set transform to scale + translate toward the dock icon */
+  pointer-events: none;
+}
+
+/* After minimization is complete, the window is hidden */
+.os-window.is-minimized {
+  display: none;
+}
+
+/* --- Restoring from minimize -------------------------------------------- */
+.os-window.is-restoring {
+  transition: transform var(--vault-transition-gentle),
+              opacity   var(--vault-transition-gentle);
+}
+
+/* --- Snapped (half-screen, quarter-screen, etc.) ------------------------ */
+.os-window.is-snapped {
+  border-radius: var(--vault-radius-sm);
+  transition: transform var(--vault-transition-smooth),
+              width     var(--vault-transition-smooth),
+              height    var(--vault-transition-smooth),
+              border-radius var(--vault-transition-smooth);
+}
+
+/* --- Opening animation -------------------------------------------------- */
+@keyframes vault-window-open {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+.os-window.is-opening {
+  animation: vault-window-open var(--vault-duration-smooth) var(--vault-ease-out) both;
+}
+
+/* --- Closing animation -------------------------------------------------- */
+@keyframes vault-window-close {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+.os-window.is-closing {
+  animation: vault-window-close var(--vault-duration-fast) var(--vault-ease-in-out) both;
+  pointer-events: none;
+}
+
+
+/* --------------------------------------------------------------------------
+   7. SNAP PREVIEW OVERLAY
+   --------------------------------------------------------------------------
+   Ghost rectangle that appears when dragging a window near a screen edge.
+   -------------------------------------------------------------------------- */
+.os-snap-preview {
+  position: fixed;
+  z-index: var(--vault-z-snap-preview);
+  background: rgba(139, 92, 246, 0.12);
+  border: 2px solid rgba(139, 92, 246, 0.45);
+  border-radius: var(--vault-radius-control);
+  pointer-events: none;
+
+  /* Pulsing glow animation */
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+  animation: vault-snap-pulse 1.4s ease-in-out infinite;
+
+  /* Entry */
+  opacity: 0;
+  transform: scale(0.97);
+  transition: opacity   var(--vault-transition-fast),
+              transform var(--vault-transition-fast);
+}
+
+.os-snap-preview.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@keyframes vault-snap-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(139, 92, 246, 0.28);
+  }
+}
+
+
+/* --------------------------------------------------------------------------
+   8. IFRAME SAFETY DURING DRAGS
+   --------------------------------------------------------------------------
+   When any window is being dragged or resized, all iframes must have
+   pointer-events disabled so the iframe doesn't steal the pointer.
+   JS adds `.is-dragging-window` to <body> during drag operations.
+   -------------------------------------------------------------------------- */
+body.is-dragging-window iframe,
+body.is-resizing-window iframe {
+  pointer-events: none !important;
+}
+
+/* Also prevent text selection site-wide during window drag */
+body.is-dragging-window,
+body.is-resizing-window {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grabbing;
+}
+
+
+/* --------------------------------------------------------------------------
+   9. WINDOW LOADING STATE
+   --------------------------------------------------------------------------
+   Shown while app content is loading inside the window.
+   -------------------------------------------------------------------------- */
+.os-window__loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vault-surface-base);
+  z-index: 3;
+  border-radius: 0 0 var(--vault-radius-window) var(--vault-radius-window);
+}
+
+.os-window__loader-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--vault-border-subtle);
+  border-top-color: var(--vault-accent-primary);
+  border-radius: 50%;
+  animation: vault-spin 0.8s linear infinite;
+}
+
+@keyframes vault-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Fade out loader when content is ready */
+.os-window__loader.is-loaded {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--vault-transition-smooth);
+}

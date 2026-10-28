@@ -80,14 +80,18 @@
         Object.assign(tabBar.style, {
             background: 'rgba(55, 55, 55, 0.9)',
             display: 'flex',
-            alignItems: 'flex-end',
-            height: '36px',
+            alignItems: 'center',
+            height: '38px',
+            minHeight: '38px',
+            boxSizing: 'border-box',
             padding: '0 8px',
+            gap: '6px',
             overflowX: 'auto',
             overflowY: 'hidden',
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             zIndex: '10',
-            position: 'relative'
+            position: 'relative',
+            flexShrink: '0'
         });
 
         const newTabBtn = document.createElement('button');
@@ -113,17 +117,36 @@
             { background: 'rgba(255, 255, 255, 0.1)', color: '#fff' }
         );
         newTabBtn.addEventListener('click', handleNewTabClick);
-        tabBar.appendChild(newTabBtn);
+
+        // macOS-inspired window controls live in the tab strip, not in a separate title bar.
+        const windowControls = document.createElement('div');
+        windowControls.id = 'browser-window-controls';
+        Object.assign(windowControls.style, {
+            display: 'flex', alignItems: 'center', gap: '7px', padding: '0 6px 0 2px', flexShrink: '0'
+        });
+        const minimizeBtn = createControlButton('−', 'Minimize');
+        const fsIframeBtn = createControlButton('⛶', 'Fullscreen (content only)');
+        const maximizeBtn = createControlButton('□', 'Fullscreen — Alt+`');
+        const closeBrowserBtn = createControlButton('×', 'Close');
+        [closeBrowserBtn, minimizeBtn, maximizeBtn].forEach((btn, index) => {
+            Object.assign(btn.style, { width: '12px', height: '12px', minWidth: '12px', minHeight: '12px', fontSize: '0', borderRadius: '50%', padding: '0', boxShadow: 'none', background: ['#ff5f57', '#febc2e', '#28c840'][index] });
+            btn.style.color = 'transparent';
+        });
+        // The content-only fullscreen action stays available in the navigation toolbar.
+        tabBar.append(windowControls, newTabBtn);
 
         const toolbar = document.createElement('div');
         toolbar.id = 'toolbar';
         Object.assign(toolbar.style, {
             background: 'rgba(42, 42, 42, 0.95)',
-            padding: '8px 16px',
+            padding: '4px 10px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            height: '44px',
+            gap: '6px',
+            height: '38px',
+            minHeight: '38px',
+            boxSizing: 'border-box',
+            flexShrink: '0',
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             zIndex: '10',
             position: 'relative'
@@ -148,20 +171,6 @@
 
         browserWindow.append(tabBar, toolbar, iframeContainer);
 
-        const windowControls = document.createElement('div');
-        Object.assign(windowControls.style, {
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            display: 'flex',
-            gap: '8px',
-            zIndex: '1000'
-        });
-
-        const minimizeBtn = createControlButton('−', 'Minimize');
-        const fsIframeBtn = createControlButton('⛶', 'Fullscreen (content only)');
-        const maximizeBtn = createControlButton('□', 'Fullscreen — Alt+`');
-        const closeBrowserBtn = createControlButton('×', 'Close');
         const sponsoredBtn = document.createElement('a');
         sponsoredBtn.href = 'https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991';
         sponsoredBtn.target = '_blank';
@@ -207,8 +216,13 @@
             { background: 'rgba(239, 68, 68, 0.8)', color: '#fff' }
         );
 
-        windowControls.append(minimizeBtn, fsIframeBtn, maximizeBtn, sponsoredBtn, closeBrowserBtn);
-        browserWindow.appendChild(windowControls);
+        // Keep secondary browser actions on the compact navigation toolbar.
+        const toolbarActions = document.createElement('div');
+        Object.assign(toolbarActions.style, { display: 'flex', alignItems: 'center', gap: '6px', flexShrink: '0' });
+        Object.assign(fsIframeBtn.style, { width: '28px', height: '28px', minWidth: '28px', minHeight: '28px', borderRadius: '8px', fontSize: '14px', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)' });
+        fsIframeBtn.innerHTML = '⛶';
+        toolbarActions.append(fsIframeBtn, sponsoredBtn);
+        toolbar.appendChild(toolbarActions);
 
         overlay.appendChild(browserWindow);
         overlay.addEventListener('click', function (e) {
@@ -630,7 +644,7 @@
             background: 'rgba(55, 55, 55, 0.8)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '24px',
-            padding: '8px 16px',
+            padding: '5px 12px',
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
