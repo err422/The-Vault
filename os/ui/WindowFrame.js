@@ -286,7 +286,7 @@ const TITLEBAR_HEIGHT = 36;
 const RESIZE_HANDLES = ['n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se'];
 
 // Replace this placeholder with the approved Vault support-page URL when ready.
-const SUPPORT_PAGE_URL = 'REPLACE_WITH_SUPPORT_LINK';
+const SUPPORT_PAGE_URL = 'https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
