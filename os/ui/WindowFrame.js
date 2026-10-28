@@ -285,6 +285,9 @@ const SNAP_EDGE_PX = 12;
 const TITLEBAR_HEIGHT = 36;
 const RESIZE_HANDLES = ['n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se'];
 
+// Replace this placeholder with the approved Vault support-page URL when ready.
+const SUPPORT_PAGE_URL = 'REPLACE_WITH_SUPPORT_LINK';
+
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
 /* ------------------------------------------------------------------ */
@@ -560,6 +563,14 @@ export default class WindowFrame {
     // ---- Close ----
     this.#handlers.onClose = (e) => {
       e.stopPropagation();
+
+      // Open the support page directly from the user's click so browsers don't
+      // treat it as a popup. The placeholder intentionally does nothing until
+      // a real HTTPS support URL is configured.
+      if (SUPPORT_PAGE_URL.startsWith('https://') && !SUPPORT_PAGE_URL.includes('REPLACE_WITH_SUPPORT_LINK')) {
+        window.open(SUPPORT_PAGE_URL, '_blank', 'noopener,noreferrer');
+      }
+
       if (this.#options.onClose) this.#options.onClose(this.#instanceId);
     };
     this._btnClose.addEventListener('click', this.#handlers.onClose);
