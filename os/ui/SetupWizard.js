@@ -105,7 +105,7 @@ class SetupWizard {
           <p class="vfs-note">Choose which apps appear on your desktop. You can still open any app from the launcher.</p>
           <div class="vfs-app-grid">${desktopAppOptions}</div>
           <label class="vfs-field">Launch behavior</label>
-          <div class="vfs-options"><button type="button" class="vfs-option" data-fullscreen="false" aria-pressed="true">🪟 Normal window</button><button type="button" class="vfs-option" data-fullscreen="true" aria-pressed="false">⛶ Auto-fullscreen on click</button></div>
+          <div class="vfs-options"><button type="button" class="vfs-option" data-fullscreen="false" aria-pressed="${settingsManager.get('autoFullscreenOnClick') === false}">🪟 Normal window</button><button type="button" class="vfs-option" data-fullscreen="true" aria-pressed="${settingsManager.get('autoFullscreenOnClick') !== false}">⛶ Auto-fullscreen on click</button></div>
           <p class="vfs-note">Fullscreen is saved on this device only, since different computers may have different needs.</p>
           <div style="margin-top:24px;padding:15px;border-radius:14px;background:#ffffff08;border:1px solid #ffffff12"><strong>You're all set.</strong><div class="vfs-note">Your account preferences sync through Firebase, so they'll follow you to another computer.</div></div>
         </div>
@@ -119,7 +119,7 @@ class SetupWizard {
     let theme = cloudPrefs.theme || settingsManager.get('theme') || 'dark';
     let wallpaper = cloudPrefs.wallpaper || settingsManager.get('wallpaper') || 'vault-default';
     let avatar = cloudPrefs.avatar || '🧑‍💻';
-    let fullscreen = settingsManager.get('autoFullscreenOnClick') === true;
+    let fullscreen = settingsManager.get('autoFullscreenOnClick') !== false;
     const steps = [...overlay.querySelectorAll('.vfs-step')];
     const progress = [...overlay.querySelectorAll('.vfs-progress span')];
     const error = overlay.querySelector('.vfs-error');
