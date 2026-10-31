@@ -170,6 +170,13 @@ const CHANGELOG_ENTRIES = [
 
   document.body.appendChild(overlay);
 
+  const sponsoredLink = overlay.querySelector("#vault-changelog-sponsored");
+  const syncSponsoredVisibility = () => {
+    if (sponsoredLink) sponsoredLink.style.display = window.VaultAds?.canShowAds?.() === true ? "block" : "none";
+  };
+  syncSponsoredVisibility();
+  window.addEventListener("vaultMembershipChanged", syncSponsoredVisibility);
+
   // ---- Close logic ----
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, CHANGELOG_VERSION);
