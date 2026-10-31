@@ -567,7 +567,7 @@ export default class WindowFrame {
       // Open the support page directly from the user's click so browsers don't
       // treat it as a popup. The placeholder intentionally does nothing until
       // a real HTTPS support URL is configured.
-      if (SUPPORT_PAGE_URL.startsWith('https://') && !SUPPORT_PAGE_URL.includes('REPLACE_WITH_SUPPORT_LINK')) {
+      if (window.VaultAds?.canShowAds?.() === true && SUPPORT_PAGE_URL.startsWith('https://') && !SUPPORT_PAGE_URL.includes('REPLACE_WITH_SUPPORT_LINK')) {
         window.open(SUPPORT_PAGE_URL, '_blank', 'noopener,noreferrer');
       }
 
