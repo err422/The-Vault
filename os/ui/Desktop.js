@@ -309,6 +309,11 @@ function _createVaultPlusPromo() {
   const promo = document.createElement('button');
   promo.type = 'button';
   promo.className = 'vault-plus-promo';
+  const syncPromoVisibility = () => {
+    promo.style.display = window.VaultAds?.canShowAds?.() === true ? 'flex' : 'none';
+  };
+  syncPromoVisibility();
+  window.addEventListener('vaultMembershipChanged', syncPromoVisibility);
   promo.setAttribute('aria-label', 'Learn about Vault+ and browse ad-free');
   promo.innerHTML = `
     <span class="vault-plus-promo__top">
