@@ -37,23 +37,18 @@
     });
   }
 
-  function applyMembership(membership, signedIn, fromLiveUpdate = false) {
-    const nextAdFree = !!signedIn &&
+  function applyMembership(membership, signedIn) {
+    adFree = !!signedIn &&
       membership?.plan === 'vault_plus' &&
       membership?.active === true;
 
-    // A third-party ad script cannot be safely "un-executed". Reload when
-    // membership changes so the next page load starts with the correct ad state.
-    if (fromLiveUpdate && hasMembershipSnapshot && ready && nextAdFree !== adFree) {
-      window.location.reload();
-      return;
-    }
-
     ready = true;
-    adFree = nextAdFree;
     hasMembershipSnapshot = true;
     window.VaultAds.ready = true;
     syncUI();
+
+    // If membership is inactive, load ads normally. If it is active, keep
+    // the ad loader stopped and hide all Vault-controlled ad placements.
     if (!adFree) loadAds();
   }
 
@@ -74,7 +69,7 @@
     // listener then catches admin activation/deactivation while the user is online.
     applyMembership(initialMembership, true);
     membershipRef.on('value', (snapshot) => {
-      applyMembership(snapshot.val(), true, hasMembershipSnapshot);
+      applyMembership(snapshot.val(), true);
     }, (error) => {
       console.warn('[VaultAds] Could not watch membership:', error);
     });
