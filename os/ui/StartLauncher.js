@@ -399,6 +399,11 @@ export function init() {
 
   // Store toggle event (from TopMenuBar logo click)
   _unsubs.push(Store.on('launcher:toggle', toggle));
+
+  // Keep admin-only apps in sync when the signed-in account changes.
+  _unsubs.push(Store.on('user:changed', () => {
+    if (_open) _renderApps(_searchInput?.value || '');
+  }));
 }
 
 export function destroy() {
