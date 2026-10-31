@@ -4,6 +4,7 @@
         currentUser: null,
         currentUsername: null,
         currentAdmin: false,
+        currentMembership: null,
         currentGuest: false,
         profileReady: false,
         
@@ -15,12 +16,14 @@
                 
                 this.profileReady = false;
                 this.currentAdmin = false;
+                this.currentMembership = null;
 
                 if (user) {
                     database.ref('users/' + user.uid).once('value')
                         .then(async (snapshot) => {
                             const userData = snapshot.val() || {};
                             this.currentUsername = userData.username || null;
+                            this.currentMembership = userData.membership && typeof userData.membership === 'object' ? userData.membership : null;
 
                             // Missing admin flags are treated as non-admin. Backfill old
                             // accounts on their next sign-in without overwriting true flags.
@@ -38,7 +41,7 @@
                             this.profileReady = true;
                             this.updateUI();
                             window.dispatchEvent(new CustomEvent('authProfileReady', {
-                                detail: { user, username: this.currentUsername, admin: this.currentAdmin }
+                                detail: { user, username: this.currentUsername, admin: this.currentAdmin, membership: this.currentMembership }
                             }));
                             setTimeout(() => this.loadUserData(), 500);
                         })
@@ -46,19 +49,21 @@
                             console.error('Could not load account profile:', error);
                             this.currentUsername = null;
                             this.currentAdmin = false;
+                            this.currentMembership = null;
                             this.profileReady = true;
                             this.updateUI();
                             window.dispatchEvent(new CustomEvent('authProfileReady', {
-                                detail: { user, username: null, admin: false, error: true }
+                                detail: { user, username: null, admin: false, membership: null, error: true }
                             }));
                         });
                 } else {
                     this.currentUsername = null;
                     this.currentAdmin = false;
+                    this.currentMembership = null;
                     this.profileReady = true;
                     this.updateUI();
                     window.dispatchEvent(new CustomEvent('authProfileReady', {
-                        detail: { user: null, username: this.currentGuest ? 'Guest' : null, admin: false, guest: this.currentGuest }
+                        detail: { user: null, username: this.currentGuest ? 'Guest' : null, admin: false, membership: null, guest: this.currentGuest }
                     }));
                 }
             });
