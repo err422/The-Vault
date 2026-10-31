@@ -173,6 +173,11 @@
 
         const sponsoredBtn = document.createElement('a');
         sponsoredBtn.href = 'https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991';
+        const syncSponsoredVisibility = () => {
+            sponsoredBtn.style.display = window.VaultAds?.canShowAds?.() === true ? 'inline-flex' : 'none';
+        };
+        syncSponsoredVisibility();
+        window.addEventListener('vaultMembershipChanged', syncSponsoredVisibility);
         sponsoredBtn.target = '_blank';
         sponsoredBtn.rel = 'sponsored noopener noreferrer';
         sponsoredBtn.textContent = 'Sponsored ↗';
@@ -201,13 +206,14 @@
 
         maximizeBtn.addEventListener('click', toggleFullscreen);
         closeBrowserBtn.addEventListener('click', function () {
-            // Open the sponsored link directly from the user's click so popup blockers
-            // are less likely to prevent it, then close the in-site browser.
-            window.open(
-                'https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991',
-                '_blank',
-                'noopener,noreferrer'
-            );
+            // Sponsored redirects are disabled for Vault+ members.
+            if (window.VaultAds?.canShowAds?.() === true) {
+                window.open(
+                    'https://asiafilm.org/4/ef24d6c489753d45db16a7d6b10ab991',
+                    '_blank',
+                    'noopener,noreferrer'
+                );
+            }
             closeBrowser();
         });
         addHoverEffect(
