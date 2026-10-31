@@ -209,6 +209,86 @@ function _injectStyles() {
       text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
       pointer-events: none;
     }
+    .vault-plus-promo {
+      position: absolute;
+      right: 22px;
+      bottom: 84px;
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: min(310px, calc(100% - 32px));
+      box-sizing: border-box;
+      padding: 15px 16px;
+      border: 1px solid rgba(168, 85, 247, 0.48);
+      border-radius: 16px;
+      background: linear-gradient(140deg, rgba(35, 21, 58, 0.96), rgba(15, 10, 25, 0.96));
+      color: #f5f3ff;
+      text-align: left;
+      font: inherit;
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.38), 0 0 24px rgba(139, 92, 246, 0.12);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      cursor: pointer;
+      transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+    .vault-plus-promo:hover {
+      transform: translateY(-3px);
+      border-color: rgba(196, 181, 253, 0.78);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.46), 0 0 28px rgba(139, 92, 246, 0.2);
+    }
+    .vault-plus-promo:focus-visible {
+      outline: 2px solid #c4b5fd;
+      outline-offset: 3px;
+    }
+    .vault-plus-promo__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #d8b4fe;
+    }
+    .vault-plus-promo__title {
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .vault-plus-promo__description {
+      color: #c4b5d8;
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+    .vault-plus-promo__cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 2px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      background: linear-gradient(110deg, #7c3aed, #9333ea);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 750;
+    }
+    @media (max-width: 560px) {
+      .vault-plus-promo {
+        right: 12px;
+        bottom: 78px;
+        width: min(270px, calc(100% - 24px));
+        padding: 12px 13px;
+      }
+      .vault-plus-promo__description { font-size: 10.5px; }
+    }
+    @media (max-height: 480px) {
+      .vault-plus-promo { bottom: 76px; gap: 6px; padding: 10px 12px; }
+      .vault-plus-promo__description { display: none; }
+    }
     .vault-desktop-icon__label {
       font-size: 11px;
       color: #e8e0f0;
@@ -222,6 +302,35 @@ function _injectStyles() {
     }
   `;
   document.head.appendChild(s);
+}
+
+// ── Vault+ desktop promotion ----------------------------------------
+function _createVaultPlusPromo() {
+  const promo = document.createElement('button');
+  promo.type = 'button';
+  promo.className = 'vault-plus-promo';
+  promo.setAttribute('aria-label', 'Learn about Vault+ and browse ad-free');
+  promo.innerHTML = `
+    <span class="vault-plus-promo__top">
+      <span>♛ &nbsp; THE WEB VAULT</span>
+      <span>VAULT+</span>
+    </span>
+    <span class="vault-plus-promo__title">Tired of ads?</span>
+    <span class="vault-plus-promo__description">Support The Web Vault and enjoy an ad-free experience with Vault+.</span>
+    <span class="vault-plus-promo__cta">
+      <span>Explore Vault+ membership</span>
+      <span aria-hidden="true">↗</span>
+    </span>
+  `;
+  promo.addEventListener('click', (event) => {
+    event.stopPropagation();
+    AppRegistry.launch('browser', {
+      url: 'https://buymeacoffee.com/thevault_/membership',
+      title: 'Vault+ Membership'
+    });
+  });
+  promo.addEventListener('contextmenu', (event) => event.stopPropagation());
+  return promo;
 }
 
 // ── Layout persistence and grid helpers ────────────────────────────
@@ -643,6 +752,7 @@ export function init(mountTarget) {
   _iconGrid = document.createElement('div');
   _iconGrid.className = 'vault-desktop-icons';
   _root.appendChild(_iconGrid);
+  _root.appendChild(_createVaultPlusPromo());
   mount.appendChild(_root);
 
   // Load only after mounting so grid dimensions are available.
