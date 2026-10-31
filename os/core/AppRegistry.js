@@ -121,7 +121,10 @@ class AppRegistry {
    * @returns {AppManifest[]}
    */
   getAllApps() {
-    return Array.from(this._manifests.values());
+    const session = store.getState('session') || {};
+    return Array.from(this._manifests.values()).filter((manifest) =>
+      !manifest.adminOnly || (session.isLoggedIn === true && session.isAdmin === true)
+    );
   }
 
   /**
@@ -154,6 +157,15 @@ class AppRegistry {
     if (!manifest) {
       console.error(`[AppRegistry] No manifest registered for "${appId}".`);
       return null;
+    }
+
+    // Admin-only apps are hidden from app listings and blocked at launch time.
+    if (manifest.adminOnly) {
+      const session = store.getState('session') || {};
+      if (session.isLoggedIn !== true || session.isAdmin !== true || window.AuthCore?.currentAdmin !== true) {
+        console.warn(`[AppRegistry] Blocked unauthorized launch of admin-only app "${appId}".`);
+        return null;
+      }
     }
 
     // Singleton check
