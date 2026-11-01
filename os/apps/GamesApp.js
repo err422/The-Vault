@@ -83,6 +83,10 @@ export const AppManifest = {
           <input id="zg-search-input" type="search" placeholder="Search games..." aria-label="Search games" style="width:min(240px,45%);height:30px;padding:0 12px;border-radius:15px;border:1px solid rgba(168,85,247,.3);background:rgba(15,11,26,.9);color:#fff;font-size:12px">
         </div>
 
+        <div role="note" style="padding:7px 18px;background:rgba(168,85,247,.07);border-bottom:1px solid rgba(168,85,247,.14);color:#b9a7d8;font-size:11px;line-height:1.45">
+          <strong style="color:#d8c5f5">Heads up:</strong> Games are provided by third parties. I don't own or control them, so if a game doesn't load, there's usually nothing I can do to fix it.
+        </div>
+
         <div id="zg-scroll-area" style="flex:1;min-height:0;overflow-y:auto">
           <section id="zg-search-results" aria-live="polite" style="display:none;padding:16px 18px 4px;border-bottom:1px solid rgba(168,85,247,.18)">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">
