@@ -31,10 +31,9 @@
       { async: '', crossorigin: 'anonymous' }
     );
 
-    // Monetization / pop-under provider. Never loaded for Vault+ accounts.
-    injectScript('https://bauval.org/14/8c0b873d66a359e0f25e1402357679d4', {
-      'data-cfasync': 'false'
-    });
+    // Do not auto-load the third-party pop-under/redirect script.
+    // It can cause unexpected navigation or reload behavior, especially on mobile.
+    // Keep standard AdSense ads for non-members only.
   }
 
   function applyMembership(membership, signedIn) {
