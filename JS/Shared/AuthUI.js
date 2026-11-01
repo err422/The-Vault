@@ -200,7 +200,7 @@
                 color: #667eea;
             }
 
-            /* Desktop-style lock screen */
+            /* Desktop-style lock screen window */
             #auth-required-overlay {
                 background:
                     radial-gradient(ellipse at 18% 12%, rgba(139,92,246,.20), transparent 42%),
@@ -209,14 +209,48 @@
                 backdrop-filter: blur(22px) saturate(125%);
             }
             #auth-required-modal {
-                max-width: 460px;
-                padding: 34px;
-                border-radius: 24px;
-                background: linear-gradient(155deg, rgba(29,23,43,.96), rgba(10,9,17,.98));
-                border: 1px solid rgba(196,181,253,.24);
-                box-shadow: 0 30px 100px rgba(0,0,0,.65), inset 0 1px rgba(255,255,255,.06);
+                position: relative;
+                max-width: 480px;
+                padding: 0 30px 30px;
+                overflow: hidden;
+                border-radius: 16px;
+                background: linear-gradient(155deg, rgba(29,23,43,.98), rgba(10,9,17,.99));
+                border: 1px solid rgba(196,181,253,.28);
+                box-shadow: 0 32px 110px rgba(0,0,0,.72), inset 0 1px rgba(255,255,255,.07);
             }
+            .auth-window-bar {
+                height: 42px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin: 0 -30px 28px;
+                padding: 0 15px;
+                background: rgba(7,5,13,.58);
+                border-bottom: 1px solid rgba(196,181,253,.13);
+                color: #aaa2bd;
+                font-size: 11px;
+                letter-spacing: .04em;
+            }
+            .auth-window-controls { display:flex; align-items:center; gap:7px; }
+            .auth-window-dot { width:9px; height:9px; border-radius:50%; display:block; }
+            .auth-window-dot.close { background:#fb7185; }
+            .auth-window-dot.minimize { background:#fbbf24; }
+            .auth-window-dot.maximize { background:#4ade80; }
+            .auth-window-brand { display:flex; align-items:center; gap:7px; font-weight:600; }
+            .auth-window-brand-mark {
+                display:grid; place-items:center; width:19px; height:19px;
+                border-radius:6px; background:rgba(139,92,246,.2); color:#c4b5fd;
+                font-size:12px;
+            }
+            .auth-window-status { color:#8f83a8; font-size:10px; }
             .auth-modal-header { margin-bottom: 24px; }
+            .auth-modal-header::before {
+                width: 64px;
+                height: 64px;
+                border-radius: 20px;
+                background: linear-gradient(145deg, rgba(139,92,246,.24), rgba(88,28,135,.18));
+                box-shadow: 0 8px 28px rgba(124,58,237,.12);
+            }
             .auth-modal-header::before {
                 content: "🔒";
                 display: grid;
@@ -250,7 +284,9 @@
             }
             @media(max-width:520px) {
                 #auth-required-overlay { padding: 12px; }
-                #auth-required-modal { padding: 26px 20px; border-radius: 20px; }
+                #auth-required-modal { padding: 0 20px 24px; border-radius: 14px; }
+                .auth-window-bar { margin-left:-20px; margin-right:-20px; padding:0 12px; }
+                .auth-window-status { font-size:9px; }
             }
         `;
         document.head.appendChild(style);
@@ -291,6 +327,15 @@
         overlay.id = 'auth-required-overlay';
         overlay.innerHTML = `
             <div id="auth-required-modal">
+                <div class="auth-window-bar" aria-hidden="true">
+                    <div class="auth-window-controls">
+                        <span class="auth-window-dot close"></span>
+                        <span class="auth-window-dot minimize"></span>
+                        <span class="auth-window-dot maximize"></span>
+                    </div>
+                    <div class="auth-window-brand"><span class="auth-window-brand-mark">V</span> THE WEB VAULT</div>
+                    <span class="auth-window-status">SECURE SESSION</span>
+                </div>
                 <div class="auth-modal-header">
                     <div class="auth-modal-title" id="auth-modal-title">Sign in to your desktop</div>
                     <p class="auth-modal-subtitle" id="auth-modal-subtitle">Unlock your WebOS session to pick up where you left off.</p>
