@@ -282,6 +282,53 @@
                 background: linear-gradient(135deg, #7c3aed, #8b5cf6);
                 box-shadow: 0 8px 24px rgba(124,58,237,.2);
             }
+            /* Native vaultOS session panel */
+            #auth-required-modal { max-width: 500px; padding: 0 34px 30px; border-radius: 17px; }
+            .auth-window-bar { height: 44px; margin-bottom: 26px; }
+            .auth-session-heading { display:flex; align-items:center; gap:17px; margin: 0 0 24px; text-align:left; }
+            .auth-session-avatar { position:relative; flex:0 0 66px; width:66px; height:66px; display:grid; place-items:center; border-radius:20px; background:linear-gradient(145deg,rgba(139,92,246,.34),rgba(76,29,149,.2)); border:1px solid rgba(196,181,253,.28); box-shadow:inset 0 1px rgba(255,255,255,.12),0 10px 28px rgba(0,0,0,.22); }
+            .auth-session-avatar span { font-size:30px; line-height:1; font-weight:800; letter-spacing:-.08em; color:#ede9fe; text-shadow:0 2px 16px rgba(167,139,250,.4); }
+            .auth-session-avatar i { position:absolute; right:-3px; bottom:-3px; width:15px; height:15px; border-radius:50%; background:#4ade80; border:3px solid #171222; box-shadow:0 0 12px rgba(74,222,128,.4); }
+            .auth-session-copy { min-width:0; }
+            .auth-session-eyebrow { color:#a78bfa; font-size:9px; font-weight:800; letter-spacing:.16em; margin-bottom:7px; }
+            .auth-modal-header { margin:0; text-align:left; }
+            .auth-modal-header::before { display:none; content:none; }
+            .auth-modal-title { margin:0 0 4px; font-size:25px; line-height:1.15; letter-spacing:-.045em; }
+            .auth-modal-subtitle { margin:0; font-size:12px; line-height:1.45; }
+            .auth-modal-tabs { display:flex; gap:5px; padding:5px; margin-bottom:21px; border:1px solid rgba(196,181,253,.12); background:rgba(4,3,10,.38); border-radius:11px; }
+            .auth-modal-tab { padding:10px 12px; color:#8f86a2; font-size:11px; letter-spacing:.01em; }
+            .auth-modal-tab.active { color:#f5f3ff; background:linear-gradient(135deg,rgba(124,58,237,.38),rgba(139,92,246,.2)); border-color:rgba(167,139,250,.35); box-shadow:inset 0 1px rgba(255,255,255,.06); }
+            .auth-session-context { display:flex; align-items:center; gap:8px; margin:0 0 16px; color:#8f83a8; font-size:9px; font-weight:700; letter-spacing:.13em; }
+            .auth-context-dot { width:6px; height:6px; border-radius:50%; background:#a78bfa; box-shadow:0 0 9px rgba(167,139,250,.7); }
+            .auth-context-line { height:1px; flex:1; background:linear-gradient(90deg,rgba(167,139,250,.25),transparent); }
+            .auth-modal-group { margin-bottom:15px; }
+            .auth-modal-label { margin-bottom:7px; color:#a99fba; font-size:9px; font-weight:800; letter-spacing:.12em; }
+            .auth-modal-input { box-sizing:border-box; min-height:47px; padding:13px 14px; border-radius:9px; background:rgba(3,2,8,.52); border-color:rgba(196,181,253,.15); font-size:13px; }
+            .auth-modal-input::placeholder { color:#665d75; }
+            .auth-modal-input:focus { border-color:rgba(167,139,250,.75); background:rgba(8,5,17,.8); box-shadow:0 0 0 3px rgba(139,92,246,.12); }
+            .auth-modal-btn { display:flex; align-items:center; justify-content:space-between; min-height:47px; padding:0 16px; border:1px solid rgba(196,181,253,.25); border-radius:9px; background:linear-gradient(110deg,#6d28d9,#8b5cf6); color:#fff; font-size:12px; font-weight:750; letter-spacing:.02em; box-shadow:0 8px 25px rgba(109,40,217,.22),inset 0 1px rgba(255,255,255,.14); }
+            .auth-modal-btn span:last-child { font-size:17px; opacity:.8; }
+            .auth-modal-btn:hover:not(:disabled) { filter:brightness(1.1); }
+            .auth-guest-divider { display:flex; align-items:center; gap:12px; margin:17px 0 12px; color:#716781; font-size:9px; font-weight:700; letter-spacing:.14em; }
+            .auth-guest-divider::before,.auth-guest-divider::after { content:""; height:1px; flex:1; background:rgba(196,181,253,.12); }
+            .auth-guest-btn { display:flex; align-items:center; justify-content:center; gap:9px; margin:0; min-height:42px; padding:10px 14px; border:1px solid rgba(196,181,253,.16); border-radius:9px; background:rgba(255,255,255,.025); color:#c9c1d8; font-size:11px; font-weight:650; }
+            .auth-guest-btn:hover { background:rgba(139,92,246,.1); border-color:rgba(167,139,250,.32); }
+            .auth-guest-icon { font-size:18px; color:#a78bfa; }
+            .auth-guest-note { margin:8px 0 0; color:#756c84; font-size:9px; line-height:1.4; }
+            .auth-modal-tos { margin:8px 0 12px; font-size:11px; line-height:1.5; }
+            .auth-modal-tos a { color:#c4b5fd; }
+            .auth-modal-error { min-height:18px; margin-bottom:8px; font-size:11px; }
+            #auth-modal-signup .auth-modal-group { margin-bottom:12px; }
+            .auth-guest-btn-signup { width:100%; }
+            @media(max-width:520px) {
+                #auth-required-modal { padding:0 20px 24px; }
+                .auth-session-heading { gap:13px; }
+                .auth-session-avatar { flex-basis:56px; width:56px; height:56px; border-radius:17px; }
+                .auth-session-avatar span { font-size:26px; }
+                .auth-modal-title { font-size:22px; }
+                .auth-window-bar { margin-left:-20px; margin-right:-20px; padding:0 12px; }
+                .auth-window-status { font-size:9px; }
+            }
             @media(max-width:520px) {
                 #auth-required-overlay { padding: 12px; }
                 #auth-required-modal { padding: 0 20px 24px; border-radius: 14px; }
@@ -336,39 +383,45 @@
                     <div class="auth-window-brand"><span class="auth-window-brand-mark">V</span> THE WEB VAULT</div>
                     <span class="auth-window-status">SECURE SESSION</span>
                 </div>
-                <div class="auth-modal-header">
-                    <div class="auth-modal-title" id="auth-modal-title">Sign in to your desktop</div>
-                    <p class="auth-modal-subtitle" id="auth-modal-subtitle">Unlock your WebOS session to pick up where you left off.</p>
+                <div class="auth-session-heading">
+                    <div class="auth-session-avatar" aria-hidden="true"><span>V</span><i></i></div>
+                    <div class="auth-session-copy">
+                        <div class="auth-session-eyebrow">VAULTOS · USER SESSION</div>
+                        <div class="auth-modal-title" id="auth-modal-title">Welcome back</div>
+                        <p class="auth-modal-subtitle" id="auth-modal-subtitle">Sign in to restore your desktop and account.</p>
+                    </div>
                 </div>
-                <div class="auth-modal-tabs">
-                    <button class="auth-modal-tab" id="auth-tab-signin" type="button">Sign In</button>
-                    <button class="auth-modal-tab active" id="auth-tab-signup" type="button">Sign Up</button>
+                <div class="auth-modal-tabs" role="tablist" aria-label="Account access">
+                    <button class="auth-modal-tab active" id="auth-tab-signin" type="button" role="tab" aria-selected="true">Unlock session</button>
+                    <button class="auth-modal-tab" id="auth-tab-signup" type="button" role="tab" aria-selected="false">New account</button>
                 </div>
-                <button class="auth-guest-btn" id="auth-continue-guest" type="button">Continue as Guest →</button>
-                <p class="auth-guest-note">Guest sessions stay on this device. Some account features may be unavailable.</p>
                 <div id="auth-modal-signin" style="display: none;">
+                    <div class="auth-session-context"><span class="auth-context-dot"></span> LOCAL DESKTOP ACCESS <span class="auth-context-line"></span></div>
                     <div class="auth-modal-group">
-                        <label class="auth-modal-label">Username or Email</label>
-                        <input type="text" class="auth-modal-input" id="auth-signin-user" placeholder="Enter username or email" autocomplete="username">
+                        <label class="auth-modal-label" for="auth-signin-user">ACCOUNT IDENTIFIER</label>
+                        <input type="text" class="auth-modal-input" id="auth-signin-user" placeholder="Username or email" autocomplete="username">
                     </div>
                     <div class="auth-modal-group">
-                        <label class="auth-modal-label">Password</label>
-                        <input type="password" class="auth-modal-input" id="auth-signin-pass" placeholder="Enter password" autocomplete="current-password">
+                        <label class="auth-modal-label" for="auth-signin-pass">PASSWORD</label>
+                        <input type="password" class="auth-modal-input" id="auth-signin-pass" placeholder="Enter your password" autocomplete="current-password">
                     </div>
-                    <div class="auth-modal-error" id="auth-signin-error"></div>
-                    <button class="auth-modal-btn" id="auth-signin-btn" type="button">Sign In</button>
+                    <div class="auth-modal-error" id="auth-signin-error" role="alert"></div>
+                    <button class="auth-modal-btn" id="auth-signin-btn" type="button"><span>Unlock Desktop</span><span aria-hidden="true">↗</span></button>
+                    <div class="auth-guest-divider"><span>OR</span></div>
+                    <button class="auth-guest-btn" id="auth-continue-guest" type="button"><span class="auth-guest-icon">◌</span> Start a guest session</button>
+                    <p class="auth-guest-note">Guest sessions are saved on this device. Account features won't be available.</p>
                 </div>
                 <div id="auth-modal-signup">
                     <div class="auth-modal-group">
-                        <label class="auth-modal-label">Username</label>
-                        <input type="text" class="auth-modal-input" id="auth-signup-user" placeholder="Choose a username" autocomplete="username">
+                        <label class="auth-modal-label" for="auth-signup-user">CHOOSE A USERNAME</label>
+                        <input type="text" class="auth-modal-input" id="auth-signup-user" placeholder="Your desktop username" autocomplete="username">
                     </div>
                     <div class="auth-modal-group">
-                        <label class="auth-modal-label">Email</label>
-                        <input type="email" class="auth-modal-input" id="auth-signup-email" placeholder="Enter your email" autocomplete="email">
+                        <label class="auth-modal-label" for="auth-signup-email">EMAIL ADDRESS</label>
+                        <input type="email" class="auth-modal-input" id="auth-signup-email" placeholder="name@example.com" autocomplete="email">
                     </div>
                     <div class="auth-modal-group">
-                        <label class="auth-modal-label">Password</label>
+                        <label class="auth-modal-label" for="auth-signup-pass">CREATE PASSWORD</label>
                         <input type="password" class="auth-modal-input" id="auth-signup-pass" placeholder="At least 6 characters" autocomplete="new-password">
                     </div>
                     <label class="auth-modal-tos">
@@ -376,7 +429,10 @@
                         <span>I agree to the <a href="https://docs.google.com/document/d/1iEg2ysVHRlZni3fwQHKJUDzd3qKMmcW8FbB6CEl5L_Q/edit?tab=t.0" target="_blank">Terms of Service</a></span>
                     </label>
                     <div class="auth-modal-error" id="auth-signup-error"></div>
-                    <button class="auth-modal-btn" id="auth-signup-btn" type="button">Create Account</button>
+                    <button class="auth-modal-btn" id="auth-signup-btn" type="button"><span>Create Vault Account</span><span aria-hidden="true">↗</span></button>
+                    <div class="auth-guest-divider"><span>OR</span></div>
+                    <button class="auth-guest-btn auth-guest-btn-signup" id="auth-continue-guest-signup" type="button"><span class="auth-guest-icon">◌</span> Explore as a guest</button>
+                    <p class="auth-guest-note">You can create an account later from your desktop.</p>
                 </div>
             </div>
         `;
@@ -393,17 +449,21 @@
         const title = document.getElementById('auth-modal-title');
         const subtitle = document.getElementById('auth-modal-subtitle');
         if (tab === 'signin') {
-            if (title) title.textContent = 'Sign in to your desktop';
-            if (subtitle) subtitle.textContent = 'Unlock your WebOS session to pick up where you left off.';
+            if (title) title.textContent = 'Welcome back';
+            if (subtitle) subtitle.textContent = 'Sign in to restore your desktop and account.';
             signInTab.classList.add('active');
             signUpTab.classList.remove('active');
+            signInTab.setAttribute('aria-selected', 'true');
+            signUpTab.setAttribute('aria-selected', 'false');
             signInForm.style.display = 'block';
             signUpForm.style.display = 'none';
         } else {
-            if (title) title.textContent = 'Create your Vault account';
-            if (subtitle) subtitle.textContent = 'Set up your account, then make the desktop your own.';
+            if (title) title.textContent = 'Set up your desktop';
+            if (subtitle) subtitle.textContent = 'Create a Vault account to save your desktop across sessions.';
             signUpTab.classList.add('active');
             signInTab.classList.remove('active');
+            signUpTab.setAttribute('aria-selected', 'true');
+            signInTab.setAttribute('aria-selected', 'false');
             signUpForm.style.display = 'block';
             signInForm.style.display = 'none';
         }
@@ -416,14 +476,14 @@
         const btn = document.getElementById('auth-signin-btn');
 
         errorDiv.textContent = '';
-        btn.textContent = 'Signing in...';
+        btn.querySelector('span').textContent = 'Unlocking session...';
         btn.disabled = true;
 
         try {
             await window.AuthCore.signIn(username, password);
         } catch (error) {
             errorDiv.textContent = error.message;
-            btn.textContent = 'Sign In';
+            btn.querySelector('span').textContent = 'Unlock Desktop';
             btn.disabled = false;
         }
     }
@@ -442,14 +502,14 @@
         }
 
         errorDiv.textContent = '';
-        btn.textContent = 'Creating account...';
+        btn.querySelector('span').textContent = 'Creating account...';
         btn.disabled = true;
 
         try {
             await window.AuthCore.signUp(username, email, password);
         } catch (error) {
             errorDiv.textContent = error.message;
-            btn.textContent = 'Create Account';
+            btn.querySelector('span').textContent = 'Create Vault Account';
             btn.disabled = false;
         }
     }
@@ -457,7 +517,9 @@
     function attachModalListeners() {
         document.getElementById('auth-tab-signin').addEventListener('click', () => switchTab('signin'));
         document.getElementById('auth-tab-signup').addEventListener('click', () => switchTab('signup'));
-        document.getElementById('auth-continue-guest').addEventListener('click', () => window.AuthCore.continueAsGuest());
+        const guestHandler = () => window.AuthCore.continueAsGuest();
+        document.getElementById('auth-continue-guest')?.addEventListener('click', guestHandler);
+        document.getElementById('auth-continue-guest-signup')?.addEventListener('click', guestHandler);
         document.getElementById('auth-signin-btn').addEventListener('click', handleSignIn);
         document.getElementById('auth-signup-btn').addEventListener('click', handleSignUp);
         document.getElementById('auth-signin-pass').addEventListener('keypress', (e) => {
@@ -472,11 +534,11 @@
         const signInBtn = document.getElementById('auth-signin-btn');
         const signUpBtn = document.getElementById('auth-signup-btn');
         if (signInBtn) {
-            signInBtn.textContent = 'Sign In';
+            signInBtn.querySelector('span').textContent = 'Unlock Desktop';
             signInBtn.disabled = false;
         }
         if (signUpBtn) {
-            signUpBtn.textContent = 'Create Account';
+            signUpBtn.querySelector('span').textContent = 'Create Vault Account';
             signUpBtn.disabled = false;
         }
     }
