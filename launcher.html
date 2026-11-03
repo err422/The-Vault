@@ -340,16 +340,18 @@ summary:focus-visible {
 .hero-visual::before {
   content: "";
   position: absolute;
+  z-index: 0;
   width: 80%;
   aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(circle, #7c3aed, transparent 70%);
-  opacity: .2;
+  opacity: .26;
   pointer-events: none;
 }
 
 .door-wrapper {
   position: relative;
+  z-index: 1;
   width: min(100%, 510px);
   transform-style: preserve-3d;
   transition: transform .4s cubic-bezier(.2,.8,.2,1);
@@ -361,8 +363,22 @@ summary:focus-visible {
 
 .door-transition.door-stage .door-wrapper { transition: none; }
 
+.door-tick-ring {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 200%;
+  overflow: visible;
+  pointer-events: none;
+  opacity: var(--tick-ring-opacity, 1);
+  transform: translate(-50%, -50%) scale(var(--camera-scale, 1));
+}
+
 .door {
   position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   overflow: visible;
@@ -834,7 +850,8 @@ html.js .rv.item {
 .door-transition.door-stage {
   position: relative;
   height: 200vh;
-  overflow: clip;
+  overflow-x: visible;
+  overflow-y: clip;
 }
 
 .door-transition.door-stage .hero {
@@ -970,6 +987,11 @@ html.js .rv.item {
 
     <div class="hero-visual" id="hero-visual">
       <div class="door-wrapper" id="door-wrapper">
+        <svg class="door-tick-ring" viewBox="-220 -220 840 840"
+             aria-hidden="true">
+          <g id="door-ticks" stroke="#9b70df" stroke-width="2"
+             stroke-linecap="round"></g>
+        </svg>
         <svg class="door" id="door" viewBox="-10 -10 420 420"
              role="img" aria-label="Vault door."
              tabindex="0">
@@ -1010,10 +1032,6 @@ html.js .rv.item {
                   stroke="url(#ringGrad)" stroke-width="3"/>
           <circle class="door-backing" cx="200" cy="200" r="179" fill="url(#discGrad)"
                   stroke="#5b21b6" stroke-width="2"/>
-
-          <!-- Outer measurement marks -->
-          <g id="door-ticks" stroke="#9b70df" stroke-width="2"
-             stroke-linecap="round"></g>
 
           <g class="door-leaf" id="door-leaf">
           <!-- Door plate -->
@@ -1569,8 +1587,8 @@ html.js .rv.item {
 
   for (var i = 0; i < 48; i++) {
     var angle = i * 7.5;
-    var inner = i % 4 === 0 ? 168 : 172;
-    var outer = 179;
+    var inner = i % 4 === 0 ? 260 : 264;
+    var outer = 270;
 
     var tick = svgElement("line", {
       x1: 200,
@@ -1627,6 +1645,7 @@ html.js .rv.item {
   -------------------------------- */
 
   var door = $("#door");
+  var doorTickRing = $(".door-tick-ring");
   var doorLeaf = $("#door-leaf");
   var doorBacking = $(".door-backing");
   var doorTransition = $("#door-transition");
@@ -1813,6 +1832,16 @@ html.js .rv.item {
       );
       doorFadeProgress = doorFadeProgress * doorFadeProgress *
         (3 - 2 * doorFadeProgress);
+      var tickFadeProgress = Math.max(
+        0,
+        Math.min(1, (progress - .42) / .18)
+      );
+      tickFadeProgress = tickFadeProgress * tickFadeProgress *
+        (3 - 2 * tickFadeProgress);
+      doorTickRing.style.setProperty(
+        "--tick-ring-opacity",
+        (1 - tickFadeProgress).toFixed(2)
+      );
       door.style.setProperty(
         "--camera-scale",
         (1 + cameraProgress * 5).toFixed(3)
