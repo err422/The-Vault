@@ -37,7 +37,7 @@
 
 html {
   background: var(--bg);
-  scroll-behavior: auto;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -91,6 +91,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
     opacity .65s cubic-bezier(.2,.8,.2,1),
     transform .65s cubic-bezier(.2,.8,.2,1);
 }
+
+.boot-screen[hidden] { display: none; }
 
 .boot-screen.hidden {
   opacity: 0;
@@ -171,25 +173,6 @@ h1, h2, h3 {
   width: 24px;
   height: 1px;
   background: var(--purple2);
-}
-
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--glow);
-  font: .68rem var(--mono);
-  letter-spacing: .1em;
-  text-transform: uppercase;
-}
-
-.status::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #a78bfa;
-  box-shadow: 0 0 12px #a78bfa;
 }
 
 .lead {
@@ -345,21 +328,6 @@ summary:focus-visible {
   line-height: 1.75;
 }
 
-.hero-meta {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-  margin-top: 28px;
-}
-
-.hero-meta span {
-  color: var(--muted);
-  font: .68rem var(--mono);
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
 .hero-visual {
   position: relative;
   display: grid;
@@ -375,8 +343,7 @@ summary:focus-visible {
   width: 80%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #7c3aed;
-  filter: blur(100px);
+  background: radial-gradient(circle, #7c3aed, transparent 70%);
   opacity: .2;
   pointer-events: none;
 }
@@ -386,7 +353,13 @@ summary:focus-visible {
   width: min(100%, 510px);
   transform-style: preserve-3d;
   transition: transform .4s cubic-bezier(.2,.8,.2,1);
+  transform:
+    translate3d(var(--door-shift-x, 0px), var(--door-shift-y, 0px), 0)
+    rotateX(var(--door-tilt-x, 0deg))
+    rotateY(var(--door-tilt-y, 0deg));
 }
+
+.door-transition.door-stage .door-wrapper { transition: none; }
 
 .door {
   position: relative;
@@ -396,6 +369,16 @@ summary:focus-visible {
   cursor: pointer;
   filter: drop-shadow(0 25px 55px #0008);
   transform-origin: center;
+  transform: scale(var(--camera-scale, 1));
+  opacity: var(--door-opacity, 1);
+  will-change: transform, opacity;
+}
+
+.door-leaf {
+  transform-box: view-box;
+  transform-origin: 36px 200px;
+  transform: perspective(700px) rotateY(var(--door-angle, 0deg));
+  backface-visibility: hidden;
 }
 
 .door:focus-visible {
@@ -406,6 +389,7 @@ summary:focus-visible {
 
 .door .wheel {
   transform-origin: 200px 200px;
+  transform: rotate(var(--wheel-angle, 0deg));
 }
 
 .door.play .wheel {
@@ -433,18 +417,6 @@ summary:focus-visible {
 @keyframes doorLight {
   from { opacity: 0; }
   to { opacity: .8; }
-}
-
-.door-caption {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  color: var(--muted);
-  font: .65rem var(--mono);
-  letter-spacing: .16em;
-  text-transform: uppercase;
 }
 
 /* SECTION STYLING */
@@ -493,7 +465,7 @@ summary:focus-visible {
   background: linear-gradient(145deg, #1b1427, #120d1a);
   transition:
     border-color .25s,
-    transform .25s,
+    translate .25s,
     background .25s;
 }
 
@@ -525,7 +497,7 @@ summary:focus-visible {
 
 .item:hover {
   border-color: #7952bd;
-  transform: translateY(-3px);
+  translate: 0 -3px;
 }
 
 .item:hover::before,
@@ -759,6 +731,21 @@ summary::after {
 
 details[open] summary::after { transform: rotate(45deg); }
 
+details[open] > p {
+  animation: faqAnswerIn .22s ease both;
+}
+
+@keyframes faqAnswerIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 details p {
   max-width: 65ch;
   margin: 12px 0 0;
@@ -782,6 +769,31 @@ details p {
 .footer strong {
   color: var(--text);
   font-family: var(--head);
+}
+
+.footer-contact {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-contact a {
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(167, 122, 255, .06);
+  color: var(--glow);
+  text-decoration: none;
+  transition:
+    color .2s ease,
+    border-color .2s ease,
+    background .2s ease;
+}
+
+.footer-contact a:hover {
+  border-color: var(--purple);
+  background: rgba(167, 122, 255, .12);
 }
 
 .bar {
@@ -810,6 +822,45 @@ html.js .rv.in {
   transform: none;
 }
 
+html.js .rv.item {
+  transition:
+    opacity .7s ease var(--delay, 0s),
+    transform .7s ease var(--delay, 0s),
+    border-color .25s ease,
+    translate .25s ease,
+    background .25s ease;
+}
+
+.door-transition.door-stage {
+  position: relative;
+  height: 200vh;
+  overflow: clip;
+}
+
+.door-transition.door-stage .hero {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 40px 0;
+  align-items: center;
+}
+
+.door-transition.door-stage .hero-copy {
+  opacity: var(--hero-copy-opacity, 1);
+}
+
+.door-transition.door-stage + #inside {
+  position: relative;
+  z-index: 1;
+  margin-top: -100vh;
+  clip-path: circle(
+    var(--portal-radius, 0px) at
+    var(--portal-x, 50%) var(--portal-y, 50%)
+  );
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 800px) {
@@ -821,10 +872,17 @@ html.js .rv.in {
   }
 
   .hero-visual { grid-row: 1; }
+  .door-transition.door-stage { height: auto; }
+  .door-transition.door-stage .hero {
+    position: relative;
+    top: auto;
+    height: auto;
+    min-height: 0;
+  }
+  .door-transition.door-stage + #inside { margin-top: 0; }
   .door-wrapper { max-width: 390px; }
   .hero-copy { text-align: center; }
   .hero-copy .eyebrow,
-  .hero-meta,
   .cta { justify-content: center; }
   .hero .lead { margin-left: auto; margin-right: auto; }
 
@@ -879,7 +937,7 @@ html.js .rv.in {
 <body>
 
 <!-- TERMINAL BOOT -->
-<div class="boot-screen" id="boot-screen" aria-label="Simulated startup sequence">
+<div class="boot-screen" id="boot-screen" aria-label="Simulated startup sequence" hidden>
   <div class="boot-brand">THE WEB <span>VAULT</span></div>
   <div class="boot-hint">Press ENTER to skip</div>
   <div class="boot-console" id="boot-console" aria-live="polite"></div>
@@ -890,6 +948,7 @@ html.js .rv.in {
 <main class="wrap">
 
   <!-- HERO -->
+  <div class="door-transition" id="door-transition">
   <header class="hero">
     <div class="hero-copy">
       <div class="eyebrow">Your next destination</div>
@@ -907,16 +966,12 @@ html.js .rv.in {
         <a class="btn alt" href="#inside">Explore the system</a>
       </div>
 
-      <div class="hero-meta">
-        <div class="status">System online</div>
-        <span>WebOS // Browser-based</span>
-      </div>
     </div>
 
     <div class="hero-visual" id="hero-visual">
       <div class="door-wrapper" id="door-wrapper">
         <svg class="door" id="door" viewBox="-10 -10 420 420"
-             role="img" aria-label="Interactive vault door. Click to spin the central wheel."
+             role="img" aria-label="Vault door."
              tabindex="0">
           <defs>
             <radialGradient id="discGrad" cx=".38" cy=".32" r=".9">
@@ -949,17 +1004,18 @@ html.js .rv.in {
           </defs>
 
           <!-- Outer frame -->
-          <circle cx="200" cy="200" r="197" fill="#09060f"
+          <circle cx="200" cy="200" r="197" fill="none"
                   stroke="#2b1748" stroke-width="5"/>
           <circle cx="200" cy="200" r="188" fill="none"
                   stroke="url(#ringGrad)" stroke-width="3"/>
-          <circle cx="200" cy="200" r="179" fill="url(#discGrad)"
+          <circle class="door-backing" cx="200" cy="200" r="179" fill="url(#discGrad)"
                   stroke="#5b21b6" stroke-width="2"/>
 
           <!-- Outer measurement marks -->
           <g id="door-ticks" stroke="#9b70df" stroke-width="2"
              stroke-linecap="round"></g>
 
+          <g class="door-leaf" id="door-leaf">
           <!-- Door plate -->
           <circle cx="200" cy="200" r="164" fill="#110a1e"
                   stroke="#281545" stroke-width="7"/>
@@ -1030,12 +1086,13 @@ html.js .rv.in {
           <!-- Center highlight -->
           <circle cx="200" cy="200" r="5" fill="#fff"
                   opacity=".8"/>
+          </g>
         </svg>
 
-        <div class="door-caption">Vault mechanism // Interactive</div>
       </div>
     </div>
   </header>
+  </div>
 
   <!-- FEATURES -->
   <section class="section" id="inside">
@@ -1061,7 +1118,7 @@ html.js .rv.in {
         <span class="item-number">02 // ENTERTAINMENT</span>
         <h3>Games library</h3>
         <p>
-          Browse a collection of browser games and launch them directly
+          Browse a collection of over 1000+ browser games and launch them directly
           from the Games app without leaving your desktop.
         </p>
       </article>
@@ -1070,8 +1127,8 @@ html.js .rv.in {
         <span class="item-number">03 // CONNECTIVITY</span>
         <h3>Vault Browser</h3>
         <p>
-          A browser built on Scramjet, allowing supported websites to load
-          through the Vault instead of directly from your device.
+          A browser built on Scramjet, allowing all websites to load
+          through the Vault bypassing any device or network restrictions.
         </p>
       </article>
 
@@ -1307,6 +1364,11 @@ html.js .rv.in {
   <footer class="footer">
     <strong>The Web Vault</strong>
     <span>Designed to be explored.</span>
+    <div class="footer-contact">
+      <span>Contact me:</span>
+      <a href="mailto:ashur.nichols@gmail.com">Email</a>
+      <a href="https://www.instagram.com/ashurn_/" target="_blank" rel="noopener noreferrer">Instagram</a>
+    </div>
     <a href="https://thewebvault.org" target="_blank" rel="noopener">thewebvault.org ↗</a>
   </footer>
 
@@ -1462,12 +1524,27 @@ html.js .rv.in {
     }
   });
 
-  if (reduce) {
-    endBoot();
-  } else {
+  var shouldPlayBoot = !reduce;
+
+  if (shouldPlayBoot) {
+    try {
+      if (window.sessionStorage.getItem("vaultBootPlayed") === "true") {
+        shouldPlayBoot = false;
+      } else {
+        window.sessionStorage.setItem("vaultBootPlayed", "true");
+      }
+    } catch (error) {
+      console.warn("Could not save boot sequence state for this session.", error);
+    }
+  }
+
+  if (shouldPlayBoot) {
+    bootScreen.hidden = false;
     bootTimers.push(setTimeout(function () {
       printBootLine(0);
     }, 250));
+  } else {
+    endBoot();
   }
 
   /* --------------------------------
@@ -1497,9 +1574,9 @@ html.js .rv.in {
 
     var tick = svgElement("line", {
       x1: 200,
-      y1: -inner,
+      y1: 200 - inner,
       x2: 200,
-      y2: -outer,
+      y2: 200 - outer,
       transform: "rotate(" + angle + " 200 200)",
       opacity: i % 4 === 0 ? ".9" : ".45",
       "stroke-width": i % 4 === 0 ? "2.5" : "1.2"
@@ -1508,13 +1585,14 @@ html.js .rv.in {
 
   // Outer bolts
   var doorBolts = $("#door-bolts");
+  var boltData = [];
 
   for (var j = 0; j < 12; j++) {
     var boltAngle = j * 30 * Math.PI / 180;
     var bx = 200 + Math.sin(boltAngle) * 151;
     var by = 200 - Math.cos(boltAngle) * 151;
 
-    svgElement("circle", {
+    var bolt = svgElement("circle", {
       cx: bx.toFixed(2),
       cy: by.toFixed(2),
       r: 7,
@@ -1522,6 +1600,8 @@ html.js .rv.in {
       stroke: "#2a1060",
       "stroke-width": 2
     }, doorBolts);
+
+    boltData.push({ element: bolt, angle: boltAngle });
   }
 
   // Wheel knobs
@@ -1547,8 +1627,26 @@ html.js .rv.in {
   -------------------------------- */
 
   var door = $("#door");
+  var doorLeaf = $("#door-leaf");
+  var doorBacking = $(".door-backing");
+  var doorTransition = $("#door-transition");
+  var inside = $("#inside");
+  var hero = $(".hero");
+  var heroCopy = $(".hero-copy");
   var heroVisual = $("#hero-visual");
   var doorWrapper = $("#door-wrapper");
+  var lockingBars = $(".locking-bars");
+  var doorStageQuery = window.matchMedia("(min-width: 801px)");
+
+  function updateDoorStage() {
+    doorTransition.classList.toggle(
+      "door-stage",
+      !reduce && doorStageQuery.matches
+    );
+  }
+
+  updateDoorStage();
+  doorStageQuery.addEventListener("change", updateDoorStage);
 
   function replayDoor() {
     door.classList.remove("play");
@@ -1576,13 +1674,19 @@ html.js .rv.in {
       var xPct = (x - .5) * 2;
       var yPct = (y - .5) * 2;
 
-      doorWrapper.style.transform =
-        "rotateX(" + (yPct * -9) + "deg) " +
-        "rotateY(" + (xPct * 9) + "deg)";
+      doorWrapper.style.setProperty(
+        "--door-tilt-x",
+        (yPct * -9) + "deg"
+      );
+      doorWrapper.style.setProperty(
+        "--door-tilt-y",
+        (xPct * 9) + "deg"
+      );
     });
 
     heroVisual.addEventListener("mouseleave", function () {
-      doorWrapper.style.transform = "rotateX(0deg) rotateY(0deg)";
+      doorWrapper.style.setProperty("--door-tilt-x", "0deg");
+      doorWrapper.style.setProperty("--door-tilt-y", "0deg");
     });
   }
 
@@ -1609,12 +1713,11 @@ html.js .rv.in {
   }
 
   /* --------------------------------
-     SCROLL PROGRESS + DOOR ROTATION
+     SCROLL PROGRESS + DOOR OPENING
   -------------------------------- */
 
   var bar = $("#bar");
   var scrollTicking = false;
-  var scrollRotation = 0;
 
   function onScroll() {
     if (scrollTicking) return;
@@ -1627,16 +1730,122 @@ html.js .rv.in {
       bar.style.transform =
         "scaleX(" + (height > 0 ? Math.min(1, y / height) : 0) + ")";
 
-      // Keep the original scroll-driven door rotation.
-      // The separate wrapper handles mouse tilt.
-      scrollRotation = y * .045;
-      door.style.transform = "rotate(" + scrollRotation.toFixed(2) + "deg)";
+      var progress = 0;
+      var doorStageActive =
+        !reduce && doorTransition.classList.contains("door-stage");
+
+      if (doorStageActive) {
+        var scrollDistance = Math.max(
+          1,
+          doorTransition.offsetHeight - window.innerHeight
+        );
+        progress = Math.max(0, Math.min(
+          1,
+          (y - doorTransition.offsetTop) / scrollDistance
+        ));
+      }
+
+      hero.style.pointerEvents =
+        doorStageActive && progress >= .8 ? "none" : "";
+
+      doorTransition.style.setProperty(
+        "--door-progress",
+        progress.toFixed(3)
+      );
+
+      var centerProgress = Math.max(0, Math.min(1, progress / .55));
+      centerProgress = centerProgress * centerProgress *
+        (3 - 2 * centerProgress);
+      var visualRect = heroVisual.getBoundingClientRect();
+      var doorShiftX = (window.innerWidth / 2 -
+        (visualRect.left + visualRect.width / 2)) * centerProgress;
+      var doorShiftY = (window.innerHeight / 2 -
+        (visualRect.top + visualRect.height / 2)) * centerProgress;
+      doorWrapper.style.setProperty(
+        "--door-shift-x",
+        doorShiftX.toFixed(1) + "px"
+      );
+      doorWrapper.style.setProperty(
+        "--door-shift-y",
+        doorShiftY.toFixed(1) + "px"
+      );
+
+      heroCopy.style.opacity = doorStageActive
+        ? Math.max(0, 1 - progress / .16).toFixed(2)
+        : "";
+      doorBacking.style.opacity = doorStageActive
+        ? (1 - progress / .55).toFixed(2)
+        : "";
+
+      if (doorStageActive) {
+        var insideRect = inside.getBoundingClientRect();
+        var portalX = visualRect.left + visualRect.width / 2 +
+          doorShiftX - insideRect.left;
+        var portalY = visualRect.top + visualRect.height / 2 +
+          doorShiftY - insideRect.top;
+        var farthestX = Math.max(portalX, insideRect.width - portalX);
+        var farthestY = Math.max(portalY, insideRect.height - portalY);
+        var portalRadius = (Math.hypot(farthestX, farthestY) + 2) *
+          Math.pow(progress, 1.15) * 1.12;
+
+        inside.style.setProperty("--portal-x", portalX.toFixed(1) + "px");
+        inside.style.setProperty("--portal-y", portalY.toFixed(1) + "px");
+        inside.style.setProperty(
+          "--portal-radius",
+          portalRadius.toFixed(1) + "px"
+        );
+      } else {
+        inside.style.removeProperty("--portal-x");
+        inside.style.removeProperty("--portal-y");
+        inside.style.removeProperty("--portal-radius");
+        inside.style.removeProperty("clip-path");
+      }
+
+      doorLeaf.style.setProperty(
+        "--door-angle",
+        (-progress * 110).toFixed(2) + "deg"
+      );
+      var cameraProgress = Math.max(0, Math.min(1, (progress - .48) / .52));
+      cameraProgress *= cameraProgress;
+      var doorFadeProgress = Math.max(
+        0,
+        Math.min(1, (progress - .58) / .22)
+      );
+      doorFadeProgress = doorFadeProgress * doorFadeProgress *
+        (3 - 2 * doorFadeProgress);
+      door.style.setProperty(
+        "--camera-scale",
+        (1 + cameraProgress * 5).toFixed(3)
+      );
+      door.style.setProperty(
+        "--door-opacity",
+        (1 - doorFadeProgress).toFixed(2)
+      );
+      door.style.setProperty(
+        "--wheel-angle",
+        (-progress * 180).toFixed(2) + "deg"
+      );
+      lockingBars.style.opacity = (1 - progress * .55).toFixed(2);
+
+      boltData.forEach(function (item) {
+        var radius = 151 + progress * 14;
+        item.element.setAttribute(
+          "cx",
+          (200 + Math.sin(item.angle) * radius).toFixed(2)
+        );
+        item.element.setAttribute(
+          "cy",
+          (200 - Math.cos(item.angle) * radius).toFixed(2)
+        );
+        item.element.setAttribute("opacity", (1 - progress * .55).toFixed(2));
+      });
 
       scrollTicking = false;
     });
   }
 
   window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
   onScroll();
 
   /* --------------------------------
