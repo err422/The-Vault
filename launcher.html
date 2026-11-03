@@ -199,6 +199,7 @@ h1, h2, h3 {
 }
 
 .btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -239,6 +240,43 @@ h1, h2, h3 {
   box-shadow: none;
 }
 
+.button-sparks {
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+}
+
+.button-sparks span {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: 3px;
+  height: 9px;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 4px #fff, 0 0 10px var(--purple2);
+  animation: buttonSpark .65s ease-out forwards;
+}
+
+.button-sparks span:nth-child(even) {
+  background: var(--purple2);
+  box-shadow: 0 0 5px var(--glow), 0 0 12px var(--purple2);
+}
+
+@keyframes buttonSpark {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--angle)) scaleY(.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(
+      calc(-50% + var(--x)),
+      calc(-50% + var(--y))
+    ) rotate(var(--angle)) scaleY(.35);
+  }
+}
+
 .btn:focus-visible,
 .pick:focus-visible,
 summary:focus-visible {
@@ -273,9 +311,31 @@ summary:focus-visible {
   letter-spacing: -.07em;
 }
 
-.hero h1 span {
+.hero h1 > .decrypt-line.accent {
   display: block;
   color: var(--purple2);
+}
+
+.decrypt-line {
+  display: block;
+  min-height: 0.95em;
+}
+
+.decrypt-line .char {
+  display: inline-block;
+  transition:
+    color .2s ease,
+    text-shadow .2s ease;
+}
+
+.decrypt-line .char.resolved {
+  color: inherit;
+  text-shadow: 0 0 18px rgba(167, 122, 255, .35);
+}
+
+.decrypt-line.accent .char.resolved {
+  color: var(--purple2);
+  text-shadow: 0 0 22px rgba(167, 122, 255, .5);
 }
 
 .hero .lead {
@@ -833,7 +893,10 @@ html.js .rv.in {
   <header class="hero">
     <div class="hero-copy">
       <div class="eyebrow">Your next destination</div>
-      <h1>The Web <span>Vault.</span></h1>
+      <h1 class="decrypt-heading" aria-label="The Web Vault.">
+        <span class="decrypt-line" data-text="The Web">The Web</span>
+        <span class="decrypt-line accent" data-text="Vault.">Vault.</span>
+      </h1>
       <p class="lead">
         A desktop-style WebOS, a library of games, and a browser built right in.
         Everything you need, tucked behind one door.
@@ -1289,32 +1352,69 @@ html.js .rv.in {
     { text: "WELCOME TO THE WEB VAULT.", style: "success", delay: 300 }
   ];
 
-  function decryptText(element, finalString) {
-    if (!element || reduce) return;
+  function decryptHeading() {
+    if (reduce) return;
 
+    var lines = $$(".decrypt-line");
     var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
-    var iterations = 0;
-    var interval = setInterval(function () {
-      element.textContent = finalString.split("").map(function (letter, index) {
-        if (index < iterations || letter === " ") return letter;
-        return chars[Math.floor(Math.random() * chars.length)];
-      }).join("");
+    var animations = [];
 
-      if (iterations >= finalString.length) {
-        clearInterval(interval);
-        element.textContent = finalString;
+    lines.forEach(function (line, lineIndex) {
+      var original = line.getAttribute("data-text");
+      line.textContent = "";
+
+      original.split("").forEach(function (letter, charIndex) {
+        var span = document.createElement("span");
+        span.className = "char";
+        span.textContent = letter === " " ? "\u00A0" : chars[0];
+        span.dataset.final = letter;
+        line.appendChild(span);
+        animations.push({
+          element: span,
+          final: letter,
+          start: lineIndex * 150 + charIndex * 18
+        });
+      });
+    });
+
+    var startTime = performance.now();
+    var duration = 780;
+
+    function animate(now) {
+      var elapsed = now - startTime;
+      var finished = true;
+
+      animations.forEach(function (item) {
+        if (item.element.classList.contains("resolved")) return;
+
+        var progress = elapsed - item.start;
+
+        if (item.final === " ") {
+          item.element.textContent = "\u00A0";
+          item.element.classList.add("resolved");
+          return;
+        }
+
+        if (progress >= duration) {
+          item.element.textContent = item.final;
+          item.element.classList.add("resolved");
+          return;
+        }
+
+        finished = false;
+
+        if (progress > 0) {
+          item.element.textContent =
+            chars[Math.floor(Math.random() * chars.length)];
+        }
+      });
+
+      if (!finished) {
+        requestAnimationFrame(animate);
       }
+    }
 
-      iterations += 0.55;
-    }, 30);
-  }
-
-  function revealLabels() {
-    var status = $(".status");
-    var eyebrow = $(".eyebrow");
-
-    if (status) decryptText(status, "SYSTEM ONLINE");
-    if (eyebrow) decryptText(eyebrow, "YOUR NEXT DESTINATION");
+    requestAnimationFrame(animate);
   }
 
   function endBoot() {
@@ -1328,7 +1428,7 @@ html.js .rv.in {
       if (bootScreen.parentNode) bootScreen.remove();
     }, 700);
 
-    revealLabels();
+    setTimeout(decryptHeading, 150);
   }
 
   function printBootLine(index) {
@@ -1650,6 +1750,45 @@ html.js .rv.in {
 '</body>\n' +
 '</html>';
 
+var sparkTimers = new WeakMap();
+
+function sparkButton(button) {
+  if (reduce) return;
+
+  window.clearTimeout(sparkTimers.get(button));
+  var previousSparks = button.querySelector(".button-sparks");
+  if (previousSparks) previousSparks.remove();
+
+  var sparks = document.createElement("span");
+  sparks.className = "button-sparks";
+  sparks.setAttribute("aria-hidden", "true");
+
+  [
+    { left: "0%", top: "50%", x: "-14px", y: "0px", angle: "90deg" },
+    { left: "25%", top: "0%", x: "-6px", y: "-13px", angle: "45deg" },
+    { left: "50%", top: "0%", x: "0px", y: "-16px", angle: "0deg" },
+    { left: "75%", top: "0%", x: "6px", y: "-13px", angle: "-45deg" },
+    { left: "100%", top: "50%", x: "14px", y: "0px", angle: "90deg" },
+    { left: "75%", top: "100%", x: "6px", y: "13px", angle: "45deg" },
+    { left: "50%", top: "100%", x: "0px", y: "16px", angle: "0deg" },
+    { left: "25%", top: "100%", x: "-6px", y: "13px", angle: "-45deg" }
+  ].forEach(function (position) {
+    var spark = document.createElement("span");
+    spark.style.setProperty("--left", position.left);
+    spark.style.setProperty("--top", position.top);
+    spark.style.setProperty("--x", position.x);
+    spark.style.setProperty("--y", position.y);
+    spark.style.setProperty("--angle", position.angle);
+    sparks.appendChild(spark);
+  });
+
+  button.appendChild(sparks);
+  sparkTimers.set(button, window.setTimeout(function () {
+    sparks.remove();
+    sparkTimers.delete(button);
+  }, 700));
+}
+
   // about:blank
   $("#cloak").addEventListener("click", function () {
     var message = $("#cloakmsg");
@@ -1673,6 +1812,7 @@ html.js .rv.in {
 
     win.document.body.appendChild(frame);
     message.textContent = "Opened in a new tab.";
+    sparkButton(this);
   });
 
   // Download HTML launcher
@@ -1693,6 +1833,7 @@ html.js .rv.in {
     }, 1000);
 
     $("#dlmsg").textContent = "Downloaded Vault.html.";
+    sparkButton(this);
   });
 
   // Copy launcher
@@ -1704,6 +1845,7 @@ html.js .rv.in {
         navigator.clipboard.writeText(LAUNCHER).then(
           function () {
             output.textContent = "Launcher code copied.";
+            sparkButton(button);
           },
           function () {
             output.textContent =
