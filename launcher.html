@@ -266,10 +266,29 @@ summary:focus-visible {
   outline-offset: 4px;
 }
 
-.cta {
+.scroll-cue {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
+  margin-top: 34px;
+  color: var(--muted);
+  font: .68rem var(--mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.scroll-cue-line {
+  display: block;
+  width: 38px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--purple2), transparent);
+  transform-origin: left;
+  animation: scrollCuePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes scrollCuePulse {
+  0%, 100% { opacity: .45; transform: scaleX(.65); }
+  50% { opacity: 1; transform: scaleX(1); }
 }
 
 /* HERO */
@@ -899,7 +918,7 @@ html.js .rv.item {
   .door-wrapper { max-width: 390px; }
   .hero-copy { text-align: center; }
   .hero-copy .eyebrow,
-  .cta { justify-content: center; }
+  .scroll-cue { justify-content: center; }
   .hero .lead { margin-left: auto; margin-right: auto; }
 
   .entry-layout {
@@ -977,9 +996,10 @@ html.js .rv.item {
         Everything you need, tucked behind one door.
       </p>
 
-      <div class="cta">
-        <a class="btn" href="#enter">Enter the Vault <span>↗</span></a>
-        <a class="btn alt" href="#inside">Explore the system</a>
+
+      <div class="scroll-cue" aria-hidden="true">
+        <span>Scroll to unlock</span>
+        <span class="scroll-cue-line"></span>
       </div>
 
     </div>
