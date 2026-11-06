@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +10,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
@@ -729,6 +728,68 @@ summary:focus-visible {
   font-size: .83rem;
 }
 
+/* ROUTE FINDER */
+.finder { margin-bottom: 16px; }
+.finder:empty { display: none; }
+
+.fq, .fr {
+  padding: 24px; border: 1px solid var(--line); border-radius: 14px;
+  background: linear-gradient(145deg, #1b1427, #120d1a);
+  animation: panelIn .3s ease both;
+}
+.fq-prog { display: flex; gap: 6px; margin-bottom: 18px; }
+.fq-prog i {
+  flex: 1; height: 3px; border-radius: 2px; background: var(--steel);
+  transition: background .3s, box-shadow .3s;
+}
+.fq-prog i.done { background: var(--purple); }
+.fq-prog i.now { background: var(--purple2); box-shadow: 0 0 10px var(--purple2); }
+
+.fq-count, .fr-tag {
+  margin-bottom: 10px; color: var(--purple2);
+  font: 700 .66rem var(--mono); letter-spacing: .16em; text-transform: uppercase;
+}
+.fq-q { margin: 0 0 6px; font-size: 1.35rem; line-height: 1.2; outline: 0; }
+.fq-help { margin: 0 0 18px; color: var(--muted); font-size: .88rem; }
+
+.fq-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.fq-opt {
+  padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px;
+  background: rgba(23,17,31,.8); color: var(--text);
+  font: 700 .95rem var(--head); text-align: left; cursor: pointer;
+  transition: border-color .2s, background .2s, transform .2s;
+}
+.fq-opt:hover { border-color: var(--purple); background: var(--plate2); transform: translateY(-2px); }
+.fq-opt:focus-visible, .fq-link:focus-visible { outline: 2px solid var(--glow); outline-offset: 3px; }
+
+.fq-nav { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.fq-link {
+  padding: 4px 0; border: 0; background: none; color: var(--muted);
+  font: 700 .72rem var(--mono); letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+}
+.fq-link:hover { color: var(--glow); }
+
+.fr h3 { margin: 0 0 4px; font-size: 1.5rem; }
+.fr-why { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.fr-why li { color: var(--muted); font-size: .88rem; }
+.fr-why b { color: var(--text); }
+
+.picks[hidden], .pick[hidden] { display: none; }
+.pick { position: relative; }
+.pick.best b { padding-right: 104px; }
+.pick.best::after {
+  content: "Best match";
+  position: absolute; top: 14px; right: 14px;
+  padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--purple); background: rgba(139,92,246,.14);
+  color: var(--glow); font: 700 .6rem var(--mono);
+  letter-spacing: .1em; text-transform: uppercase;
+}
+@media (max-width: 580px) {
+  .pick.best b { padding-right: 0; }
+  .pick.best::after { position: static; display: inline-block; margin-top: 8px; }
+}
+
 /* FAQ */
 
 .faq {
@@ -966,6 +1027,129 @@ html.js .rv.item {
     transform: none;
   }
 }
+
+/* ================= UPGRADE LAYER ================= */
+:root{
+  --body:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+html{scrollbar-width:thin;scrollbar-color:#3a2e4d var(--bg)}
+::selection{background:#8b5cf6;color:#fff}
+body{font-feature-settings:"ss01","cv11";-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body::before{display:none}
+.wrap{position:relative;z-index:1}
+
+/* atmosphere */
+.fx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.fx canvas{position:absolute;inset:0;width:100%;height:100%}
+.fx::before{content:"";position:absolute;inset:0;
+  background-image:linear-gradient(rgba(180,140,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(180,140,255,.045) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(ellipse 70% 60% at 50% 0%,#000,transparent 80%);
+  -webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 0%,#000,transparent 80%)}
+.grain{position:fixed;inset:0;z-index:40;pointer-events:none;opacity:.035;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+
+/* hero */
+.eyebrow{display:inline-flex;padding:7px 14px 7px 12px;border:1px solid rgba(167,122,255,.28);border-radius:999px;
+  background:rgba(139,92,246,.08);color:var(--glow);font:500 .78rem var(--mono);letter-spacing:.04em;text-transform:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.eyebrow::before{width:7px;height:7px;border-radius:50%;background:#c9a8ff;box-shadow:0 0 0 0 rgba(201,168,255,.6),0 0 12px #a77aff;animation:ping 2.4s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 9px rgba(201,168,255,0),0 0 12px #a77aff}100%{box-shadow:0 0 0 0 rgba(201,168,255,0),0 0 12px #a77aff}}
+.hero h1{text-shadow:0 2px 40px rgba(139,92,246,.18)}
+.hero .lead{color:#b9aecb}
+.hero-visual::before{width:105%;opacity:.5;filter:blur(64px);border-radius:50%;
+  background:conic-gradient(from 0deg,#7c3aed,#2a1163,#c084fc,#4c1d95,#7c3aed);
+  -webkit-mask-image:radial-gradient(circle,#000 25%,transparent 68%);mask-image:radial-gradient(circle,#000 25%,transparent 68%);
+  }
+.hero-visual::after{content:"";position:absolute;bottom:2%;width:62%;height:7%;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(139,92,246,.45),transparent 70%);filter:blur(10px);pointer-events:none}
+.scroll-cue{font-family:var(--mono)}
+
+/* buttons */
+.btn{border-color:rgba(255,255,255,.18);font-family:var(--head);letter-spacing:-.01em;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.3) 50%,transparent 65%) no-repeat -160% 0/260% 100%,
+             linear-gradient(180deg,#a283ff,#7a49f2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 24px -8px rgba(124,77,255,.6);
+  transform:translate(var(--tx,0px),var(--ty,0px));
+  transition:background-position .7s var(--ease),border-color .2s,box-shadow .25s,transform .25s var(--ease)}
+.btn:hover{background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.3) 50%,transparent 65%) no-repeat 160% 0/260% 100%,
+             linear-gradient(180deg,#b196ff,#8556f7);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 12px 34px -8px rgba(139,92,246,.8);
+  transform:translate(var(--tx,0px),calc(var(--ty,0px) - 2px))}
+.btn:active{transform:translate(var(--tx,0px),var(--ty,0px)) scale(.98)}
+.btn.alt,.btn.alt:hover{background:rgba(255,255,255,.03);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);border-color:var(--line)}
+.btn.alt:hover{background:rgba(139,92,246,.1);border-color:var(--purple)}
+
+/* surfaces with cursor-tracked border light */
+.item,.item:hover,.panel,.fq,.fr{border-color:transparent}
+.item,.panel,.fq,.fr{
+  background:linear-gradient(150deg,#1c1429,#110c19) padding-box,
+    radial-gradient(280px circle at var(--mx,-400px) var(--my,-400px),rgba(205,170,255,.95),rgba(139,92,246,.18) 55%,#2f2441 100%) border-box;
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 24px 50px -30px #000}
+.item{border-radius:18px}
+.item::before{background:radial-gradient(520px circle at var(--mouse-x,50%) var(--mouse-y,50%),rgba(139,92,246,.17),transparent 45%)}
+.item-number{display:inline-grid;place-items:center;height:26px;padding:0 10px;margin-bottom:26px;border:1px solid rgba(167,122,255,.3);
+  border-radius:999px;background:rgba(139,92,246,.1);font-weight:500}
+.item h3{font-size:1.6rem}
+
+/* sections */
+.section{border-top:0;position:relative}
+.section::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--line) 18%,rgba(190,150,255,.6) 50%,var(--line) 82%,transparent)}
+.section-heading h2{background:linear-gradient(180deg,#fff 30%,#b7a3e6);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:.08em}
+.step{position:relative;border-top:0;padding-top:30px}
+.step::before{content:"";position:absolute;top:0;left:0;height:1px;width:100%;background:var(--line)}
+.step::after{content:"";position:absolute;top:0;left:0;height:1px;width:0;background:linear-gradient(90deg,var(--purple2),transparent);box-shadow:0 0 12px var(--purple);transition:width .8s var(--ease)}
+.step:hover::after{width:100%}
+.step-number{color:transparent;-webkit-text-stroke:1px rgba(167,122,255,.75);transition:color .4s,text-shadow .4s}
+.step:hover .step-number{color:rgba(167,122,255,.9);text-shadow:0 0 30px rgba(139,92,246,.6)}
+
+/* finder + options */
+.pick{border-radius:12px;background:rgba(23,17,31,.7);backdrop-filter:blur(8px);transition:border-color .25s,background .25s,transform .35s var(--ease),box-shadow .25s}
+.pick[aria-selected="true"]{box-shadow:inset 3px 0 var(--purple),0 0 40px -14px rgba(139,92,246,.7)}
+.fq-opt{border-radius:12px;transition:border-color .2s,background .2s,transform .3s var(--ease),box-shadow .2s}
+.fq-opt:hover{box-shadow:0 10px 26px -14px rgba(139,92,246,.8)}
+.fq-link,.fq-count,.fr-tag,.dial-caption{font-family:var(--mono)}
+.dial{filter:drop-shadow(0 20px 40px rgba(124,58,237,.28))}
+
+/* faq */
+details{transition:background .3s}
+details summary{transition:color .2s}
+details:hover summary{color:var(--glow)}
+details[open]{background:linear-gradient(90deg,rgba(139,92,246,.07),transparent 70%)}
+details[open] summary{color:var(--glow)}
+
+/* progress + dock */
+.bar{height:2px;background:linear-gradient(90deg,#6d3df5,#c9a8ff,#fff)}
+.dock{position:fixed;left:50%;bottom:22px;z-index:45;display:flex;gap:2px;padding:5px;border:1px solid rgba(167,122,255,.22);border-radius:999px;
+  background:rgba(16,11,25,.62);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
+  box-shadow:0 18px 40px -12px #000,inset 0 1px 0 rgba(255,255,255,.07);
+  transform:translate(-50%,24px);opacity:0;pointer-events:none;transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.dock.on{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+.dock a{padding:8px 15px;border-radius:999px;color:var(--muted);text-decoration:none;font:500 .82rem var(--body);transition:color .2s,background .2s}
+.dock a:hover{color:var(--text)}
+.dock a.cur{color:#fff;background:rgba(139,92,246,.28);box-shadow:inset 0 0 0 1px rgba(167,122,255,.4)}
+.dock a:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+
+/* boot + footer */
+.boot-screen::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.65))}
+.boot-console{text-shadow:0 0 12px rgba(167,122,255,.55)}
+.footer{border-top:0;position:relative;margin-top:10px}
+.footer::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent)}
+.footer-contact a{border-radius:999px;padding:5px 13px}
+@media (max-width:580px){.dock{bottom:12px;max-width:calc(100% - 20px)}.dock a{padding:8px 10px;font-size:.76rem}}
+@media (prefers-reduced-motion:reduce){.hero-visual::before,.eyebrow::before{animation:none}.dock{transition:none}}
+
+/* ===== LENIS + GSAP + TSPARTICLES ===== */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+.fx::after{content:"";position:absolute;left:-350px;top:-350px;width:700px;height:700px;background:radial-gradient(circle,rgba(139,92,246,.17),transparent 65%);transform:translate3d(var(--cx,-2000px),var(--cy,-2000px),0);will-change:transform}
+html.js.gsap .rv,html.js.gsap .rv.in{opacity:0;transform:none;transition:none}
+html.js.gsap .rv.item,html.js.gsap .rv.item.in{transition:border-color .25s,translate .25s,background .25s}
 </style>
 </head>
 
@@ -987,9 +1171,9 @@ html.js .rv.item {
   <header class="hero">
     <div class="hero-copy">
       <div class="eyebrow">Your next destination</div>
-      <h1 class="decrypt-heading" aria-label="The Web Vault.">
+      <h1 class="decrypt-heading" aria-label="The Web Vault">
         <span class="decrypt-line" data-text="The Web">The Web</span>
-        <span class="decrypt-line accent" data-text="Vault.">Vault.</span>
+        <span class="decrypt-line accent" data-text="Vault">Vault.</span>
       </h1>
       <p class="lead">
         A desktop-style WebOS, a library of games, and a browser built right in.
@@ -1249,6 +1433,7 @@ html.js .rv.item {
       </div>
 
       <div>
+        <div class="finder" id="finder" aria-live="polite"></div>
         <div class="picks" role="tablist" aria-label="Choose an access method">
           <button class="pick" role="tab" id="t0"
                   aria-controls="p0" aria-selected="false" data-i="0">
@@ -1971,11 +2156,11 @@ html.js .rv.item {
       var next = -1;
 
       if (event.key === "ArrowDown" || event.key === "ArrowRight") {
-        next = (index + 1) % tabs.length;
+        next = stepTab(index, 1);
       }
 
       if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
-        next = (index + tabs.length - 1) % tabs.length;
+        next = stepTab(index, -1);
       }
 
       if (next >= 0) {
@@ -1985,6 +2170,236 @@ html.js .rv.item {
       }
     });
   });
+
+  /* --------------------------------
+     ACCESS INTERVIEW
+  -------------------------------- */
+
+  var NAMES = ["CodeHS", "about:blank", "HTML launcher", "Google Docs"];
+  var ORDER = [3, 1, 2, 0];
+
+  var QUESTIONS = [
+    { id: "vault", q: "What happens when you open thewebvault.org directly?",
+      help: "Type it into the address bar on the device you'll use.",
+      opts: [["loads", "It loads"], ["blocked", "It's blocked"], ["?", "Haven't tried"]] },
+    { id: "docs", q: "Can you open Google Docs on this device?",
+      help: "docs.google.com opens normally and you can sign in.",
+      opts: [["yes", "Yes"], ["no", "No"], ["?", "Not sure"]] },
+    { id: "codehs", q: "Does your school use CodeHS to teach programming?",
+      help: "You can open codehs.com and log in.",
+      opts: [["yes", "Yes"], ["no", "No"], ["?", "Not sure"]] },
+    { id: "html", q: "Can you open an HTML file on this device?",
+      help: "From your downloads, or from a site that hosts files you upload.",
+      opts: [["yes", "Yes"], ["no", "No"], ["?", "Not sure"]] }
+  ];
+
+  var SCORES = {
+    vault:  { loads:   [0, 4, 2, 0],  blocked: [1, 2, 0, 2],  "?": [0, 1, 1, 0] },
+    docs:   { yes:     [0, 0, 0, 3],  no:      [0, 0, 0, -99], "?": [0, 0, 0, 1] },
+    codehs: { yes:     [3, 0, 0, 0],  no:      [-99, 0, 0, 0], "?": [1, 0, 0, 0] },
+    html:   { yes:     [0, 0, 2, 0],  no:      [0, 0, -99, 0], "?": [0, 0, 0, 0] }
+  };
+
+  var WHY = [
+    function (a) { return a.codehs === "yes" ? "Your school teaches programming with CodeHS, so this is the most reliable route." : "CodeHS might be open. Worth a try."; },
+    function (a) {
+      return a.vault === "loads" ? "The Vault loads directly, so an about:blank tab is the cleanest launch."
+        : a.vault === "blocked" ? "An about:blank tab can get through when the address itself is what gets filtered."
+        : "It needs nothing except pop-ups allowed.";
+    },
+    function (a) { return a.html === "yes" ? "You can open HTML files, so a one-file launcher will run." : "Worth trying if you can open files."; },
+    function (a) { return a.docs === "yes" ? "Google Docs opens for you, and it usually survives strict filters." : "Google Docs might be open. Worth a try."; }
+  ];
+
+  var finder = $("#finder");
+  var picksEl = $(".picks");
+  var answers = {};
+  var qi = 0;
+
+  function node(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function stepTab(from, dir) {
+    var n = from;
+    do { n = (n + dir + tabs.length) % tabs.length; } while (tabs[n].hidden && n !== from);
+    return n;
+  }
+
+  function turnDial(turns, caption) {
+    $("#dial-rot").style.transform = "rotate(" + (-90 * turns) + "deg)";
+    $("#dial-caption").textContent = caption;
+  }
+
+  function startFinder(focus) {
+    answers = {};
+    qi = 0;
+    picksEl.hidden = true;
+    tabs.forEach(function (t) {
+      t.hidden = false;
+      t.classList.remove("best");
+      t.setAttribute("aria-selected", "false");
+    });
+    $$(".panel").forEach(function (p) { p.hidden = true; });
+    turnDial(0, "Access interview");
+    renderQuestion(focus);
+  }
+
+  function renderQuestion(focus) {
+    var Q = QUESTIONS[qi];
+    var box = node("div", "fq");
+
+    var prog = node("div", "fq-prog");
+    prog.setAttribute("aria-hidden", "true");
+    QUESTIONS.forEach(function (_, i) {
+      prog.appendChild(node("i", i < qi ? "done" : i === qi ? "now" : ""));
+    });
+
+    var title = node("h3", "fq-q", Q.q);
+    title.id = "fq-title";
+    title.tabIndex = -1;
+
+    var opts = node("div", "fq-opts");
+    opts.setAttribute("role", "group");
+    opts.setAttribute("aria-labelledby", "fq-title");
+    Q.opts.forEach(function (o) {
+      var b = node("button", "fq-opt", o[1]);
+      b.type = "button";
+      b.addEventListener("click", function () { answer(Q.id, o[0]); });
+      opts.appendChild(b);
+    });
+
+    var nav = node("div", "fq-nav");
+    if (qi > 0) {
+      var back = node("button", "fq-link", "\u2190 Back");
+      back.type = "button";
+      back.addEventListener("click", function () {
+        qi--;
+        delete answers[QUESTIONS[qi].id];
+        turnDial(qi, qi ? "Tumbler " + (qi + 1) + " / " + QUESTIONS.length : "Access interview");
+        renderQuestion(true);
+      });
+      nav.appendChild(back);
+    } else {
+      nav.appendChild(node("span"));
+    }
+    var all = node("button", "fq-link", "Skip: show all options");
+    all.type = "button";
+    all.addEventListener("click", function () {
+      finder.textContent = "";
+      showPicks(null);
+      selectTab(3);
+    });
+    nav.appendChild(all);
+
+    box.appendChild(prog);
+    box.appendChild(node("div", "fq-count", "Question " + (qi + 1) + " of " + QUESTIONS.length));
+    box.appendChild(title);
+    box.appendChild(node("p", "fq-help", Q.help));
+    box.appendChild(opts);
+    box.appendChild(nav);
+
+    finder.textContent = "";
+    finder.appendChild(box);
+    if (focus) title.focus();
+  }
+
+  function answer(id, value) {
+    answers[id] = value;
+    qi++;
+    if (qi < QUESTIONS.length) {
+      turnDial(qi, "Tumbler " + (qi + 1) + " / " + QUESTIONS.length);
+      renderQuestion(true);
+    } else {
+      showResult();
+    }
+  }
+
+  function recommend() {
+    if (answers.codehs === "yes") return { picks: [0], top: 5 };
+
+    var s = [0, 0, 0, 0];
+    QUESTIONS.forEach(function (q) {
+      SCORES[q.id][answers[q.id]].forEach(function (v, i) { s[i] += v; });
+    });
+    var ranked = ORDER.slice().sort(function (a, b) {
+      return s[b] - s[a] || ORDER.indexOf(a) - ORDER.indexOf(b);
+    });
+    var top = s[ranked[0]];
+    if (top <= 0) return { picks: [], top: top };
+    var picks = ranked.filter(function (i) { return s[i] > 0 && s[i] >= top - 2; }).slice(0, 2);
+    return { picks: picks, top: top };
+  }
+
+  function showPicks(only) {
+    picksEl.hidden = false;
+    tabs.forEach(function (t, i) {
+      t.hidden = !!only && only.indexOf(i) < 0;
+      t.classList.toggle("best", !!only && i === only[0]);
+    });
+  }
+
+  function showResult() {
+    var r = recommend();
+    var box = node("div", "fr");
+    var tag, head, sub;
+
+    if (!r.picks.length) {
+      tag = "No clear route";
+      head = "Nothing looks workable.";
+      sub = "That usually means this network blocks the Vault and everything it can be reached through. Try another network or device, or review every option in case an answer was off.";
+    } else {
+      tag = r.top >= 5 ? "Strong match" : r.top >= 3 ? "Good match" : "Best guess";
+      head = r.picks.length === 1 ? "One route fits." : "Two routes fit.";
+      sub = r.top >= 3 ? "" : "Your answers left a lot open, so try the second one if the first doesn't work.";
+    }
+
+    box.appendChild(node("div", "fr-tag", tag));
+    box.appendChild(node("h3", null, head));
+    if (sub) box.appendChild(node("p", "fq-help", sub));
+
+    if (r.picks.length) {
+      var ul = node("ul", "fr-why");
+      r.picks.forEach(function (i) {
+        var li = node("li");
+        li.appendChild(node("b", null, NAMES[i] + ": "));
+        li.appendChild(document.createTextNode(WHY[i](answers)));
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
+    }
+
+    var nav = node("div", "fq-nav");
+    var again = node("button", "fq-link", "\u21BB Retake");
+    again.type = "button";
+    again.addEventListener("click", function () { startFinder(true); });
+    var all = node("button", "fq-link", "Show all 4 options");
+    all.type = "button";
+    all.addEventListener("click", function () { showPicks(null); all.remove(); });
+    nav.appendChild(again);
+    if (r.picks.length) nav.appendChild(all);
+    box.appendChild(nav);
+
+    finder.textContent = "";
+    finder.appendChild(box);
+
+    if (r.picks.length) {
+      showPicks(r.picks);
+      selectTab(r.picks[0]);
+    } else {
+      picksEl.hidden = true;
+      turnDial(0, "No route");
+      var showAllBtn = node("button", "fq-link", "Show all 4 options");
+      showAllBtn.type = "button";
+      showAllBtn.addEventListener("click", function () { showPicks(null); selectTab(3); });
+      nav.replaceChild(showAllBtn, nav.lastChild === again ? nav.appendChild(node("span")) : nav.lastChild);
+    }
+  }
+
+  startFinder(false);
 
   /* --------------------------------
      LAUNCHER
@@ -2114,6 +2529,130 @@ function sparkButton(button) {
     });
   });
 
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+/* upgrade layer: Lenis, GSAP ScrollTrigger, cursor light, dock */
+(function(){
+  var rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var fine=window.matchMedia&&matchMedia("(hover: hover)").matches;
+  var fx=document.createElement("div");fx.className="fx";fx.id="vault-dust";fx.setAttribute("aria-hidden","true");
+  document.body.insertBefore(fx,document.body.firstChild);
+  var g=document.createElement("div");g.className="grain";g.setAttribute("aria-hidden","true");document.body.appendChild(g);
+
+  /* Load a small, low-rate ambient particle layer only when motion is allowed. */
+  if(!rm){
+    function loadDust(){
+      var script=document.createElement("script");
+      script.src="https://cdn.jsdelivr.net/npm/@tsparticles/slim@3.8.1/tsparticles.slim.bundle.min.js";
+      script.async=true;
+      script.addEventListener("load",function(){
+        if(!window.tsParticles||typeof window.tsParticles.load!=="function"){
+          console.warn("The ambient dust library loaded without its expected API.");
+          return;
+        }
+        window.tsParticles.load({
+          id:"vault-dust",
+          options:{
+            fullScreen:{enable:false},
+            background:{color:{value:"transparent"}},
+            detectRetina:false,
+            fpsLimit:30,
+            pauseOnBlur:true,
+            pauseOnOutsideViewport:true,
+            particles:{
+              number:{value:innerWidth<=800?22:44,density:{enable:false}},
+              color:{value:["#e2d3ff","#c7a8ff","#a77aff","#ffffff"]},
+              shape:{type:"circle"},
+              opacity:{value:{min:.35,max:.8}},
+              size:{value:{min:1.2,max:3.2}},
+              move:{enable:true,direction:"none",random:true,speed:.55,straight:false,
+                outModes:{default:"bounce"}}
+            },
+            interactivity:{events:{onHover:{enable:false},onClick:{enable:false}}}
+          }
+        }).catch(function(error){
+          console.warn("Could not initialize the ambient dust field.",error);
+        });
+      });
+      script.addEventListener("error",function(){
+        console.warn("Could not load the ambient dust library.");
+      });
+      document.head.appendChild(script);
+    }
+
+    addEventListener("load",function(){
+      if("requestIdleCallback" in window){
+        requestIdleCallback(loadDust,{timeout:2000});
+      }else{
+        setTimeout(loadDust,1200);
+      }
+    },{once:true});
+  }
+
+  /* cursor light + bordered-card spotlight + magnetic buttons */
+  var mx=-999,my=-999,lx=-999,ly=-999;
+  if(fine){
+    var last=null;
+    document.addEventListener("pointermove",function(e){
+      mx=e.clientX;my=e.clientY;if(lx<-900){lx=mx;ly=my}
+      var s=e.target.closest&&e.target.closest(".item,.panel,.fq,.fr");
+      if(s){var r=s.getBoundingClientRect();s.style.setProperty("--mx",(e.clientX-r.left)+"px");s.style.setProperty("--my",(e.clientY-r.top)+"px")}
+      if(rm)return;
+      var b=e.target.closest&&e.target.closest(".btn");
+      if(last&&last!==b){last.style.removeProperty("--tx");last.style.removeProperty("--ty");last=null}
+      if(b){var q=b.getBoundingClientRect();
+        b.style.setProperty("--tx",((e.clientX-q.left-q.width/2)*.12).toFixed(1)+"px");
+        b.style.setProperty("--ty",((e.clientY-q.top-q.height/2)*.2).toFixed(1)+"px");last=b}
+    },{passive:true});
+  }
+  function glow(){lx+=(mx-lx)*.1;ly+=(my-ly)*.1;fx.style.setProperty("--cx",lx.toFixed(1)+"px");fx.style.setProperty("--cy",ly.toFixed(1)+"px")}
+
+  /* Lenis smooth scroll, driven by the GSAP ticker so ScrollTrigger stays in sync */
+  var ln=null;
+  if(!rm){
+    ln=new Lenis({lerp:.085,smoothWheel:true});
+    ln.on("scroll",ScrollTrigger.update);gsap.ticker.add(function(t){ln.raf(t*1000)});gsap.ticker.lagSmoothing(0);
+    document.addEventListener("click",function(e){
+      var a=e.target.closest&&e.target.closest('a[href^="#"]');if(!a)return;
+      var id=a.getAttribute("href").slice(1),t=id&&document.getElementById(id);if(!t)return;
+      e.preventDefault();ln.scrollTo(t,{duration:1.7,easing:function(x){return 1-Math.pow(1-x,4)}});
+    });
+  }
+  if(fine&&!rm)gsap.ticker.add(glow);
+
+  /* GSAP ScrollTrigger: staggered reveals replace the old CSS reveals, plus a gentle heading parallax */
+  if(!rm){
+    gsap.registerPlugin(ScrollTrigger);
+    document.documentElement.classList.add("gsap");
+    ScrollTrigger.batch(".rv",{start:"top 90%",once:true,
+      onEnter:function(els){gsap.fromTo(els,{autoAlpha:0,y:38,filter:"blur(6px)"},
+        {autoAlpha:1,y:0,filter:"blur(0px)",duration:.95,ease:"power3.out",stagger:.09,overwrite:true,clearProps:"filter"})}});
+    gsap.utils.toArray(".section-heading h2").forEach(function(h){
+      gsap.fromTo(h,{yPercent:16},{yPercent:-16,ease:"none",scrollTrigger:{trigger:h,start:"top bottom",end:"bottom top",scrub:.6}})});
+    gsap.utils.toArray(".step-number").forEach(function(n){
+      gsap.fromTo(n,{xPercent:-12,opacity:.25},{xPercent:0,opacity:1,ease:"power2.out",scrollTrigger:{trigger:n,start:"top 92%",end:"top 55%",scrub:.5}})});
+    addEventListener("load",function(){ScrollTrigger.refresh()});
+  }
+
+  /* floating section dock */
+  var defs=[["inside","What it is"],["start","How it works"],["enter","Get in"],["faq","FAQ"]];
+  var nav=document.createElement("nav");nav.className="dock";nav.setAttribute("aria-label","Sections");
+  var links={};
+  defs.forEach(function(d){if(!document.getElementById(d[0]))return;
+    var a=document.createElement("a");a.href="#"+d[0];a.textContent=d[1];nav.appendChild(a);links[d[0]]=a});
+  document.body.appendChild(nav);
+  function tick(){
+    var y=scrollY,vh=innerHeight,cur=null;
+    nav.classList.toggle("on",y>vh*1.25);
+    Object.keys(links).forEach(function(id){var r=document.getElementById(id).getBoundingClientRect();
+      if(r.top<vh*.5&&r.bottom>vh*.35)cur=id});
+    Object.keys(links).forEach(function(id){links[id].classList.toggle("cur",id===cur)})}
+  addEventListener("scroll",tick,{passive:true});tick();
 })();
 </script>
 
