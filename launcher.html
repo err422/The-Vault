@@ -1059,12 +1059,12 @@ body::before{display:none}
 @keyframes ping{70%{box-shadow:0 0 0 9px rgba(201,168,255,0),0 0 12px #a77aff}100%{box-shadow:0 0 0 0 rgba(201,168,255,0),0 0 12px #a77aff}}
 .hero h1{text-shadow:0 2px 40px rgba(139,92,246,.18)}
 .hero .lead{color:#b9aecb}
-.hero-visual::before{width:105%;opacity:.5;filter:blur(64px);border-radius:50%;
+.hero-visual::before{width:105%;opacity:calc(.5 * var(--door-halo-opacity, 1));filter:blur(64px);border-radius:50%;
   background:conic-gradient(from 0deg,#7c3aed,#2a1163,#c084fc,#4c1d95,#7c3aed);
   -webkit-mask-image:radial-gradient(circle,#000 25%,transparent 68%);mask-image:radial-gradient(circle,#000 25%,transparent 68%);
   }
 .hero-visual::after{content:"";position:absolute;bottom:2%;width:62%;height:7%;border-radius:50%;
-  background:radial-gradient(ellipse,rgba(139,92,246,.45),transparent 70%);filter:blur(10px);pointer-events:none}
+  background:radial-gradient(ellipse,rgba(139,92,246,.45),transparent 70%);filter:blur(10px);opacity:var(--door-halo-opacity,1);pointer-events:none}
 .scroll-cue{font-family:var(--mono)}
 
 /* buttons */
@@ -1171,9 +1171,9 @@ html.js.gsap .rv.item,html.js.gsap .rv.item.in{transition:border-color .25s,tran
   <header class="hero">
     <div class="hero-copy">
       <div class="eyebrow">Your next destination</div>
-      <h1 class="decrypt-heading" aria-label="The Web Vault">
+      <h1 class="decrypt-heading" aria-label="The Web Vault.">
         <span class="decrypt-line" data-text="The Web">The Web</span>
-        <span class="decrypt-line accent" data-text="Vault">Vault.</span>
+        <span class="decrypt-line accent" data-text="Vault.">Vault.</span>
       </h1>
       <p class="lead">
         A desktop-style WebOS, a library of games, and a browser built right in.
@@ -2052,6 +2052,10 @@ html.js.gsap .rv.item,html.js.gsap .rv.item.in{transition:border-color .25s,tran
         "--door-opacity",
         (1 - doorFadeProgress).toFixed(2)
       );
+      heroVisual.style.setProperty(
+        "--door-halo-opacity",
+        (1 - doorFadeProgress).toFixed(2)
+      );
       door.style.setProperty(
         "--wheel-angle",
         (-progress * 180).toFixed(2) + "deg"
@@ -2540,59 +2544,9 @@ function sparkButton(button) {
 (function(){
   var rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
   var fine=window.matchMedia&&matchMedia("(hover: hover)").matches;
-  var fx=document.createElement("div");fx.className="fx";fx.id="vault-dust";fx.setAttribute("aria-hidden","true");
+  var fx=document.createElement("div");fx.className="fx";fx.setAttribute("aria-hidden","true");
   document.body.insertBefore(fx,document.body.firstChild);
   var g=document.createElement("div");g.className="grain";g.setAttribute("aria-hidden","true");document.body.appendChild(g);
-
-  /* Load a small, low-rate ambient particle layer only when motion is allowed. */
-  if(!rm){
-    function loadDust(){
-      var script=document.createElement("script");
-      script.src="https://cdn.jsdelivr.net/npm/@tsparticles/slim@3.8.1/tsparticles.slim.bundle.min.js";
-      script.async=true;
-      script.addEventListener("load",function(){
-        if(!window.tsParticles||typeof window.tsParticles.load!=="function"){
-          console.warn("The ambient dust library loaded without its expected API.");
-          return;
-        }
-        window.tsParticles.load({
-          id:"vault-dust",
-          options:{
-            fullScreen:{enable:false},
-            background:{color:{value:"transparent"}},
-            detectRetina:false,
-            fpsLimit:30,
-            pauseOnBlur:true,
-            pauseOnOutsideViewport:true,
-            particles:{
-              number:{value:innerWidth<=800?22:44,density:{enable:false}},
-              color:{value:["#e2d3ff","#c7a8ff","#a77aff","#ffffff"]},
-              shape:{type:"circle"},
-              opacity:{value:{min:.35,max:.8}},
-              size:{value:{min:1.2,max:3.2}},
-              move:{enable:true,direction:"none",random:true,speed:.55,straight:false,
-                outModes:{default:"bounce"}}
-            },
-            interactivity:{events:{onHover:{enable:false},onClick:{enable:false}}}
-          }
-        }).catch(function(error){
-          console.warn("Could not initialize the ambient dust field.",error);
-        });
-      });
-      script.addEventListener("error",function(){
-        console.warn("Could not load the ambient dust library.");
-      });
-      document.head.appendChild(script);
-    }
-
-    addEventListener("load",function(){
-      if("requestIdleCallback" in window){
-        requestIdleCallback(loadDust,{timeout:2000});
-      }else{
-        setTimeout(loadDust,1200);
-      }
-    },{once:true});
-  }
 
   /* cursor light + bordered-card spotlight + magnetic buttons */
   var mx=-999,my=-999,lx=-999,ly=-999;
