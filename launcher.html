@@ -1251,9 +1251,9 @@ html.js .rv.item {
       <div>
         <div class="picks" role="tablist" aria-label="Choose an access method">
           <button class="pick" role="tab" id="t0"
-                  aria-controls="p0" aria-selected="true" data-i="0">
-            <b>I can access Google Docs</b>
-            <span>Recommended — works best if you can access Google Docs.</span>
+                  aria-controls="p0" aria-selected="false" data-i="0">
+            <b>I only have CodeHS</b>
+            <span>Join the Vault class on CodeHS.</span>
           </button>
 
           <button class="pick" role="tab" id="t1"
@@ -1269,17 +1269,23 @@ html.js .rv.item {
           </button>
 
           <button class="pick" role="tab" id="t3"
-                  aria-controls="p3" aria-selected="false" data-i="3">
-            <b>I only have CodeHS</b>
-            <span>Join the Vault class on CodeHS.</span>
+                  aria-controls="p3" aria-selected="true" data-i="3">
+            <b>I can access Google Docs</b>
+            <span>Recommended — works best if you can access Google Docs.</span>
           </button>
         </div>
 
-        <section class="panel" role="tabpanel" id="p0" aria-labelledby="t0">
-          <h3>Open through Google Docs</h3>
-          <p>Open the shared document and launch the Web Vault add-on from its Extensions menu.</p>
-          <a class="btn" href="https://docs.google.com/document/d/13lPWnpJnKWtHo1T5QB4a9HzmVLmOKnoUpKv9lXClY-A/edit?usp=sharing" target="_blank" rel="noopener">Open the Docs add-on ↗</a>
-          <div class="note">Access depends on the document's sharing permissions and the Google account you use.</div>
+        <section class="panel" role="tabpanel" id="p0" aria-labelledby="t0" hidden>
+          <h3>Join the CodeHS class</h3>
+          <p>If CodeHS is the one thing your school lets through, join the Vault class and open it from there.</p>
+          <ol>
+            <li>Open the class invite below.</li>
+            <li>Sign in to CodeHS, or create a free account.</li>
+            <li>Accept the invite to join the class.</li>
+            <li>Open the Vault project from your class assignments.</li>
+          </ol>
+          <a class="btn" href="https://codehs.com/go/6F75D"
+             target="_blank" rel="noopener">Join the class ↗</a>
         </section>
 
         <section class="panel" role="tabpanel" id="p1"
@@ -1316,18 +1322,11 @@ html.js .rv.item {
           </div>
         </section>
 
-        <section class="panel" role="tabpanel" id="p3"
-                 aria-labelledby="t3" hidden>
-          <h3>Join the CodeHS class</h3>
-          <p>If CodeHS is the one thing your school lets through, join the Vault class and open it from there.</p>
-          <ol>
-            <li>Open the class invite below.</li>
-            <li>Sign in to CodeHS, or create a free account.</li>
-            <li>Accept the invite to join the class.</li>
-            <li>Open the Vault project from your class assignments.</li>
-          </ol>
-          <a class="btn" href="https://codehs.com/go/6F75D"
-             target="_blank" rel="noopener">Join the class ↗</a>
+        <section class="panel" role="tabpanel" id="p3" aria-labelledby="t3">
+          <h3>Open through Google Docs</h3>
+          <p>Open the shared document and launch the Web Vault add-on from its Extensions menu.</p>
+          <a class="btn" href="https://docs.google.com/document/d/13lPWnpJnKWtHo1T5QB4a9HzmVLmOKnoUpKv9lXClY-A/edit?usp=sharing" target="_blank" rel="noopener">Open the Docs add-on ↗</a>
+          <div class="note">Access depends on the document's sharing permissions and the Google account you use.</div>
         </section>
       </div>
     </div>
@@ -1942,10 +1941,10 @@ html.js .rv.item {
 
   var tabs = $$(".pick");
   var labels = [
-    "Standard access",
+    "CodeHS access",
     "about:blank",
     "HTML launcher",
-    "CodeHS access"
+    "Standard access"
   ];
 
   function selectTab(index) {
